@@ -186,7 +186,7 @@ window.SUPABASE_CONFIG = {
 
 ### 6.1 เปิดแอป
 
-- ดับเบิลคลิกเปิด `app.html` ใน browser
+- ดับเบิลคลิกเปิด `index.html` ใน browser
 - หรือ refresh ถ้าเปิดอยู่แล้ว
 
 ### 6.2 สังเกตสัญลักษณ์
@@ -294,7 +294,7 @@ Free plan: backup รายวัน เก็บไว้ **7 วัน** ย�
    ```bash
    # ใน folder นี้
    python -m http.server 8000
-   # แล้วเปิด http://localhost:8000/app.html
+   # แล้วเปิด http://localhost:8000/index.html
    ```
 
 3. **CDN script load ไม่ทัน**
@@ -362,7 +362,7 @@ truncate sale_items, sales, share_txns restart identity cascade;
 1. สร้าง repo ใน GitHub
 2. Push folder ขึ้น
 3. Settings → Pages → Source: main branch
-4. ได้ URL `https://username.github.io/repo-name/app.html`
+4. ได้ URL `https://username.github.io/repo-name/index.html`
 
 ---
 
@@ -376,7 +376,7 @@ truncate sale_items, sales, share_txns restart identity cascade;
 
 แทนที่จะใช้ PIN `1234`:
 ```js
-// ใน app.html
+// ใน index.html
 const { data, error } = await sb.auth.signInWithPassword({
   email: studentEmail,
   password: studentPassword

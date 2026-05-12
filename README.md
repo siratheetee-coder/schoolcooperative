@@ -23,7 +23,7 @@
 ## 🚀 เริ่มใช้
 
 ### ใช้ทันที (ข้อมูล mock)
-ดับเบิลคลิก `app.html` → ใช้ได้เลย
+ดับเบิลคลิก `index.html` หรือเปิดผ่าน `http://localhost` → ใช้ได้เลย
 
 ### เชื่อม Supabase (ฐานข้อมูลจริง)
 ดู [SETUP.md](./SETUP.md) — คู่มือเต็ม
@@ -32,7 +32,7 @@
 
 | ไฟล์ | หน้าที่ |
 |---|---|
-| `app.html` | แอปหลักทั้งหมด |
+| `index.html` | แอปหลักทั้งหมด |
 | `icon.svg` | ไอคอนแอป (PWA) |
 | `manifest.webmanifest` | PWA manifest |
 | `sw.js` | Service worker (offline) |

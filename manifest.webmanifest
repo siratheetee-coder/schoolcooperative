@@ -2,7 +2,7 @@
   "name": "สหกรณ์โรงเรียน",
   "short_name": "สหกรณ์",
   "description": "ระบบจัดการร้านสหกรณ์โรงเรียนสำหรับนักเรียนผู้ขาย",
-  "start_url": "./app.html",
+  "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
@@ -29,13 +29,13 @@
     {
       "name": "หน้าขาย (POS)",
       "short_name": "ขาย",
-      "url": "./app.html#pos",
+      "url": "./index.html#pos",
       "icons": [{ "src": "icon.svg", "sizes": "any", "type": "image/svg+xml" }]
     },
     {
       "name": "รายงานยอดขาย",
       "short_name": "รายงาน",
-      "url": "./app.html#report",
+      "url": "./index.html#report",
       "icons": [{ "src": "icon.svg", "sizes": "any", "type": "image/svg+xml" }]
     }
   ]

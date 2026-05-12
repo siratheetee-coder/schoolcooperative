@@ -2,7 +2,7 @@
 const CACHE = 'coop-v1';
 const CORE_ASSETS = [
   './',
-  './app.html',
+  './index.html',
   './manifest.webmanifest',
   './icon.svg'
 ];

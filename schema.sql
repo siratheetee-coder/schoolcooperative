@@ -25,8 +25,11 @@ create table if not exists members (
   avatar text,
   color int default 1,
   pin text default '1234',
+  role text default 'student' check (role in ('student','teacher')),
   created_at timestamptz default now()
 );
+-- อัปเกรดตารางเดิมถ้ายังไม่มี role
+alter table members add column if not exists role text default 'student';
 
 -- 3. SALES (header)
 create table if not exists sales (
@@ -34,8 +37,19 @@ create table if not exists sales (
   seller_id bigint references members(id) on delete set null,
   seller_name text,
   total int not null,
-  date timestamptz default now()
+  date timestamptz default now(),
+  is_voided boolean default false,
+  void_reason text,
+  voided_by_id bigint references members(id) on delete set null,
+  voided_by_name text,
+  voided_at timestamptz
 );
+-- อัปเกรดตารางเดิม
+alter table sales add column if not exists is_voided boolean default false;
+alter table sales add column if not exists void_reason text;
+alter table sales add column if not exists voided_by_id bigint;
+alter table sales add column if not exists voided_by_name text;
+alter table sales add column if not exists voided_at timestamptz;
 create index if not exists sales_date_idx on sales (date desc);
 
 -- 4. SALE ITEMS (line items)
@@ -49,6 +63,23 @@ create table if not exists sale_items (
   qty int
 );
 create index if not exists sale_items_sale_idx on sale_items (sale_id);
+
+-- 6. PENDING REQUESTS (นักเรียนขออนุมัติ → ครูอนุมัติ)
+create table if not exists pending_requests (
+  id bigserial primary key,
+  requested_by_id bigint references members(id) on delete set null,
+  requested_by_name text,
+  type text not null check (type in ('add_product','edit_product','delete_product','restock')),
+  payload jsonb not null,
+  summary text,
+  status text default 'pending' check (status in ('pending','approved','rejected')),
+  requested_at timestamptz default now(),
+  reviewed_by_id bigint references members(id) on delete set null,
+  reviewed_by_name text,
+  reviewed_at timestamptz,
+  notes text
+);
+create index if not exists pending_requests_status_idx on pending_requests (status, requested_at desc);
 
 -- 5. SHARE TRANSACTIONS (buy หุ้น / รับปันผล)
 create table if not exists share_txns (
@@ -65,23 +96,26 @@ create index if not exists share_txns_member_idx on share_txns (member_id);
 -- ROW LEVEL SECURITY (เปิดให้ทุกคนอ่าน-เขียนได้สำหรับ prototype)
 -- ⚠️ ก่อน production ควรเข้มงวดกว่านี้!
 -- ============================================================
-alter table products    enable row level security;
-alter table members     enable row level security;
-alter table sales       enable row level security;
-alter table sale_items  enable row level security;
-alter table share_txns  enable row level security;
+alter table products          enable row level security;
+alter table members           enable row level security;
+alter table sales             enable row level security;
+alter table sale_items        enable row level security;
+alter table share_txns        enable row level security;
+alter table pending_requests  enable row level security;
 
 drop policy if exists "open" on products;
 drop policy if exists "open" on members;
 drop policy if exists "open" on sales;
 drop policy if exists "open" on sale_items;
 drop policy if exists "open" on share_txns;
+drop policy if exists "open" on pending_requests;
 
-create policy "open" on products    for all using (true) with check (true);
-create policy "open" on members     for all using (true) with check (true);
-create policy "open" on sales       for all using (true) with check (true);
-create policy "open" on sale_items  for all using (true) with check (true);
-create policy "open" on share_txns  for all using (true) with check (true);
+create policy "open" on products          for all using (true) with check (true);
+create policy "open" on members           for all using (true) with check (true);
+create policy "open" on sales             for all using (true) with check (true);
+create policy "open" on sale_items        for all using (true) with check (true);
+create policy "open" on share_txns        for all using (true) with check (true);
+create policy "open" on pending_requests  for all using (true) with check (true);
 
 -- ============================================================
 -- SEED DATA
@@ -99,17 +133,18 @@ insert into products (name, emoji, price, stock, low_at, unit) values
   ('ช็อกโกแลต',     '🍫', 18, 4,   10, '/แท่ง')
 on conflict do nothing;
 
--- Members
-insert into members (code, name, class, avatar, color, pin) values
-  ('05421', 'น้องนภา ศรีสุข',   'ม.5/2', 'นภ', 1, '1234'),
-  ('05422', 'น้องบอส ใจดี',     'ม.5/2', 'บอ', 2, '1234'),
-  ('05323', 'น้องแพรว มงคล',   'ม.5/1', 'แพ', 3, '1234'),
-  ('05524', 'น้องเก่ง วงศ์ทอง', 'ม.5/3', 'เก', 4, '1234'),
-  ('04125', 'น้องฟ้า สวยงาม',   'ม.4/1', 'ฟ้', 5, '1234'),
-  ('04226', 'น้องโอ๊ต พิทักษ์', 'ม.4/2', 'โอ', 6, '1234'),
-  ('06127', 'น้องน้ำ ขำขัน',    'ม.6/1', 'น้', 1, '1234'),
-  ('03128', 'น้องเจ ภูมิใจ',    'ม.3/1', 'เจ', 2, '1234')
-on conflict (code) do nothing;
+-- Members (8 นักเรียน + 1 ครู)
+insert into members (code, name, class, avatar, color, pin, role) values
+  ('T0001', 'ครูสมศักดิ์ ใจดี',  'ครูที่ปรึกษา', 'คร', 4, '9999', 'teacher'),
+  ('05421', 'น้องนภา ศรีสุข',    'ม.5/2', 'นภ', 1, '1234', 'student'),
+  ('05422', 'น้องบอส ใจดี',      'ม.5/2', 'บอ', 2, '1234', 'student'),
+  ('05323', 'น้องแพรว มงคล',    'ม.5/1', 'แพ', 3, '1234', 'student'),
+  ('05524', 'น้องเก่ง วงศ์ทอง',  'ม.5/3', 'เก', 4, '1234', 'student'),
+  ('04125', 'น้องฟ้า สวยงาม',    'ม.4/1', 'ฟ้', 5, '1234', 'student'),
+  ('04226', 'น้องโอ๊ต พิทักษ์',  'ม.4/2', 'โอ', 6, '1234', 'student'),
+  ('06127', 'น้องน้ำ ขำขัน',     'ม.6/1', 'น้', 1, '1234', 'student'),
+  ('03128', 'น้องเจ ภูมิใจ',     'ม.3/1', 'เจ', 2, '1234', 'student')
+on conflict (code) do update set role = excluded.role;
 
 -- Share transactions (initial holdings)
 insert into share_txns (member_id, type, shares, amount, date) values

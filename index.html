@@ -558,6 +558,150 @@
     box-shadow: 0 2px 0 var(--green-700), 0 4px 10px rgba(23,71,64,0.35);
   }
 
+  /* ============== ROLE BADGE + BELL ============== */
+  .role-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 8px;
+    font-size: 10px;
+    font-weight: 700;
+    margin-left: 6px;
+    vertical-align: middle;
+  }
+  .role-badge.teacher {
+    background: linear-gradient(135deg, var(--gold-400), var(--gold-500));
+    color: var(--green-700);
+    box-shadow: 0 2px 0 var(--gold-600);
+  }
+  .role-badge.student {
+    background: rgba(255,255,255,0.25);
+    color: white;
+  }
+
+  /* bell icon-btn override to show badge */
+  .bell-btn { position: relative; }
+  .bell-badge {
+    position: absolute;
+    top: -4px; right: -4px;
+    min-width: 18px; height: 18px;
+    border-radius: 9px;
+    padding: 0 5px;
+    background: var(--red-500);
+    color: white;
+    font-size: 10px;
+    font-weight: 800;
+    display: grid; place-items: center;
+    box-shadow: 0 2px 0 var(--red-600);
+    animation: bellPulse 1.4s infinite;
+  }
+  @keyframes bellPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.15); }
+  }
+
+  /* ============== REQUESTS LIST ============== */
+  .req-tabs {
+    display: flex;
+    gap: 6px;
+    background: var(--cream-100);
+    padding: 4px;
+    border-radius: 14px;
+    margin-bottom: 12px;
+    box-shadow: var(--shadow-inset);
+  }
+  .req-tab {
+    flex: 1;
+    padding: 9px 6px;
+    border: none;
+    background: transparent;
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--ink-soft);
+    cursor: pointer;
+    transition: all 0.18s;
+  }
+  .req-tab.active {
+    background: linear-gradient(135deg, var(--green-400), var(--green-500));
+    color: white;
+    box-shadow: 0 3px 0 var(--green-700);
+  }
+  .req-list { display: flex; flex-direction: column; gap: 10px; max-height: 50vh; overflow-y: auto; }
+  .req-item {
+    background: var(--cream-100);
+    border-radius: 18px;
+    padding: 12px 14px;
+    border-left: 4px solid var(--gold-500);
+    box-shadow: var(--shadow-sm);
+  }
+  .req-item.approved { border-left-color: var(--green-500); opacity: 0.75; }
+  .req-item.rejected { border-left-color: var(--red-500); opacity: 0.75; }
+  .req-item-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 4px;
+  }
+  .req-type-pill {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 700;
+  }
+  .req-type-pill.add { background: #BFE8DD; color: var(--green-700); }
+  .req-type-pill.edit { background: #FFE0A8; color: var(--gold-600); }
+  .req-type-pill.delete { background: #FFC2B8; color: var(--red-600); }
+  .req-type-pill.restock { background: #C0DBF0; color: #2D6FA3; }
+  .req-status-pill {
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 8px;
+    font-weight: 700;
+  }
+  .req-status-pill.pending { background: var(--gold-500); color: var(--green-700);}
+  .req-status-pill.approved { background: var(--green-500); color: white;}
+  .req-status-pill.rejected { background: var(--red-500); color: white;}
+  .req-summary { font-weight: 600; font-size: 14px; margin: 6px 0 4px; color: var(--ink);}
+  .req-meta { font-size: 11px; color: var(--ink-soft);}
+  .req-actions { display: flex; gap: 8px; margin-top: 10px; }
+  .req-actions .btn { padding: 10px; font-size: 13px;}
+
+  /* ============== SALE DETAIL / VOID ============== */
+  .sale-detail-list {
+    background: var(--cream-100);
+    border-radius: 14px;
+    padding: 10px 14px;
+    margin-bottom: 14px;
+    box-shadow: var(--shadow-inset);
+  }
+  .sd-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0;
+    border-bottom: 1px dashed var(--cream-300);
+    font-size: 13px;
+  }
+  .sd-row:last-child { border-bottom: none; font-weight: 700; }
+  .sd-row .item { display: flex; align-items: center; gap: 8px; }
+  .sd-row .emoji { font-size: 18px; }
+
+  /* voided sale styling in lists */
+  .txn.voided { opacity: 0.5; }
+  .txn.voided .txn-amt { text-decoration: line-through; color: var(--red-500); }
+  .void-badge {
+    display: inline-block;
+    background: var(--red-500);
+    color: white;
+    font-size: 9px;
+    font-weight: 800;
+    padding: 1px 6px;
+    border-radius: 6px;
+    margin-left: 4px;
+    vertical-align: middle;
+  }
+
   /* ============== CLOUD STATUS ============== */
   .cloud-pill {
     position: fixed;
@@ -1731,7 +1875,10 @@
       <label>PIN 4 หลัก</label>
       <input type="password" id="loginPin" placeholder="••••" inputmode="numeric" maxlength="4" autocomplete="off" />
     </div>
-    <div class="login-hint">💡 ทดสอบ: ใช้ PIN <b>1234</b> กับรหัสนักเรียนใดก็ได้</div>
+    <div class="login-hint">
+      💡 <b>นักเรียน</b>: รหัสใดก็ได้ + PIN <b>1234</b><br>
+      👨‍🏫 <b>ครู</b>: รหัส <b>T0001</b> + PIN <b>9999</b>
+    </div>
     <button class="login-btn" onclick="doLogin()">เข้าสู่ระบบ →</button>
 
     <div class="quick-divider"><span>หรือเลือกบัญชีทดสอบ</span></div>
@@ -1751,7 +1898,10 @@
           <div class="sub" id="headerSub">ร้านนักเรียน · ม.5/2</div>
         </div>
       </div>
-      <button class="icon-btn" aria-label="เมนู">☰</button>
+      <button class="icon-btn bell-btn" id="bellBtn" onclick="openRequests()" aria-label="คำขออนุมัติ">
+        🔔
+        <span class="bell-badge" id="bellBadge" style="display:none;">0</span>
+      </button>
     </div>
     <div class="seller-card" onclick="logout()" title="แตะเพื่อออกจากระบบ">
       <div class="avatar" id="userAvatar">น</div>
@@ -2097,6 +2247,41 @@
   </div>
 </div>
 
+<!-- ============== REQUESTS MODAL ============== -->
+<div class="modal-bg" id="requestsModal" onclick="if(event.target===this)closeRequests()">
+  <div class="modal">
+    <div class="modal-close"></div>
+    <h3 id="reqModalTitle">📋 คำขออนุมัติ</h3>
+
+    <div class="req-tabs" id="reqTabs">
+      <button class="req-tab active" data-rt="pending" onclick="setReqTab('pending')">รอดำเนินการ <span id="cntPending">0</span></button>
+      <button class="req-tab" data-rt="approved" onclick="setReqTab('approved')">อนุมัติแล้ว</button>
+      <button class="req-tab" data-rt="rejected" onclick="setReqTab('rejected')">ปฏิเสธ</button>
+    </div>
+
+    <div class="req-list" id="reqList"></div>
+
+    <div class="actions" style="margin-top:14px;">
+      <button class="btn btn-ghost" onclick="closeRequests()">ปิด</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============== SALE DETAIL / VOID MODAL ============== -->
+<div class="modal-bg" id="saleDetailModal" onclick="if(event.target===this)closeSaleDetail()">
+  <div class="modal">
+    <div class="modal-close"></div>
+    <h3 id="saleDetailTitle">รายละเอียดบิล</h3>
+    <div id="saleDetailMeta" style="text-align:center;font-size:12px;color:var(--ink-soft);margin-bottom:14px;"></div>
+    <div class="sale-detail-list" id="saleDetailItems"></div>
+    <div id="saleVoidInfo"></div>
+    <div class="actions" id="saleDetailActions">
+      <button class="btn btn-ghost" onclick="closeSaleDetail()">ปิด</button>
+      <button class="btn btn-danger" id="voidBtn" onclick="voidSale()" style="flex:1;">🚫 ยกเลิกบิล</button>
+    </div>
+  </div>
+</div>
+
 <!-- ============== TOAST ============== -->
 <div class="toast" id="toast">
   <div class="check">✓</div>
@@ -2199,7 +2384,7 @@ function setView(name) {
   if (name === 'stock') renderStock();
   if (name === 'pos') renderProducts();
   if (name === 'report') renderReport();
-  if (name === 'shares') { renderShareHero(); renderMembers(); }
+  if (name === 'shares') { renderShareHero(); renderMembers(); applyRoleVisibility(); }
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -2467,10 +2652,11 @@ function deleteProduct() {
 // ============== REPORT LOGIC ==============
 let currentPeriod = 'day';
 
-function filterSales(period = currentPeriod, offset = 0) {
+function filterSales(period = currentPeriod, offset = 0, includeVoided = false) {
   // offset: 0 = current period, 1 = previous period
   const t = new Date(TODAY);
   return sales.filter(s => {
+    if (!includeVoided && s.isVoided) return false;
     if (period === 'day') {
       const ref = new Date(t); ref.setDate(ref.getDate() - offset);
       return s.date.toDateString() === ref.toDateString();
@@ -2559,15 +2745,16 @@ function renderReport() {
       </div>
     `).join('');
 
-  const recent = cur.slice().sort((a,b) => b.date - a.date).slice(0, 10);
+  // include voided in recent list so teacher can see them; subtotal already excludes voided
+  const recentAll = filterSales(currentPeriod, 0, true).sort((a,b) => b.date - a.date).slice(0, 10);
   document.getElementById('txnCount').textContent = `${cur.length.toLocaleString()} รายการ · แสดง 10 ล่าสุด`;
-  document.getElementById('txnList').innerHTML = recent.length === 0
+  document.getElementById('txnList').innerHTML = recentAll.length === 0
     ? `<div style="text-align:center;color:var(--ink-soft);padding:14px;font-size:13px;">ยังไม่มีข้อมูล</div>`
-    : recent.map(s => `
-      <div class="txn">
+    : recentAll.map(s => `
+      <div class="txn ${s.isVoided ? 'voided' : ''}" style="cursor:pointer;" onclick="openSaleDetail(${s.id})">
         <div class="txn-icon">${s.items[0]?.emoji || '🧾'}</div>
         <div class="txn-info">
-          <div class="t">บิล #${s.id} · ${s.items.length} รายการ</div>
+          <div class="t">บิล #${s.id} · ${s.items.length} รายการ ${s.isVoided ? '<span class="void-badge">ยกเลิก</span>' : ''}</div>
           <div class="s">${thDateTime(s.date)} · ${s.seller}</div>
         </div>
         <div class="txn-amt">฿${s.total.toLocaleString()}</div>
@@ -2788,15 +2975,23 @@ tfoot tr.sub td { background:#F5EAD3; color:#226258; font-size:11px; padding:8px
 // ============== SHARES DATA ==============
 const SHARE_PRICE = 10;
 const members = [
-  { id: 1, code: '05421', name: 'น้องนภา ศรีสุข',     class: 'ม.5/2', avatar: 'นภ', color: 1 },
-  { id: 2, code: '05422', name: 'น้องบอส ใจดี',       class: 'ม.5/2', avatar: 'บอ', color: 2 },
-  { id: 3, code: '05323', name: 'น้องแพรว มงคล',     class: 'ม.5/1', avatar: 'แพ', color: 3 },
-  { id: 4, code: '05524', name: 'น้องเก่ง วงศ์ทอง',   class: 'ม.5/3', avatar: 'เก', color: 4 },
-  { id: 5, code: '04125', name: 'น้องฟ้า สวยงาม',     class: 'ม.4/1', avatar: 'ฟ้', color: 5 },
-  { id: 6, code: '04226', name: 'น้องโอ๊ต พิทักษ์',   class: 'ม.4/2', avatar: 'โอ', color: 6 },
-  { id: 7, code: '06127', name: 'น้องน้ำ ขำขัน',      class: 'ม.6/1', avatar: 'น้', color: 1 },
-  { id: 8, code: '03128', name: 'น้องเจ ภูมิใจ',      class: 'ม.3/1', avatar: 'เจ', color: 2 },
+  { id: 99, code: 'T0001', name: 'ครูสมศักดิ์ ใจดี',  class: 'ครูที่ปรึกษา', avatar: 'คร', color: 4, role: 'teacher' },
+  { id: 1,  code: '05421', name: 'น้องนภา ศรีสุข',    class: 'ม.5/2', avatar: 'นภ', color: 1, role: 'student' },
+  { id: 2,  code: '05422', name: 'น้องบอส ใจดี',      class: 'ม.5/2', avatar: 'บอ', color: 2, role: 'student' },
+  { id: 3,  code: '05323', name: 'น้องแพรว มงคล',    class: 'ม.5/1', avatar: 'แพ', color: 3, role: 'student' },
+  { id: 4,  code: '05524', name: 'น้องเก่ง วงศ์ทอง',  class: 'ม.5/3', avatar: 'เก', color: 4, role: 'student' },
+  { id: 5,  code: '04125', name: 'น้องฟ้า สวยงาม',    class: 'ม.4/1', avatar: 'ฟ้', color: 5, role: 'student' },
+  { id: 6,  code: '04226', name: 'น้องโอ๊ต พิทักษ์',  class: 'ม.4/2', avatar: 'โอ', color: 6, role: 'student' },
+  { id: 7,  code: '06127', name: 'น้องน้ำ ขำขัน',     class: 'ม.6/1', avatar: 'น้', color: 1, role: 'student' },
+  { id: 8,  code: '03128', name: 'น้องเจ ภูมิใจ',     class: 'ม.3/1', avatar: 'เจ', color: 2, role: 'student' },
 ];
+
+// Pending requests (in-memory + Supabase sync)
+let nextRequestId = 1;
+const pendingRequests = [];
+
+function isTeacher() { return currentUser && currentUser.role === 'teacher'; }
+function pendingCount() { return pendingRequests.filter(r => r.status === 'pending').length; }
 
 let nextShareTxnId = 1;
 const shareTxns = []; // { id, memberId, type: 'buy'|'dividend', shares, amount, date }
@@ -2842,9 +3037,10 @@ function setShareView(v) {
   shareView = v;
   document.querySelectorAll('.share-tab').forEach(el => el.classList.toggle('active', el.dataset.sv === v));
   document.querySelectorAll('.share-view').forEach(el => el.classList.toggle('active', el.id === 'sv-' + v));
-  document.getElementById('shareFab').classList.toggle('hidden', v !== 'members');
+  // FAB only for teachers, and only on members tab
+  document.getElementById('shareFab').classList.toggle('hidden', v !== 'members' || !isTeacher());
   if (v === 'members') renderMembers();
-  if (v === 'dividend') renderDividend();
+  if (v === 'dividend') { renderDividend(); applyRoleVisibility(); }
 }
 
 function renderMembers() {
@@ -3014,10 +3210,46 @@ function renderQuickGrid() {
 function setUser(m) {
   currentUser = m;
   document.getElementById('userAvatar').textContent = m.avatar.charAt(0);
-  document.getElementById('userName').textContent = `${m.name} (รหัส ${m.code})`;
+  const badge = m.role === 'teacher'
+    ? '<span class="role-badge teacher">👨‍🏫 ครู</span>'
+    : '<span class="role-badge student">นักเรียน</span>';
+  document.getElementById('userName').innerHTML = `${m.name} (รหัส ${m.code})${badge}`;
   localStorage.setItem('coopUser', m.id);
   updateTodaySales();
+  updateBellBadge();
+  applyRoleVisibility();
   document.getElementById('loginScreen').classList.add('hidden');
+}
+
+function updateBellBadge() {
+  const badge = document.getElementById('bellBadge');
+  const n = pendingCount();
+  // Teachers see global pending count; students see only their own pending
+  const count = isTeacher() ? n : pendingRequests.filter(r => r.status==='pending' && r.requestedById === currentUser?.id).length;
+  badge.textContent = count;
+  badge.style.display = count > 0 ? 'grid' : 'none';
+}
+
+function applyRoleVisibility() {
+  // Hide dividend "pay" button for non-teacher
+  const payDivBtn = document.querySelector('.pay-div-btn');
+  if (payDivBtn) payDivBtn.style.display = isTeacher() ? 'block' : 'none';
+  // Hide dividend config for non-teacher (or show readonly)
+  const divConfig = document.querySelector('.div-config');
+  if (divConfig) {
+    const inputs = divConfig.querySelectorAll('.div-input');
+    inputs.forEach(inp => inp.readOnly = !isTeacher());
+    if (!isTeacher()) {
+      divConfig.style.opacity = '0.85';
+    } else {
+      divConfig.style.opacity = '1';
+    }
+  }
+  // Share FAB (ซื้อหุ้น) — teachers can do directly; students hidden (only teacher manages shares)
+  const sf = document.getElementById('shareFab');
+  if (sf && shareView === 'members') {
+    sf.style.display = isTeacher() ? 'flex' : 'none';
+  }
 }
 
 function updateTodaySales() {
@@ -3033,9 +3265,10 @@ function doLogin() {
   const code = document.getElementById('loginCode').value.trim();
   const pin = document.getElementById('loginPin').value;
   if (!code) { showToast('กรุณาใส่รหัสนักเรียน', true); return; }
-  if (pin !== TEST_PIN) { showToast('PIN ไม่ถูกต้อง', true); return; }
   const m = members.find(x => x.code === code);
   if (!m) { showToast('ไม่พบรหัสนักเรียน', true); return; }
+  const expectedPin = m.role === 'teacher' ? '9999' : '1234';
+  if (pin !== expectedPin) { showToast('PIN ไม่ถูกต้อง', true); return; }
   setUser(m);
   showToast(`ยินดีต้อนรับ ${m.name}!`);
   document.getElementById('loginCode').value = '';
@@ -3150,14 +3383,15 @@ async function loadFromCloud() {
       members.length = 0;
       mems.forEach(m => members.push({
         id: m.id, code: m.code, name: m.name, class: m.class,
-        avatar: m.avatar || m.name.charAt(2), color: m.color || 1
+        avatar: m.avatar || m.name.charAt(2), color: m.color || 1,
+        role: m.role || 'student'
       }));
     }
-    // sales (with items, last 365 days)
+    // sales (with items, last 365 days) — include void fields
     const since = new Date(); since.setDate(since.getDate() - 365);
     const { data: sls } = await sb
       .from('sales')
-      .select('id,date,seller_name,total,sale_items(product_id,name,emoji,price,qty)')
+      .select('id,date,seller_name,total,is_voided,void_reason,voided_by_name,voided_at,sale_items(product_id,name,emoji,price,qty)')
       .gte('date', since.toISOString())
       .order('date', { ascending: false })
       .limit(5000);
@@ -3170,10 +3404,36 @@ async function loadFromCloud() {
         items: (s.sale_items || []).map(i => ({
           id: i.product_id, name: i.name, emoji: i.emoji, price: i.price, qty: i.qty
         })),
-        total: s.total
+        total: s.total,
+        isVoided: !!s.is_voided,
+        voidReason: s.void_reason,
+        voidedByName: s.voided_by_name,
+        voidedAt: s.voided_at ? new Date(s.voided_at) : null
       }));
       nextBillId = sls.length ? Math.max(...sls.map(x => x.id)) + 1 : 1000;
     }
+
+    // pending requests
+    const { data: reqs } = await sb.from('pending_requests').select('*').order('requested_at', { ascending: false }).limit(500);
+    if (reqs) {
+      pendingRequests.length = 0;
+      reqs.forEach(r => pendingRequests.push({
+        id: r.id,
+        requestedById: r.requested_by_id,
+        requestedByName: r.requested_by_name,
+        type: r.type,
+        payload: r.payload,
+        summary: r.summary,
+        status: r.status,
+        requestedAt: new Date(r.requested_at),
+        reviewedById: r.reviewed_by_id,
+        reviewedByName: r.reviewed_by_name,
+        reviewedAt: r.reviewed_at ? new Date(r.reviewed_at) : null,
+        notes: r.notes
+      }));
+      nextRequestId = reqs.length ? Math.max(...reqs.map(x => x.id)) + 1 : 1;
+    }
+    updateBellBadge();
     // share txns
     const { data: txns } = await sb.from('share_txns').select('*').order('date');
     if (txns) {
@@ -3368,6 +3628,332 @@ payDividend = function() {
   });
   showToast(`จ่ายปันผลให้สมาชิก ${count} คนเรียบร้อย`);
 };
+
+// ============== REQUESTS / APPROVAL WORKFLOW ==============
+async function sbSaveRequest(req) {
+  if (!sb) return;
+  try {
+    const { data, error } = await sb.from('pending_requests').insert({
+      requested_by_id: req.requestedById,
+      requested_by_name: req.requestedByName,
+      type: req.type,
+      payload: req.payload,
+      summary: req.summary,
+      status: req.status,
+      requested_at: req.requestedAt.toISOString()
+    }).select().single();
+    if (error) throw error;
+    req.id = data.id;
+  } catch (e) { console.error('saveRequest failed', e); }
+}
+
+async function sbUpdateRequest(req) {
+  if (!sb) return;
+  try {
+    await sb.from('pending_requests').update({
+      status: req.status,
+      reviewed_by_id: req.reviewedById,
+      reviewed_by_name: req.reviewedByName,
+      reviewed_at: req.reviewedAt ? req.reviewedAt.toISOString() : null,
+      notes: req.notes
+    }).eq('id', req.id);
+  } catch (e) { console.error('updateRequest failed', e); }
+}
+
+async function sbVoidSale(sale) {
+  if (!sb) return;
+  try {
+    await sb.from('sales').update({
+      is_voided: true,
+      void_reason: sale.voidReason,
+      voided_by_id: sale.voidedById,
+      voided_by_name: sale.voidedByName,
+      voided_at: sale.voidedAt.toISOString()
+    }).eq('id', sale.id);
+    // restore stock
+    for (const it of sale.items) {
+      const p = products.find(x => x.id === it.id);
+      if (p) await sb.from('products').update({ stock: p.stock }).eq('id', it.id);
+    }
+  } catch (e) { console.error('voidSale failed', e); }
+}
+
+function submitRequest(type, payload, summary) {
+  if (!currentUser) return;
+  const req = {
+    id: nextRequestId++,
+    requestedById: currentUser.id,
+    requestedByName: currentUser.name,
+    type, payload, summary,
+    status: 'pending',
+    requestedAt: new Date()
+  };
+  pendingRequests.push(req);
+  sbSaveRequest(req);
+  updateBellBadge();
+  showToast('📤 ส่งคำขอให้ครูอนุมัติแล้ว');
+}
+
+function approveRequest(id) {
+  const req = pendingRequests.find(r => r.id === id);
+  if (!req || req.status !== 'pending') return;
+  if (!isTeacher()) { showToast('เฉพาะครูเท่านั้น', true); return; }
+
+  // Execute the change
+  const p = req.payload;
+  if (req.type === 'add_product') {
+    const newP = {
+      id: nextProductId++, name: p.name, price: p.price,
+      emoji: p.emoji, stock: p.stock, lowAt: p.lowAt || 10, unit: p.unit || '/ชิ้น'
+    };
+    products.push(newP);
+    sbSaveProduct(newP, true);
+  } else if (req.type === 'edit_product') {
+    const prod = products.find(x => x.id === p.id);
+    if (prod) {
+      prod.name = p.name; prod.price = p.price; prod.emoji = p.emoji;
+      sbSaveProduct(prod, false);
+    }
+  } else if (req.type === 'delete_product') {
+    const idx = products.findIndex(x => x.id === p.id);
+    if (idx >= 0) {
+      products.splice(idx, 1);
+      sbDeleteProduct(p.id);
+    }
+  } else if (req.type === 'restock') {
+    const prod = products.find(x => x.id === p.id);
+    if (prod) {
+      prod.stock += p.addQty;
+      sbSaveProduct(prod, false);
+    }
+  }
+
+  req.status = 'approved';
+  req.reviewedById = currentUser.id;
+  req.reviewedByName = currentUser.name;
+  req.reviewedAt = new Date();
+  sbUpdateRequest(req);
+  renderRequests();
+  renderStock();
+  renderProducts();
+  updateBellBadge();
+  showToast('✅ อนุมัติเรียบร้อย');
+}
+
+function rejectRequest(id) {
+  const req = pendingRequests.find(r => r.id === id);
+  if (!req || req.status !== 'pending') return;
+  if (!isTeacher()) { showToast('เฉพาะครูเท่านั้น', true); return; }
+  const reason = prompt('เหตุผลที่ปฏิเสธ (ไม่บังคับ)') || '';
+  req.status = 'rejected';
+  req.reviewedById = currentUser.id;
+  req.reviewedByName = currentUser.name;
+  req.reviewedAt = new Date();
+  req.notes = reason;
+  sbUpdateRequest(req);
+  renderRequests();
+  updateBellBadge();
+  showToast('ปฏิเสธคำขอแล้ว');
+}
+
+let currentReqTab = 'pending';
+function openRequests() {
+  if (!currentUser) return;
+  currentReqTab = 'pending';
+  document.querySelectorAll('.req-tab').forEach(el => el.classList.toggle('active', el.dataset.rt === 'pending'));
+  document.getElementById('reqModalTitle').textContent = isTeacher() ? '📋 คำขออนุมัติ' : '📋 คำขอของฉัน';
+  renderRequests();
+  document.getElementById('requestsModal').classList.add('show');
+}
+function closeRequests() { document.getElementById('requestsModal').classList.remove('show'); }
+function setReqTab(t) {
+  currentReqTab = t;
+  document.querySelectorAll('.req-tab').forEach(el => el.classList.toggle('active', el.dataset.rt === t));
+  renderRequests();
+}
+
+function renderRequests() {
+  const list = document.getElementById('reqList');
+  let filtered = pendingRequests.filter(r => r.status === currentReqTab);
+  // Students see only their own
+  if (!isTeacher()) filtered = filtered.filter(r => r.requestedById === currentUser?.id);
+  filtered.sort((a,b) => b.requestedAt - a.requestedAt);
+
+  document.getElementById('cntPending').textContent = isTeacher()
+    ? pendingRequests.filter(r => r.status === 'pending').length
+    : pendingRequests.filter(r => r.status === 'pending' && r.requestedById === currentUser?.id).length;
+
+  const TYPE_LABELS = {
+    add_product: { cls: 'add', label: '➕ เพิ่มสินค้า' },
+    edit_product: { cls: 'edit', label: '✏️ แก้ไขสินค้า' },
+    delete_product: { cls: 'delete', label: '🗑️ ลบสินค้า' },
+    restock: { cls: 'restock', label: '📦 เติมสต็อก' }
+  };
+  const STATUS_LABELS = { pending: 'รอดำเนินการ', approved: 'อนุมัติแล้ว', rejected: 'ปฏิเสธ' };
+
+  list.innerHTML = filtered.length === 0
+    ? `<div style="text-align:center;padding:30px;color:var(--ink-soft);font-size:13px;">ไม่มีรายการ</div>`
+    : filtered.map(r => {
+      const tinfo = TYPE_LABELS[r.type] || { cls: 'add', label: r.type };
+      return `
+        <div class="req-item ${r.status}">
+          <div class="req-item-head">
+            <span class="req-type-pill ${tinfo.cls}">${tinfo.label}</span>
+            <span class="req-status-pill ${r.status}">${STATUS_LABELS[r.status]}</span>
+          </div>
+          <div class="req-summary">${r.summary}</div>
+          <div class="req-meta">
+            จาก ${r.requestedByName} · ${thDateTime(r.requestedAt)}
+            ${r.reviewedByName ? `<br>โดย ${r.reviewedByName} · ${thDateTime(r.reviewedAt)}` : ''}
+            ${r.notes ? `<br>หมายเหตุ: ${r.notes}` : ''}
+          </div>
+          ${r.status === 'pending' && isTeacher() ? `
+            <div class="req-actions">
+              <button class="btn btn-danger" style="flex:1;" onclick="rejectRequest(${r.id})">✕ ปฏิเสธ</button>
+              <button class="btn btn-primary" onclick="approveRequest(${r.id})">✓ อนุมัติ</button>
+            </div>
+          ` : ''}
+        </div>
+      `;
+    }).join('');
+}
+
+// ============== HIJACK STOCK SAVE — students go through approval ==============
+saveProduct = function() {
+  const name = document.getElementById('pName').value.trim();
+  const price = parseInt(document.getElementById('pPrice').value) || 0;
+  const addQty = parseInt(document.getElementById('pStock').value) || 0;
+  if (!name) { showToast('กรุณาใส่ชื่อสินค้า', true); return; }
+  if (price <= 0) { showToast('กรุณาใส่ราคา', true); return; }
+
+  if (isTeacher()) {
+    // direct save
+    if (editingProductId) {
+      const p = products.find(x => x.id === editingProductId);
+      p.name = name; p.price = price; p.emoji = selectedEmoji;
+      p.stock += addQty;
+      sbSaveProduct(p, false);
+      showToast(addQty > 0 ? `เพิ่มสต็อก ${name} +${addQty}` : 'แก้ไขเรียบร้อย');
+    } else {
+      const newP = { id: nextProductId++, name, price, emoji: selectedEmoji, stock: addQty, lowAt: 10, unit: '/ชิ้น' };
+      products.push(newP);
+      sbSaveProduct(newP, true);
+      showToast(`เพิ่ม "${name}" เรียบร้อย`);
+    }
+    closeProductModal();
+    renderStock();
+    return;
+  }
+
+  // student → submit request
+  if (editingProductId) {
+    const p = products.find(x => x.id === editingProductId);
+    if (addQty > 0) {
+      submitRequest('restock',
+        { id: p.id, addQty },
+        `เติมสต็อก "${p.name}" +${addQty} ${p.unit.replace('/','')}`);
+    }
+    if (name !== p.name || price !== p.price || selectedEmoji !== p.emoji) {
+      submitRequest('edit_product',
+        { id: p.id, name, price, emoji: selectedEmoji },
+        `แก้ไข "${p.name}" → ชื่อ: ${name}, ราคา: ฿${price}`);
+    }
+    if (addQty === 0 && name === p.name && price === p.price && selectedEmoji === p.emoji) {
+      showToast('ไม่มีการเปลี่ยนแปลง', true);
+      return;
+    }
+  } else {
+    submitRequest('add_product',
+      { name, price, emoji: selectedEmoji, stock: addQty, lowAt: 10, unit: '/ชิ้น' },
+      `เพิ่มสินค้าใหม่ "${name}" ราคา ฿${price} จำนวน ${addQty} ชิ้น`);
+  }
+  closeProductModal();
+};
+
+deleteProduct = function() {
+  if (!editingProductId) return;
+  const p = products.find(x => x.id === editingProductId);
+  if (isTeacher()) {
+    if (!confirm(`ลบ "${p.name}" ออกจากสต็อก?`)) return;
+    sbDeleteProduct(editingProductId);
+    products = products.filter(x => x.id !== editingProductId);
+    cart.delete(editingProductId);
+    closeProductModal();
+    showToast('ลบเรียบร้อย');
+    renderStock();
+  } else {
+    if (!confirm(`ส่งคำขอลบ "${p.name}" ให้ครูอนุมัติ?`)) return;
+    submitRequest('delete_product', { id: p.id }, `ลบสินค้า "${p.name}"`);
+    closeProductModal();
+  }
+};
+
+// Hide dividend pay for students
+const _origPayDividend2 = payDividend;
+payDividend = function() {
+  if (!isTeacher()) { showToast('เฉพาะครูเท่านั้นที่จ่ายปันผลได้', true); return; }
+  _origPayDividend2();
+};
+const _origConfirmBuyShare2 = confirmBuyShare;
+confirmBuyShare = function() {
+  if (!isTeacher()) { showToast('เฉพาะครูเท่านั้นที่จัดการหุ้นได้', true); return; }
+  _origConfirmBuyShare2();
+};
+
+// ============== VOID SALE ==============
+let viewingSaleId = null;
+function openSaleDetail(saleId) {
+  const s = sales.find(x => x.id === saleId);
+  if (!s) return;
+  viewingSaleId = saleId;
+  document.getElementById('saleDetailTitle').textContent = `บิล #${s.id}${s.isVoided ? ' (ยกเลิกแล้ว)' : ''}`;
+  document.getElementById('saleDetailMeta').textContent = `${thDateTime(s.date)} · ผู้ขาย ${s.seller}`;
+  const itemsHtml = s.items.map(i => `
+    <div class="sd-row">
+      <div class="item"><span class="emoji">${i.emoji}</span> ${i.name} × ${i.qty}</div>
+      <div>฿${(i.price * i.qty).toLocaleString()}</div>
+    </div>
+  `).join('') + `
+    <div class="sd-row">
+      <div>รวม</div>
+      <div style="color:var(--gold-600);">฿${s.total.toLocaleString()}</div>
+    </div>
+  `;
+  document.getElementById('saleDetailItems').innerHTML = itemsHtml;
+  document.getElementById('saleVoidInfo').innerHTML = s.isVoided
+    ? `<div style="background:#FFE0DC;border-left:4px solid var(--red-500);padding:10px 14px;border-radius:12px;margin-bottom:14px;font-size:13px;">
+         <b style="color:var(--red-600);">🚫 ยกเลิกโดย ${s.voidedByName}</b><br>
+         <span style="color:var(--ink-soft);">${thDateTime(s.voidedAt)}</span>
+         ${s.voidReason ? `<br><i>เหตุผล: ${s.voidReason}</i>` : ''}
+       </div>`
+    : '';
+  document.getElementById('voidBtn').style.display = (s.isVoided || !isTeacher()) ? 'none' : 'block';
+  document.getElementById('saleDetailModal').classList.add('show');
+}
+function closeSaleDetail() { document.getElementById('saleDetailModal').classList.remove('show'); }
+
+function voidSale() {
+  if (!isTeacher()) { showToast('เฉพาะครูเท่านั้น', true); return; }
+  const s = sales.find(x => x.id === viewingSaleId);
+  if (!s || s.isVoided) return;
+  const reason = prompt('เหตุผลในการยกเลิกบิล (เช่น "นักเรียนกดผิด"):') || '';
+  if (!confirm(`ยืนยันยกเลิกบิล #${s.id} ยอด ฿${s.total}?\n\nสต็อกสินค้าจะถูกคืน`)) return;
+  s.isVoided = true;
+  s.voidReason = reason;
+  s.voidedById = currentUser.id;
+  s.voidedByName = currentUser.name;
+  s.voidedAt = new Date();
+  // restore stock
+  s.items.forEach(it => {
+    const p = products.find(x => x.id === it.id);
+    if (p) p.stock += it.qty;
+  });
+  sbVoidSale(s);
+  closeSaleDetail();
+  renderReport();
+  renderProducts();
+  showToast(`ยกเลิกบิล #${s.id} เรียบร้อย`);
+}
 
 // Initial cloud load (if configured)
 (async () => {

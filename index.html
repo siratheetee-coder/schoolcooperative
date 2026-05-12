@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>สหกรณ์โรงเรียน — POS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  /* ---------- 60 / 30 / 10 PALETTE ---------- */
+  :root {
+    --cream-50: #FFFBF3;       /* 60% */
+    --cream-100: #FFF8EE;      /* 60% */
+    --cream-200: #F5EAD3;
+    --cream-300: #E8D6B3;
+
+    --green-400: #46A697;      /* 30% */
+    --green-500: #2D7D6F;      /* 30% */
+    --green-600: #226258;
+    --green-700: #174740;
+
+    --gold-400: #FFC857;       /* 10% */
+    --gold-500: #FFB627;       /* 10% */
+    --gold-600: #E89A0E;
+
+    --ink: #2A2218;
+    --ink-soft: #6B5E4C;
+
+    /* 3D shadows — light from top-left */
+    --shadow-sm:
+      -3px -3px 6px rgba(255,255,255,0.9),
+       3px  3px 8px rgba(154, 130, 90, 0.18);
+    --shadow-md:
+      -6px -6px 14px rgba(255,255,255,0.95),
+       6px  6px 18px rgba(154, 130, 90, 0.22);
+    --shadow-lg:
+      -10px -10px 24px rgba(255,255,255,0.95),
+       10px  12px 28px rgba(154, 130, 90, 0.28);
+    --shadow-inset:
+      inset 4px 4px 8px rgba(154, 130, 90, 0.20),
+      inset -4px -4px 8px rgba(255,255,255,0.9);
+
+    --shadow-green:
+      0 8px 0 var(--green-700),
+      0 12px 24px rgba(34, 98, 88, 0.45);
+    --shadow-green-pressed:
+      0 2px 0 var(--green-700),
+      0 4px 10px rgba(34, 98, 88, 0.35);
+
+    --shadow-gold:
+      0 6px 0 var(--gold-600),
+      0 10px 20px rgba(232, 154, 14, 0.40);
+  }
+
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: 'Prompt', system-ui, sans-serif;
+    color: var(--ink);
+    background: radial-gradient(circle at 20% 0%, #FFF4E0 0%, var(--cream-100) 40%, var(--cream-200) 100%);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ---------- PHONE FRAME (preview only) ---------- */
+  .phone {
+    max-width: 430px;
+    margin: 0 auto;
+    min-height: 100vh;
+    background: var(--cream-100);
+    position: relative;
+    padding-bottom: 120px;
+  }
+
+  /* ---------- HEADER ---------- */
+  .header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: linear-gradient(135deg, var(--green-400), var(--green-500) 60%, var(--green-600));
+    color: white;
+    padding: 18px 20px 28px;
+    border-radius: 0 0 28px 28px;
+    box-shadow: 0 8px 24px rgba(23, 71, 64, 0.35);
+    position: relative;
+    overflow: hidden;
+  }
+  .header::before {
+    content: "";
+    position: absolute;
+    top: -40px; right: -40px;
+    width: 160px; height: 160px;
+    background: radial-gradient(circle, rgba(255,255,255,0.18), transparent 70%);
+    border-radius: 50%;
+  }
+  .header::after {
+    content: "";
+    position: absolute;
+    bottom: -60px; left: -30px;
+    width: 140px; height: 140px;
+    background: radial-gradient(circle, rgba(255, 182, 39, 0.20), transparent 70%);
+    border-radius: 50%;
+  }
+  .header-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+    position: relative;
+    z-index: 1;
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .brand-logo {
+    width: 42px; height: 42px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, var(--gold-400), var(--gold-500));
+    display: grid; place-items: center;
+    font-size: 22px;
+    box-shadow:
+      inset -2px -2px 4px rgba(0,0,0,0.15),
+      inset 2px 2px 4px rgba(255,255,255,0.4),
+      0 4px 0 var(--gold-600),
+      0 6px 12px rgba(0,0,0,0.25);
+  }
+  .brand-text { line-height: 1.15; }
+  .brand-text .name { font-weight: 700; font-size: 16px; }
+  .brand-text .sub { font-size: 12px; opacity: 0.85; }
+
+  .icon-btn {
+    width: 42px; height: 42px;
+    border-radius: 14px;
+    border: none;
+    background: rgba(255,255,255,0.18);
+    color: white;
+    font-size: 20px;
+    cursor: pointer;
+    backdrop-filter: blur(8px);
+    box-shadow:
+      inset 1px 1px 2px rgba(255,255,255,0.3),
+      inset -1px -1px 2px rgba(0,0,0,0.1);
+    transition: transform 0.15s;
+  }
+  .icon-btn:active { transform: scale(0.92); }
+
+  .seller-card {
+    background: rgba(255,255,255,0.15);
+    backdrop-filter: blur(10px);
+    border-radius: 18px;
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    position: relative;
+    z-index: 1;
+    border: 1px solid rgba(255,255,255,0.25);
+  }
+  .avatar {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--gold-400), var(--gold-500));
+    display: grid; place-items: center;
+    font-weight: 700;
+    color: var(--green-700);
+    box-shadow: inset -1px -2px 3px rgba(0,0,0,0.2), inset 1px 2px 3px rgba(255,255,255,0.5);
+  }
+  .seller-info { flex: 1; line-height: 1.2; }
+  .seller-info .label { font-size: 11px; opacity: 0.8; }
+  .seller-info .name { font-weight: 600; font-size: 14px; }
+  .seller-stat { text-align: right; line-height: 1.1;}
+  .seller-stat .num { font-size: 18px; font-weight: 700; color: var(--gold-400); }
+  .seller-stat .lbl { font-size: 10px; opacity: 0.85; }
+
+  /* ---------- CATEGORY TABS ---------- */
+  .tabs {
+    display: flex;
+    gap: 10px;
+    padding: 18px 20px 8px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab {
+    flex-shrink: 0;
+    padding: 10px 18px;
+    border-radius: 16px;
+    background: var(--cream-50);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink-soft);
+    box-shadow: var(--shadow-sm);
+    cursor: pointer;
+    transition: all 0.18s;
+    border: none;
+    font-family: inherit;
+  }
+  .tab.active {
+    background: linear-gradient(135deg, var(--green-400), var(--green-500));
+    color: white;
+    box-shadow:
+      0 4px 0 var(--green-700),
+      0 6px 14px rgba(34, 98, 88, 0.35);
+    transform: translateY(-2px);
+  }
+  .tab:active { transform: translateY(0); }
+
+  /* ---------- SECTION TITLE ---------- */
+  .section-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    padding: 14px 20px 10px;
+  }
+  .section-head h2 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 700;
+  }
+  .section-head .count {
+    font-size: 12px;
+    color: var(--ink-soft);
+    background: var(--cream-50);
+    padding: 4px 10px;
+    border-radius: 10px;
+    box-shadow: var(--shadow-sm);
+  }
+
+  /* ---------- PRODUCT GRID ---------- */
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    padding: 4px 20px 20px;
+  }
+  .product {
+    background: var(--cream-50);
+    border-radius: 22px;
+    padding: 14px 12px 14px;
+    box-shadow: var(--shadow-md);
+    cursor: pointer;
+    transition: transform 0.18s, box-shadow 0.18s;
+    position: relative;
+    border: 1px solid rgba(255,255,255,0.6);
+  }
+  .product:active {
+    transform: translateY(2px) scale(0.98);
+    box-shadow: var(--shadow-sm);
+  }
+  .product-img {
+    width: 100%;
+    aspect-ratio: 1;
+    border-radius: 18px;
+    background: linear-gradient(145deg, #fff, var(--cream-200));
+    display: grid;
+    place-items: center;
+    font-size: 56px;
+    margin-bottom: 10px;
+    box-shadow:
+      inset 3px 3px 6px rgba(154, 130, 90, 0.15),
+      inset -3px -3px 6px rgba(255,255,255,0.9);
+    position: relative;
+    overflow: hidden;
+  }
+  .product-img::after {
+    content: "";
+    position: absolute; inset: 0;
+    background: radial-gradient(circle at 30% 25%, rgba(255,255,255,0.6), transparent 50%);
+    pointer-events: none;
+  }
+  .product-name {
+    font-weight: 600;
+    font-size: 14px;
+    margin: 0 0 4px;
+    color: var(--ink);
+  }
+  .product-stock {
+    font-size: 11px;
+    color: var(--ink-soft);
+    margin-bottom: 8px;
+  }
+  .product-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .price {
+    font-weight: 700;
+    color: var(--gold-600);
+    font-size: 16px;
+  }
+  .price .unit { font-size: 11px; color: var(--ink-soft); font-weight: 500; }
+  .add-btn {
+    width: 36px; height: 36px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--green-400), var(--green-500));
+    color: white;
+    border: none;
+    font-size: 22px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow:
+      0 4px 0 var(--green-700),
+      0 6px 10px rgba(34, 98, 88, 0.35);
+    transition: all 0.12s;
+    display: grid; place-items: center;
+    line-height: 1;
+  }
+  .add-btn:active {
+    transform: translateY(3px);
+    box-shadow:
+      0 1px 0 var(--green-700),
+      0 2px 4px rgba(34, 98, 88, 0.3);
+  }
+
+  /* Stepper (− qty +) — shown when product is in cart */
+  .stepper {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--cream-100);
+    border-radius: 14px;
+    padding: 3px;
+    box-shadow: var(--shadow-inset);
+  }
+  .step-btn {
+    width: 30px; height: 30px;
+    border-radius: 10px;
+    border: none;
+    font-size: 18px;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    display: grid; place-items: center;
+    line-height: 1;
+    transition: all 0.1s;
+  }
+  .step-btn.minus {
+    background: linear-gradient(135deg, #FF8B7A, #E0594A);
+    color: white;
+    box-shadow:
+      0 3px 0 #B23E32,
+      0 4px 8px rgba(178, 62, 50, 0.35);
+  }
+  .step-btn.plus {
+    background: linear-gradient(135deg, var(--green-400), var(--green-500));
+    color: white;
+    box-shadow:
+      0 3px 0 var(--green-700),
+      0 4px 8px rgba(34, 98, 88, 0.35);
+  }
+  .step-btn:active {
+    transform: translateY(2px);
+    box-shadow: none !important;
+  }
+  .step-qty {
+    min-width: 22px;
+    text-align: center;
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--green-700);
+  }
+
+  .product.has-qty .qty-badge {
+    position: absolute;
+    top: -8px; right: -8px;
+    background: linear-gradient(135deg, var(--gold-400), var(--gold-500));
+    color: var(--green-700);
+    font-weight: 700;
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    display: grid; place-items: center;
+    font-size: 14px;
+    box-shadow:
+      0 3px 0 var(--gold-600),
+      0 5px 10px rgba(0,0,0,0.25);
+    animation: pop 0.25s ease-out;
+  }
+  @keyframes pop {
+    0% { transform: scale(0.4); opacity: 0; }
+    60% { transform: scale(1.15); }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  .qty-badge { display: none; }
+  .product.has-qty .qty-badge { display: grid; }
+
+  /* ---------- CART BAR ---------- */
+  .cart-bar {
+    position: fixed;
+    bottom: 18px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: calc(100% - 32px);
+    max-width: 398px;
+    background: linear-gradient(135deg, var(--green-500), var(--green-600));
+    color: white;
+    border-radius: 24px;
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    box-shadow:
+      0 10px 0 var(--green-700),
+      0 18px 32px rgba(23, 71, 64, 0.45);
+    z-index: 100;
+    transition: transform 0.2s;
+  }
+  .cart-bar.empty { opacity: 0.55; }
+  .cart-icon {
+    width: 46px; height: 46px;
+    border-radius: 14px;
+    background: rgba(255,255,255,0.18);
+    display: grid; place-items: center;
+    font-size: 22px;
+    position: relative;
+    box-shadow:
+      inset 1px 1px 2px rgba(255,255,255,0.3),
+      inset -1px -1px 2px rgba(0,0,0,0.15);
+  }
+  .cart-icon .badge {
+    position: absolute;
+    top: -6px; right: -6px;
+    background: var(--gold-500);
+    color: var(--green-700);
+    font-size: 11px;
+    font-weight: 700;
+    min-width: 20px; height: 20px;
+    border-radius: 10px;
+    padding: 0 6px;
+    display: grid; place-items: center;
+    box-shadow: 0 2px 0 var(--gold-600);
+  }
+  .cart-info { flex: 1; line-height: 1.15; }
+  .cart-info .lbl { font-size: 11px; opacity: 0.85; }
+  .cart-info .amt { font-size: 20px; font-weight: 700; }
+  .pay-btn {
+    background: linear-gradient(135deg, var(--gold-400), var(--gold-500));
+    color: var(--green-700);
+    border: none;
+    padding: 12px 20px;
+    border-radius: 16px;
+    font-weight: 700;
+    font-size: 14px;
+    font-family: inherit;
+    cursor: pointer;
+    box-shadow:
+      0 5px 0 var(--gold-600),
+      0 8px 14px rgba(0,0,0,0.25);
+    transition: all 0.12s;
+  }
+  .pay-btn:active {
+    transform: translateY(3px);
+    box-shadow:
+      0 2px 0 var(--gold-600),
+      0 4px 6px rgba(0,0,0,0.2);
+  }
+
+  /* ---------- MODAL (Cash Payment) ---------- */
+  .modal-bg {
+    position: fixed; inset: 0;
+    background: rgba(23, 71, 64, 0.45);
+    backdrop-filter: blur(4px);
+    z-index: 200;
+    display: none;
+    align-items: flex-end;
+    justify-content: center;
+  }
+  .modal-bg.show { display: flex; animation: fadein 0.2s; }
+  @keyframes fadein { from { opacity: 0; } to { opacity: 1; } }
+
+  .modal {
+    background: var(--cream-50);
+    width: 100%;
+    max-width: 430px;
+    border-radius: 28px 28px 0 0;
+    padding: 22px;
+    animation: slideup 0.28s cubic-bezier(0.2, 0.9, 0.3, 1);
+    box-shadow: 0 -20px 50px rgba(23, 71, 64, 0.3);
+  }
+  @keyframes slideup {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+  .modal h3 {
+    margin: 0 0 6px;
+    font-size: 20px;
+    text-align: center;
+  }
+  .total-display {
+    text-align: center;
+    margin: 12px 0 18px;
+    padding: 18px;
+    background: linear-gradient(135deg, var(--green-400), var(--green-500));
+    color: white;
+    border-radius: 20px;
+    box-shadow: var(--shadow-md);
+  }
+  .total-display .lbl { font-size: 12px; opacity: 0.85; }
+  .total-display .val { font-size: 36px; font-weight: 800; color: var(--gold-400); }
+
+  .cash-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .cash-btn {
+    padding: 14px 8px;
+    background: var(--cream-100);
+    border: none;
+    border-radius: 16px;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    box-shadow: var(--shadow-sm);
+    transition: all 0.12s;
+    color: var(--ink);
+  }
+  .cash-btn:active {
+    box-shadow: var(--shadow-inset);
+    transform: scale(0.97);
+  }
+  .confirm-btn {
+    width: 100%;
+    padding: 16px;
+    background: linear-gradient(135deg, var(--green-400), var(--green-500));
+    color: white;
+    border: none;
+    border-radius: 18px;
+    font-size: 16px;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    box-shadow: var(--shadow-green);
+    transition: all 0.12s;
+  }
+  .confirm-btn:active {
+    transform: translateY(5px);
+    box-shadow: var(--shadow-green-pressed);
+  }
+  .modal-close {
+    width: 40px; height: 4px;
+    background: var(--cream-300);
+    border-radius: 2px;
+    margin: 0 auto 14px;
+  }
+
+  /* ---------- TOAST ---------- */
+  .toast {
+    position: fixed;
+    top: 80px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-100px);
+    background: var(--green-600);
+    color: white;
+    padding: 14px 22px;
+    border-radius: 18px;
+    font-weight: 600;
+    box-shadow: 0 10px 24px rgba(0,0,0,0.3);
+    z-index: 300;
+    transition: transform 0.35s cubic-bezier(0.2, 0.9, 0.3, 1.3);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+  .toast .check {
+    background: var(--gold-500);
+    color: var(--green-700);
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    display: grid; place-items: center;
+    font-weight: 900;
+  }
+</style>
+</head>
+<body>
+
+<div class="phone">
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="header-top">
+      <div class="brand">
+        <div class="brand-logo">🏫</div>
+        <div class="brand-text">
+          <div class="name">สหกรณ์โรงเรียน</div>
+          <div class="sub">ร้านนักเรียน · ม.5/2</div>
+        </div>
+      </div>
+      <button class="icon-btn" aria-label="เมนู">☰</button>
+    </div>
+    <div class="seller-card">
+      <div class="avatar">น</div>
+      <div class="seller-info">
+        <div class="label">ผู้ขายเวรนี้</div>
+        <div class="name">น้องนภา (รหัส 05421)</div>
+      </div>
+      <div class="seller-stat">
+        <div class="num">฿840</div>
+        <div class="lbl">ยอดวันนี้</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab active">🍱 ทั้งหมด</button>
+    <button class="tab">🥤 เครื่องดื่ม</button>
+    <button class="tab">🍪 ขนม</button>
+    <button class="tab">✏️ เครื่องเขียน</button>
+    <button class="tab">📒 สมุด</button>
+  </div>
+
+  <!-- PRODUCTS -->
+  <div class="section-head">
+    <h2>เลือกสินค้า</h2>
+    <span class="count">8 รายการ</span>
+  </div>
+
+  <div class="grid" id="grid">
+    <!-- products inserted by JS -->
+  </div>
+</div>
+
+<!-- CART BAR -->
+<div class="cart-bar empty" id="cartBar">
+  <div class="cart-icon">
+    🛒
+    <span class="badge" id="cartCount">0</span>
+  </div>
+  <div class="cart-info">
+    <div class="lbl">ตะกร้า</div>
+    <div class="amt">฿<span id="cartTotal">0</span></div>
+  </div>
+  <button class="pay-btn" onclick="openPay()">ชำระเงิน →</button>
+</div>
+
+<!-- PAYMENT MODAL -->
+<div class="modal-bg" id="modal" onclick="if(event.target===this)closePay()">
+  <div class="modal">
+    <div class="modal-close"></div>
+    <h3>รับเงินสด</h3>
+    <div class="total-display">
+      <div class="lbl">ยอดที่ต้องชำระ</div>
+      <div class="val">฿<span id="payTotal">0</span></div>
+    </div>
+    <div style="font-size:13px;color:var(--ink-soft);margin-bottom:8px;text-align:center;">เลือกจำนวนเงินที่ลูกค้าให้</div>
+    <div class="cash-grid">
+      <button class="cash-btn" onclick="setCash('exact')">พอดี</button>
+      <button class="cash-btn" onclick="setCash(20)">฿20</button>
+      <button class="cash-btn" onclick="setCash(50)">฿50</button>
+      <button class="cash-btn" onclick="setCash(100)">฿100</button>
+      <button class="cash-btn" onclick="setCash(500)">฿500</button>
+      <button class="cash-btn" onclick="setCash(1000)">฿1,000</button>
+    </div>
+    <div id="changeBox" style="text-align:center;margin-bottom:14px;font-size:14px;color:var(--ink-soft);"></div>
+    <button class="confirm-btn" onclick="confirmPay()">✓ ยืนยันการขาย</button>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <div class="check">✓</div>
+  <div>บันทึกการขายเรียบร้อย!</div>
+</div>
+
+<script>
+const products = [
+  { id: 1, name: 'นมจืด', emoji: '🥛', price: 10, stock: 24, unit: '/กล่อง' },
+  { id: 2, name: 'ขนมปังไส้ครีม', emoji: '🥐', price: 12, stock: 8, unit: '/ชิ้น' },
+  { id: 3, name: 'น้ำดื่ม', emoji: '💧', price: 7, stock: 42, unit: '/ขวด' },
+  { id: 4, name: 'ดินสอ HB', emoji: '✏️', price: 8, stock: 60, unit: '/แท่ง' },
+  { id: 5, name: 'ยางลบ', emoji: '🧽', price: 5, stock: 35, unit: '/ก้อน' },
+  { id: 6, name: 'สมุดเส้น', emoji: '📒', price: 15, stock: 18, unit: '/เล่ม' },
+  { id: 7, name: 'ลูกอม', emoji: '🍬', price: 2, stock: 120, unit: '/เม็ด' },
+  { id: 8, name: 'ช็อกโกแลต', emoji: '🍫', price: 18, stock: 14, unit: '/แท่ง' },
+];
+
+const cart = new Map();
+const grid = document.getElementById('grid');
+
+function render() {
+  grid.innerHTML = products.map(p => `
+    <div class="product ${cart.has(p.id) ? 'has-qty' : ''}" onclick="add(${p.id})">
+      <span class="qty-badge">${cart.get(p.id) || ''}</span>
+      <div class="product-img">${p.emoji}</div>
+      <div class="product-name">${p.name}</div>
+      <div class="product-stock">คงเหลือ ${p.stock} ${p.unit.replace('/','')}</div>
+      <div class="product-foot">
+        <div class="price">฿${p.price}<span class="unit">${p.unit}</span></div>
+        ${cart.has(p.id) ? `
+          <div class="stepper" onclick="event.stopPropagation()">
+            <button class="step-btn minus" onclick="remove(${p.id})">−</button>
+            <span class="step-qty">${cart.get(p.id)}</span>
+            <button class="step-btn plus" onclick="add(${p.id})">+</button>
+          </div>
+        ` : `
+          <button class="add-btn" onclick="event.stopPropagation();add(${p.id})">+</button>
+        `}
+      </div>
+    </div>
+  `).join('');
+  updateCart();
+}
+
+function add(id) {
+  cart.set(id, (cart.get(id) || 0) + 1);
+  render();
+}
+
+function remove(id) {
+  const cur = cart.get(id) || 0;
+  if (cur <= 1) cart.delete(id);
+  else cart.set(id, cur - 1);
+  render();
+}
+
+function updateCart() {
+  let total = 0, count = 0;
+  cart.forEach((qty, id) => {
+    const p = products.find(x => x.id === id);
+    total += p.price * qty;
+    count += qty;
+  });
+  document.getElementById('cartCount').textContent = count;
+  document.getElementById('cartTotal').textContent = total;
+  document.getElementById('cartBar').classList.toggle('empty', count === 0);
+}
+
+function openPay() {
+  if (cart.size === 0) return;
+  let total = 0;
+  cart.forEach((qty, id) => total += products.find(x => x.id === id).price * qty);
+  document.getElementById('payTotal').textContent = total;
+  document.getElementById('changeBox').textContent = '';
+  document.getElementById('modal').classList.add('show');
+}
+function closePay() {
+  document.getElementById('modal').classList.remove('show');
+}
+function setCash(v) {
+  const total = parseInt(document.getElementById('payTotal').textContent);
+  if (v === 'exact') {
+    document.getElementById('changeBox').textContent = 'ไม่มีเงินทอน';
+    return;
+  }
+  const change = v - total;
+  document.getElementById('changeBox').innerHTML =
+    change < 0
+      ? `<span style="color:#c44">เงินไม่พอ ขาดอีก ฿${-change}</span>`
+      : `รับเงิน <b>฿${v}</b> · เงินทอน <b style="color:var(--gold-600)">฿${change}</b>`;
+}
+function confirmPay() {
+  closePay();
+  cart.clear();
+  render();
+  const t = document.getElementById('toast');
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 1800);
+}
+
+render();
+</script>
+
+</body>
+</html>

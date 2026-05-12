@@ -1,0 +1,16 @@
+# OS / IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+
+# Logs
+*.log
+npm-debug.log*
+
+# Node (ถ้าเพิ่ม build tool ภายหลัง)
+node_modules/
+dist/
+.env
+.env.local

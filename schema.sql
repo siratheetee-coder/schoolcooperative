@@ -1,0 +1,130 @@
+-- ============================================================
+-- สหกรณ์โรงเรียน — Database Schema
+-- รันใน Supabase SQL Editor (Project → SQL → New query)
+-- ============================================================
+
+-- 1. PRODUCTS
+create table if not exists products (
+  id bigserial primary key,
+  name text not null,
+  emoji text default '🍱',
+  price int not null default 0,
+  stock int not null default 0,
+  low_at int not null default 10,
+  unit text default '/ชิ้น',
+  is_active boolean default true,
+  created_at timestamptz default now()
+);
+
+-- 2. MEMBERS
+create table if not exists members (
+  id bigserial primary key,
+  code text unique not null,
+  name text not null,
+  class text,
+  avatar text,
+  color int default 1,
+  pin text default '1234',
+  created_at timestamptz default now()
+);
+
+-- 3. SALES (header)
+create table if not exists sales (
+  id bigserial primary key,
+  seller_id bigint references members(id) on delete set null,
+  seller_name text,
+  total int not null,
+  date timestamptz default now()
+);
+create index if not exists sales_date_idx on sales (date desc);
+
+-- 4. SALE ITEMS (line items)
+create table if not exists sale_items (
+  id bigserial primary key,
+  sale_id bigint references sales(id) on delete cascade,
+  product_id bigint references products(id) on delete set null,
+  name text,
+  emoji text,
+  price int,
+  qty int
+);
+create index if not exists sale_items_sale_idx on sale_items (sale_id);
+
+-- 5. SHARE TRANSACTIONS (buy หุ้น / รับปันผล)
+create table if not exists share_txns (
+  id bigserial primary key,
+  member_id bigint references members(id) on delete cascade,
+  type text not null check (type in ('buy','dividend')),
+  shares int default 0,
+  amount int not null,
+  date timestamptz default now()
+);
+create index if not exists share_txns_member_idx on share_txns (member_id);
+
+-- ============================================================
+-- ROW LEVEL SECURITY (เปิดให้ทุกคนอ่าน-เขียนได้สำหรับ prototype)
+-- ⚠️ ก่อน production ควรเข้มงวดกว่านี้!
+-- ============================================================
+alter table products    enable row level security;
+alter table members     enable row level security;
+alter table sales       enable row level security;
+alter table sale_items  enable row level security;
+alter table share_txns  enable row level security;
+
+drop policy if exists "open" on products;
+drop policy if exists "open" on members;
+drop policy if exists "open" on sales;
+drop policy if exists "open" on sale_items;
+drop policy if exists "open" on share_txns;
+
+create policy "open" on products    for all using (true) with check (true);
+create policy "open" on members     for all using (true) with check (true);
+create policy "open" on sales       for all using (true) with check (true);
+create policy "open" on sale_items  for all using (true) with check (true);
+create policy "open" on share_txns  for all using (true) with check (true);
+
+-- ============================================================
+-- SEED DATA
+-- ============================================================
+
+-- Products
+insert into products (name, emoji, price, stock, low_at, unit) values
+  ('นมจืด',          '🥛', 10, 24,  10, '/กล่อง'),
+  ('ขนมปังไส้ครีม',   '🥐', 12, 8,   10, '/ชิ้น'),
+  ('น้ำดื่ม',         '💧', 7,  42,  15, '/ขวด'),
+  ('ดินสอ HB',       '✏️', 8,  60,  20, '/แท่ง'),
+  ('ยางลบ',          '🧽', 5,  0,   10, '/ก้อน'),
+  ('สมุดเส้น',       '📒', 15, 18,  10, '/เล่ม'),
+  ('ลูกอม',          '🍬', 2,  120, 30, '/เม็ด'),
+  ('ช็อกโกแลต',     '🍫', 18, 4,   10, '/แท่ง')
+on conflict do nothing;
+
+-- Members
+insert into members (code, name, class, avatar, color, pin) values
+  ('05421', 'น้องนภา ศรีสุข',   'ม.5/2', 'นภ', 1, '1234'),
+  ('05422', 'น้องบอส ใจดี',     'ม.5/2', 'บอ', 2, '1234'),
+  ('05323', 'น้องแพรว มงคล',   'ม.5/1', 'แพ', 3, '1234'),
+  ('05524', 'น้องเก่ง วงศ์ทอง', 'ม.5/3', 'เก', 4, '1234'),
+  ('04125', 'น้องฟ้า สวยงาม',   'ม.4/1', 'ฟ้', 5, '1234'),
+  ('04226', 'น้องโอ๊ต พิทักษ์', 'ม.4/2', 'โอ', 6, '1234'),
+  ('06127', 'น้องน้ำ ขำขัน',    'ม.6/1', 'น้', 1, '1234'),
+  ('03128', 'น้องเจ ภูมิใจ',    'ม.3/1', 'เจ', 2, '1234')
+on conflict (code) do nothing;
+
+-- Share transactions (initial holdings)
+insert into share_txns (member_id, type, shares, amount, date) values
+  (1, 'buy', 30,  300,  '2025-05-20'),
+  (1, 'buy', 20,  200,  '2025-08-15'),
+  (1, 'buy', 10,  100,  '2026-02-10'),
+  (2, 'buy', 50,  500,  '2025-05-22'),
+  (2, 'buy', 15,  150,  '2026-01-08'),
+  (3, 'buy', 25,  250,  '2025-06-01'),
+  (3, 'buy', 25,  250,  '2025-11-15'),
+  (4, 'buy', 100, 1000, '2025-05-15'),
+  (5, 'buy', 20,  200,  '2025-07-10'),
+  (5, 'buy', 10,  100,  '2026-03-05'),
+  (6, 'buy', 15,  150,  '2025-09-20'),
+  (7, 'buy', 80,  800,  '2025-05-18'),
+  (7, 'buy', 20,  200,  '2026-04-12'),
+  (8, 'buy', 12,  120,  '2025-10-05')
+on conflict do nothing;

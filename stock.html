@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>สหกรณ์โรงเรียน — จัดการสต็อก</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream-50: #FFFBF3;
+    --cream-100: #FFF8EE;
+    --cream-200: #F5EAD3;
+    --cream-300: #E8D6B3;
+
+    --green-400: #46A697;
+    --green-500: #2D7D6F;
+    --green-600: #226258;
+    --green-700: #174740;
+
+    --gold-400: #FFC857;
+    --gold-500: #FFB627;
+    --gold-600: #E89A0E;
+
+    --red-400: #FF8B7A;
+    --red-500: #E0594A;
+    --red-600: #B23E32;
+
+    --ink: #2A2218;
+    --ink-soft: #6B5E4C;
+
+    --shadow-sm:
+      -3px -3px 6px rgba(255,255,255,0.9),
+       3px  3px 8px rgba(154, 130, 90, 0.18);
+    --shadow-md:
+      -6px -6px 14px rgba(255,255,255,0.95),
+       6px  6px 18px rgba(154, 130, 90, 0.22);
+    --shadow-inset:
+      inset 4px 4px 8px rgba(154, 130, 90, 0.20),
+      inset -4px -4px 8px rgba(255,255,255,0.9);
+  }
+
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: 'Prompt', system-ui, sans-serif;
+    color: var(--ink);
+    background: radial-gradient(circle at 20% 0%, #FFF4E0 0%, var(--cream-100) 40%, var(--cream-200) 100%);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  .phone {
+    max-width: 430px;
+    margin: 0 auto;
+    min-height: 100vh;
+    background: var(--cream-100);
+    padding-bottom: 110px;
+  }
+
+  /* ---------- HEADER ---------- */
+  .header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: linear-gradient(135deg, var(--green-400), var(--green-500) 60%, var(--green-600));
+    color: white;
+    padding: 18px 20px 22px;
+    border-radius: 0 0 28px 28px;
+    box-shadow: 0 8px 24px rgba(23, 71, 64, 0.35);
+    overflow: hidden;
+  }
+  .header::before {
+    content: "";
+    position: absolute;
+    top: -40px; right: -40px;
+    width: 160px; height: 160px;
+    background: radial-gradient(circle, rgba(255,255,255,0.18), transparent 70%);
+    border-radius: 50%;
+  }
+  .header-top {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+    position: relative;
+    z-index: 1;
+  }
+  .back-btn {
+    width: 42px; height: 42px;
+    border-radius: 14px;
+    border: none;
+    background: rgba(255,255,255,0.18);
+    color: white;
+    font-size: 22px;
+    cursor: pointer;
+    box-shadow:
+      inset 1px 1px 2px rgba(255,255,255,0.3),
+      inset -1px -1px 2px rgba(0,0,0,0.1);
+    display: grid; place-items: center;
+    text-decoration: none;
+  }
+  .back-btn:active { transform: scale(0.92); }
+  .header h1 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 700;
+    flex: 1;
+  }
+  .header h1 .sub {
+    display: block;
+    font-size: 12px;
+    font-weight: 400;
+    opacity: 0.85;
+  }
+
+  /* ---------- STAT CARDS ---------- */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    position: relative;
+    z-index: 1;
+  }
+  .stat {
+    background: rgba(255,255,255,0.18);
+    backdrop-filter: blur(8px);
+    border-radius: 16px;
+    padding: 10px 8px;
+    text-align: center;
+    border: 1px solid rgba(255,255,255,0.25);
+  }
+  .stat .n { font-size: 22px; font-weight: 700; line-height: 1.1; }
+  .stat.warn .n { color: var(--gold-400); }
+  .stat.danger .n { color: #FFB4A8; }
+  .stat .l { font-size: 11px; opacity: 0.85; margin-top: 2px; }
+
+  /* ---------- SEARCH + FILTER ---------- */
+  .toolbar {
+    padding: 16px 20px 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .search-box {
+    background: var(--cream-50);
+    border-radius: 18px;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: var(--shadow-inset);
+  }
+  .search-box input {
+    flex: 1;
+    border: none;
+    background: none;
+    outline: none;
+    font-family: inherit;
+    font-size: 14px;
+    color: var(--ink);
+  }
+  .search-box .icon { font-size: 18px; opacity: 0.5; }
+
+  .filters {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .filters::-webkit-scrollbar { display: none; }
+  .filter {
+    flex-shrink: 0;
+    padding: 8px 14px;
+    border-radius: 12px;
+    background: var(--cream-50);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ink-soft);
+    box-shadow: var(--shadow-sm);
+    cursor: pointer;
+    border: none;
+    font-family: inherit;
+    transition: all 0.18s;
+  }
+  .filter.active {
+    background: linear-gradient(135deg, var(--green-400), var(--green-500));
+    color: white;
+    box-shadow:
+      0 4px 0 var(--green-700),
+      0 6px 12px rgba(34, 98, 88, 0.35);
+    transform: translateY(-2px);
+  }
+  .filter .badge {
+    margin-left: 4px;
+    padding: 1px 6px;
+    background: rgba(0,0,0,0.1);
+    border-radius: 8px;
+    font-size: 11px;
+  }
+  .filter.active .badge {
+    background: var(--gold-500);
+    color: var(--green-700);
+  }
+
+  /* ---------- PRODUCT LIST ---------- */
+  .list {
+    padding: 6px 20px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .item {
+    background: var(--cream-50);
+    border-radius: 22px;
+    padding: 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: var(--shadow-md);
+    cursor: pointer;
+    transition: transform 0.15s;
+    border: 1px solid rgba(255,255,255,0.6);
+    position: relative;
+  }
+  .item:active { transform: scale(0.98); }
+  .item-img {
+    width: 64px; height: 64px;
+    border-radius: 18px;
+    background: linear-gradient(145deg, #fff, var(--cream-200));
+    display: grid; place-items: center;
+    font-size: 36px;
+    box-shadow:
+      inset 3px 3px 6px rgba(154, 130, 90, 0.15),
+      inset -3px -3px 6px rgba(255,255,255,0.9);
+    flex-shrink: 0;
+    position: relative;
+    overflow: hidden;
+  }
+  .item-img::after {
+    content: "";
+    position: absolute; inset: 0;
+    background: radial-gradient(circle at 30% 25%, rgba(255,255,255,0.6), transparent 50%);
+  }
+  .item-info { flex: 1; min-width: 0; line-height: 1.3; }
+  .item-name { font-weight: 600; font-size: 15px; margin-bottom: 2px; }
+  .item-meta { font-size: 12px; color: var(--ink-soft); display: flex; gap: 8px; align-items: center; }
+  .item-meta .price { color: var(--gold-600); font-weight: 700; }
+  .item-meta .dot { width: 3px; height: 3px; border-radius: 50%; background: var(--ink-soft); opacity: 0.4; }
+
+  .stock-pill {
+    padding: 6px 12px;
+    border-radius: 14px;
+    font-size: 13px;
+    font-weight: 700;
+    text-align: center;
+    min-width: 60px;
+    line-height: 1.1;
+  }
+  .stock-pill .lbl { font-size: 10px; font-weight: 500; opacity: 0.75; }
+  .stock-pill.ok {
+    background: linear-gradient(135deg, #BFE8DD, #8FD3C2);
+    color: var(--green-700);
+    box-shadow:
+      0 3px 0 #5FB5A0,
+      0 5px 10px rgba(0,0,0,0.15);
+  }
+  .stock-pill.low {
+    background: linear-gradient(135deg, var(--gold-400), var(--gold-500));
+    color: var(--green-700);
+    box-shadow:
+      0 3px 0 var(--gold-600),
+      0 5px 10px rgba(232, 154, 14, 0.35);
+  }
+  .stock-pill.out {
+    background: linear-gradient(135deg, var(--red-400), var(--red-500));
+    color: white;
+    box-shadow:
+      0 3px 0 var(--red-600),
+      0 5px 10px rgba(178, 62, 50, 0.35);
+  }
+
+  /* warning corner */
+  .warn-corner {
+    position: absolute;
+    top: -6px; left: -6px;
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--gold-400), var(--gold-500));
+    color: var(--green-700);
+    display: grid; place-items: center;
+    font-size: 14px;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.25);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%,100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+  }
+
+  /* ---------- FAB ---------- */
+  .fab {
+    position: fixed;
+    bottom: 22px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: calc(100% - 40px);
+    max-width: 390px;
+    padding: 16px;
+    background: linear-gradient(135deg, var(--green-400), var(--green-500));
+    color: white;
+    border: none;
+    border-radius: 22px;
+    font-size: 16px;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    box-shadow:
+      0 8px 0 var(--green-700),
+      0 14px 28px rgba(23, 71, 64, 0.40);
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.12s;
+  }
+  .fab:active {
+    transform: translateX(-50%) translateY(4px);
+    box-shadow:
+      0 3px 0 var(--green-700),
+      0 6px 12px rgba(23, 71, 64, 0.35);
+  }
+  .fab .plus {
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    background: var(--gold-500);
+    color: var(--green-700);
+    display: grid; place-items: center;
+    font-size: 20px;
+    box-shadow: inset -1px -1px 2px rgba(0,0,0,0.2), inset 1px 1px 2px rgba(255,255,255,0.4);
+  }
+
+  /* ---------- MODAL ---------- */
+  .modal-bg {
+    position: fixed; inset: 0;
+    background: rgba(23, 71, 64, 0.45);
+    backdrop-filter: blur(4px);
+    z-index: 200;
+    display: none;
+    align-items: flex-end;
+    justify-content: center;
+  }
+  .modal-bg.show { display: flex; animation: fadein 0.2s; }
+  @keyframes fadein { from { opacity: 0; } to { opacity: 1; } }
+  .modal {
+    background: var(--cream-50);
+    width: 100%;
+    max-width: 430px;
+    border-radius: 28px 28px 0 0;
+    padding: 22px;
+    animation: slideup 0.28s cubic-bezier(0.2, 0.9, 0.3, 1);
+    box-shadow: 0 -20px 50px rgba(23, 71, 64, 0.3);
+    max-height: 88vh;
+    overflow-y: auto;
+  }
+  @keyframes slideup { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  .modal-close {
+    width: 40px; height: 4px;
+    background: var(--cream-300);
+    border-radius: 2px;
+    margin: 0 auto 14px;
+  }
+  .modal h3 {
+    margin: 0 0 16px;
+    font-size: 19px;
+    text-align: center;
+  }
+
+  .field { margin-bottom: 14px; }
+  .field label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ink-soft);
+    margin-bottom: 6px;
+    padding-left: 4px;
+  }
+  .field input {
+    width: 100%;
+    padding: 14px 16px;
+    border: none;
+    border-radius: 16px;
+    background: var(--cream-100);
+    font-family: inherit;
+    font-size: 15px;
+    color: var(--ink);
+    box-shadow: var(--shadow-inset);
+    outline: none;
+  }
+  .field input:focus { box-shadow: var(--shadow-inset), 0 0 0 3px rgba(70, 166, 151, 0.25); }
+
+  .emoji-grid {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 6px;
+    padding: 10px;
+    background: var(--cream-100);
+    border-radius: 16px;
+    box-shadow: var(--shadow-inset);
+  }
+  .emoji-pick {
+    aspect-ratio: 1;
+    border: none;
+    border-radius: 10px;
+    background: transparent;
+    font-size: 22px;
+    cursor: pointer;
+    transition: all 0.1s;
+  }
+  .emoji-pick:hover { background: var(--cream-200); }
+  .emoji-pick.sel {
+    background: linear-gradient(135deg, var(--green-400), var(--green-500));
+    transform: scale(1.1);
+    box-shadow: 0 3px 0 var(--green-700);
+  }
+
+  .quick-add {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  .quick-btn {
+    padding: 12px 4px;
+    background: var(--cream-100);
+    border: none;
+    border-radius: 14px;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--green-600);
+    cursor: pointer;
+    box-shadow: var(--shadow-sm);
+  }
+  .quick-btn:active { box-shadow: var(--shadow-inset); transform: scale(0.96); }
+
+  .actions { display: flex; gap: 10px; margin-top: 6px; }
+  .btn {
+    flex: 1;
+    padding: 15px;
+    border: none;
+    border-radius: 18px;
+    font-size: 15px;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.12s;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--green-400), var(--green-500));
+    color: white;
+    box-shadow: 0 6px 0 var(--green-700), 0 10px 18px rgba(23, 71, 64, 0.35);
+  }
+  .btn-primary:active { transform: translateY(4px); box-shadow: 0 2px 0 var(--green-700); }
+  .btn-danger {
+    background: linear-gradient(135deg, var(--red-400), var(--red-500));
+    color: white;
+    box-shadow: 0 6px 0 var(--red-600), 0 10px 18px rgba(178, 62, 50, 0.35);
+    flex: 0 0 90px;
+  }
+  .btn-danger:active { transform: translateY(4px); box-shadow: 0 2px 0 var(--red-600); }
+  .btn-ghost {
+    background: var(--cream-100);
+    color: var(--ink);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .toast {
+    position: fixed;
+    top: 80px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-100px);
+    background: var(--green-600);
+    color: white;
+    padding: 14px 22px;
+    border-radius: 18px;
+    font-weight: 600;
+    box-shadow: 0 10px 24px rgba(0,0,0,0.3);
+    z-index: 300;
+    transition: transform 0.35s cubic-bezier(0.2, 0.9, 0.3, 1.3);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+  .toast .check {
+    background: var(--gold-500);
+    color: var(--green-700);
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    display: grid; place-items: center;
+    font-weight: 900;
+  }
+</style>
+</head>
+<body>
+
+<div class="phone">
+
+  <header class="header">
+    <div class="header-top">
+      <a href="index.html" class="back-btn">←</a>
+      <h1>
+        จัดการสต็อก
+        <span class="sub">สหกรณ์โรงเรียน · ร้านนักเรียน</span>
+      </h1>
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="n" id="statTotal">0</div><div class="l">รายการ</div></div>
+      <div class="stat warn"><div class="n" id="statLow">0</div><div class="l">ใกล้หมด</div></div>
+      <div class="stat danger"><div class="n" id="statOut">0</div><div class="l">หมดสต็อก</div></div>
+    </div>
+  </header>
+
+  <div class="toolbar">
+    <div class="search-box">
+      <span class="icon">🔍</span>
+      <input type="text" id="search" placeholder="ค้นหาสินค้า..." oninput="render()" />
+    </div>
+    <div class="filters">
+      <button class="filter active" data-filter="all" onclick="setFilter('all')">ทั้งหมด <span class="badge" id="cAll">0</span></button>
+      <button class="filter" data-filter="low" onclick="setFilter('low')">⚠️ ใกล้หมด <span class="badge" id="cLow">0</span></button>
+      <button class="filter" data-filter="out" onclick="setFilter('out')">❌ หมด <span class="badge" id="cOut">0</span></button>
+    </div>
+  </div>
+
+  <div class="list" id="list"></div>
+
+</div>
+
+<button class="fab" onclick="openAdd()">
+  <span class="plus">+</span>
+  เพิ่มสินค้าใหม่
+</button>
+
+<!-- EDIT / ADD MODAL -->
+<div class="modal-bg" id="modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-close"></div>
+    <h3 id="modalTitle">แก้ไขสินค้า</h3>
+
+    <div class="field">
+      <label>เลือกรูป</label>
+      <div class="emoji-grid" id="emojiGrid"></div>
+    </div>
+
+    <div class="field">
+      <label>ชื่อสินค้า</label>
+      <input type="text" id="fName" placeholder="เช่น นมจืด" />
+    </div>
+
+    <div class="field">
+      <label>ราคา (บาท)</label>
+      <input type="number" id="fPrice" placeholder="0" inputmode="numeric" />
+    </div>
+
+    <div class="field" id="addStockField">
+      <label>เพิ่มสต็อก (ปัจจุบัน: <span id="curStock">0</span>)</label>
+      <div class="quick-add">
+        <button class="quick-btn" onclick="addStock(10)">+10</button>
+        <button class="quick-btn" onclick="addStock(20)">+20</button>
+        <button class="quick-btn" onclick="addStock(50)">+50</button>
+        <button class="quick-btn" onclick="addStock(100)">+100</button>
+      </div>
+      <input type="number" id="fStock" placeholder="หรือพิมพ์จำนวน" inputmode="numeric" />
+    </div>
+
+    <div class="actions">
+      <button class="btn btn-ghost" onclick="closeModal()">ยกเลิก</button>
+      <button class="btn btn-danger" id="deleteBtn" onclick="deleteItem()" style="display:none;">ลบ</button>
+      <button class="btn btn-primary" onclick="saveItem()">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast">
+  <div class="check">✓</div>
+  <div id="toastMsg">บันทึกเรียบร้อย</div>
+</div>
+
+<script>
+const EMOJIS = ['🥛','🥐','💧','✏️','🧽','📒','🍬','🍫','🍪','🍞','🧃','🍙','🍡','🍩','🧁','🍎','🍊','🍌','🥪','🍔','📏','📐','✂️','🖍️','🖊️','📌','📎','🔖'];
+
+let products = [
+  { id: 1, name: 'นมจืด', emoji: '🥛', price: 10, stock: 24, lowAt: 10 },
+  { id: 2, name: 'ขนมปังไส้ครีม', emoji: '🥐', price: 12, stock: 8, lowAt: 10 },
+  { id: 3, name: 'น้ำดื่ม', emoji: '💧', price: 7, stock: 42, lowAt: 15 },
+  { id: 4, name: 'ดินสอ HB', emoji: '✏️', price: 8, stock: 60, lowAt: 20 },
+  { id: 5, name: 'ยางลบ', emoji: '🧽', price: 5, stock: 0, lowAt: 10 },
+  { id: 6, name: 'สมุดเส้น', emoji: '📒', price: 15, stock: 18, lowAt: 10 },
+  { id: 7, name: 'ลูกอม', emoji: '🍬', price: 2, stock: 120, lowAt: 30 },
+  { id: 8, name: 'ช็อกโกแลต', emoji: '🍫', price: 18, stock: 4, lowAt: 10 },
+];
+
+let currentFilter = 'all';
+let editingId = null;
+let selectedEmoji = '🍱';
+let nextId = 9;
+
+function stockStatus(p) {
+  if (p.stock <= 0) return 'out';
+  if (p.stock <= p.lowAt) return 'low';
+  return 'ok';
+}
+
+function render() {
+  const q = document.getElementById('search').value.trim().toLowerCase();
+  const list = document.getElementById('list');
+
+  const filtered = products.filter(p => {
+    if (q && !p.name.toLowerCase().includes(q)) return false;
+    if (currentFilter === 'all') return true;
+    return stockStatus(p) === currentFilter;
+  });
+
+  list.innerHTML = filtered.length === 0
+    ? `<div style="text-align:center;padding:40px 20px;color:var(--ink-soft);">
+         <div style="font-size:48px;margin-bottom:10px;opacity:0.5;">📭</div>
+         ไม่พบสินค้า
+       </div>`
+    : filtered.map(p => {
+        const s = stockStatus(p);
+        const label = s === 'out' ? 'หมด' : s === 'low' ? 'ใกล้หมด' : 'ปกติ';
+        return `
+          <div class="item" onclick="openEdit(${p.id})">
+            ${s !== 'ok' ? `<div class="warn-corner">!</div>` : ''}
+            <div class="item-img">${p.emoji}</div>
+            <div class="item-info">
+              <div class="item-name">${p.name}</div>
+              <div class="item-meta">
+                <span class="price">฿${p.price}</span>
+                <span class="dot"></span>
+                <span>แจ้งเตือนที่ ${p.lowAt} ชิ้น</span>
+              </div>
+            </div>
+            <div class="stock-pill ${s}">
+              ${p.stock}
+              <div class="lbl">${label}</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+  // counters
+  document.getElementById('statTotal').textContent = products.length;
+  const low = products.filter(p => stockStatus(p) === 'low').length;
+  const out = products.filter(p => stockStatus(p) === 'out').length;
+  document.getElementById('statLow').textContent = low;
+  document.getElementById('statOut').textContent = out;
+  document.getElementById('cAll').textContent = products.length;
+  document.getElementById('cLow').textContent = low;
+  document.getElementById('cOut').textContent = out;
+}
+
+function setFilter(f) {
+  currentFilter = f;
+  document.querySelectorAll('.filter').forEach(el => {
+    el.classList.toggle('active', el.dataset.filter === f);
+  });
+  render();
+}
+
+function renderEmojis() {
+  document.getElementById('emojiGrid').innerHTML = EMOJIS.map(e =>
+    `<button class="emoji-pick ${e === selectedEmoji ? 'sel' : ''}" onclick="selectEmoji('${e}')">${e}</button>`
+  ).join('');
+}
+function selectEmoji(e) {
+  selectedEmoji = e;
+  renderEmojis();
+}
+
+function openAdd() {
+  editingId = null;
+  selectedEmoji = '🍱';
+  document.getElementById('modalTitle').textContent = 'เพิ่มสินค้าใหม่';
+  document.getElementById('fName').value = '';
+  document.getElementById('fPrice').value = '';
+  document.getElementById('fStock').value = '';
+  document.getElementById('curStock').textContent = '0';
+  document.getElementById('deleteBtn').style.display = 'none';
+  renderEmojis();
+  document.getElementById('modal').classList.add('show');
+}
+
+function openEdit(id) {
+  const p = products.find(x => x.id === id);
+  if (!p) return;
+  editingId = id;
+  selectedEmoji = p.emoji;
+  document.getElementById('modalTitle').textContent = 'แก้ไขสินค้า';
+  document.getElementById('fName').value = p.name;
+  document.getElementById('fPrice').value = p.price;
+  document.getElementById('fStock').value = '';
+  document.getElementById('curStock').textContent = p.stock;
+  document.getElementById('deleteBtn').style.display = 'block';
+  renderEmojis();
+  document.getElementById('modal').classList.add('show');
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.remove('show');
+}
+
+function addStock(n) {
+  const cur = parseInt(document.getElementById('fStock').value) || 0;
+  document.getElementById('fStock').value = cur + n;
+}
+
+function saveItem() {
+  const name = document.getElementById('fName').value.trim();
+  const price = parseInt(document.getElementById('fPrice').value) || 0;
+  const addQty = parseInt(document.getElementById('fStock').value) || 0;
+
+  if (!name) { showToast('กรุณาใส่ชื่อสินค้า', false); return; }
+  if (price <= 0) { showToast('กรุณาใส่ราคา', false); return; }
+
+  if (editingId) {
+    const p = products.find(x => x.id === editingId);
+    p.name = name; p.price = price; p.emoji = selectedEmoji;
+    p.stock += addQty;
+    showToast(addQty > 0 ? `เพิ่มสต็อก ${name} +${addQty}` : 'แก้ไขเรียบร้อย');
+  } else {
+    products.push({
+      id: nextId++,
+      name, price,
+      emoji: selectedEmoji,
+      stock: addQty,
+      lowAt: 10
+    });
+    showToast(`เพิ่ม "${name}" เรียบร้อย`);
+  }
+  closeModal();
+  render();
+}
+
+function deleteItem() {
+  if (!editingId) return;
+  const p = products.find(x => x.id === editingId);
+  if (!confirm(`ลบ "${p.name}" ออกจากสต็อก?`)) return;
+  products = products.filter(x => x.id !== editingId);
+  closeModal();
+  showToast('ลบเรียบร้อย');
+  render();
+}
+
+function showToast(msg) {
+  document.getElementById('toastMsg').textContent = msg;
+  const t = document.getElementById('toast');
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 1800);
+}
+
+render();
+</script>
+
+</body>
+</html>

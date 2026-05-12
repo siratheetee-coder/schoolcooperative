@@ -1,0 +1,42 @@
+{
+  "name": "สหกรณ์โรงเรียน",
+  "short_name": "สหกรณ์",
+  "description": "ระบบจัดการร้านสหกรณ์โรงเรียนสำหรับนักเรียนผู้ขาย",
+  "start_url": "./app.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#2D7D6F",
+  "theme_color": "#2D7D6F",
+  "lang": "th",
+  "dir": "ltr",
+  "categories": ["education", "business", "productivity"],
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "หน้าขาย (POS)",
+      "short_name": "ขาย",
+      "url": "./app.html#pos",
+      "icons": [{ "src": "icon.svg", "sizes": "any", "type": "image/svg+xml" }]
+    },
+    {
+      "name": "รายงานยอดขาย",
+      "short_name": "รายงาน",
+      "url": "./app.html#report",
+      "icons": [{ "src": "icon.svg", "sizes": "any", "type": "image/svg+xml" }]
+    }
+  ]
+}

@@ -518,10 +518,11 @@
 
   .cash-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
     margin-bottom: 16px;
   }
+  .cash-btn { padding: 14px 4px !important; font-size: 13px !important; }
   .cash-btn {
     padding: 14px 8px;
     background: var(--cream-100);
@@ -556,6 +557,273 @@
   .confirm-btn:active {
     transform: translateY(5px);
     box-shadow: 0 2px 0 var(--green-700), 0 4px 10px rgba(23,71,64,0.35);
+  }
+
+  /* ============== ADMIN THEME (yellow) ============== */
+  /* When in admin view, override header to yellow */
+  body.admin-mode .header {
+    background: linear-gradient(135deg, var(--gold-400), var(--gold-500) 55%, var(--gold-600));
+    box-shadow: 0 8px 24px rgba(232, 154, 14, 0.4);
+  }
+  body.admin-mode .header::after {
+    background: radial-gradient(circle, rgba(70, 166, 151, 0.25), transparent 70%);
+  }
+  body.admin-mode .header,
+  body.admin-mode .header h1,
+  body.admin-mode .header .sub,
+  body.admin-mode .brand-text .name,
+  body.admin-mode .brand-text .sub {
+    color: var(--green-700);
+  }
+  body.admin-mode .icon-btn {
+    background: rgba(23, 71, 64, 0.18);
+    color: var(--green-700);
+  }
+  body.admin-mode .seller-card {
+    background: rgba(23, 71, 64, 0.12);
+    border: 1px solid rgba(23, 71, 64, 0.15);
+  }
+  body.admin-mode .seller-card,
+  body.admin-mode .seller-info .label,
+  body.admin-mode .seller-info .name,
+  body.admin-mode .seller-stat .lbl {
+    color: var(--green-700);
+  }
+  body.admin-mode .seller-stat .num { color: var(--green-600); }
+  body.admin-mode .brand-logo {
+    background: linear-gradient(135deg, #fff, var(--cream-200));
+    box-shadow:
+      inset -2px -2px 4px rgba(0,0,0,0.1),
+      inset 2px 2px 4px rgba(255,255,255,0.8),
+      0 4px 0 var(--cream-300),
+      0 6px 12px rgba(0,0,0,0.2);
+  }
+  body.admin-mode .role-badge.teacher {
+    background: linear-gradient(135deg, var(--green-400), var(--green-500));
+    color: white;
+    box-shadow: 0 2px 0 var(--green-700);
+  }
+
+  /* Admin view tiles */
+  .admin-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    padding: 14px 20px 4px;
+  }
+  .a-card {
+    background: linear-gradient(145deg, #fff, var(--cream-100));
+    border-radius: 20px;
+    padding: 14px 10px;
+    text-align: center;
+    box-shadow:
+      var(--shadow-md),
+      inset 0 0 0 1px rgba(255, 200, 87, 0.25);
+    border-top: 3px solid var(--gold-500);
+    position: relative;
+    overflow: hidden;
+  }
+  .a-card .icoSmall {
+    font-size: 22px;
+    margin-bottom: 4px;
+  }
+  .a-card .n { font-size: 22px; font-weight: 800; line-height: 1.1; color: var(--gold-600); }
+  .a-card .l { font-size: 11px; color: var(--ink-soft); margin-top: 2px; font-weight: 600; }
+  .a-card.alert .n { color: var(--red-500); }
+  .a-card.green .n { color: var(--green-600); }
+
+  .admin-section-head {
+    padding: 16px 20px 8px;
+    font-size: 13px;
+    color: var(--ink-soft);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .admin-section-head::before {
+    content: "";
+    display: block;
+    width: 4px;
+    height: 16px;
+    background: linear-gradient(180deg, var(--gold-400), var(--gold-500));
+    border-radius: 2px;
+  }
+
+  .admin-tools {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    padding: 0 20px;
+  }
+  .tool-btn {
+    background: var(--cream-50);
+    border: none;
+    border-radius: 22px;
+    padding: 18px 14px;
+    font-family: inherit;
+    cursor: pointer;
+    box-shadow: var(--shadow-md);
+    border: 1px solid rgba(255, 200, 87, 0.4);
+    transition: all 0.15s;
+    text-align: left;
+    position: relative;
+  }
+  .tool-btn:active { transform: translateY(2px) scale(0.98); box-shadow: var(--shadow-sm); }
+  .tool-btn .ti {
+    width: 42px; height: 42px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, var(--gold-400), var(--gold-500));
+    color: var(--green-700);
+    display: grid; place-items: center;
+    font-size: 22px;
+    margin-bottom: 8px;
+    box-shadow: 0 4px 0 var(--gold-600), 0 6px 10px rgba(0,0,0,0.15);
+  }
+  .tool-btn.green .ti { background: linear-gradient(135deg, var(--green-400), var(--green-500)); color: white; box-shadow: 0 4px 0 var(--green-700);}
+  .tool-btn.red .ti { background: linear-gradient(135deg, var(--red-400), var(--red-500)); color: white; box-shadow: 0 4px 0 var(--red-600);}
+  .tool-btn.blue .ti { background: linear-gradient(135deg, #7AB8E0, #4D8FCA); color: white; box-shadow: 0 4px 0 #2D6FA3;}
+  .tool-btn .tt { font-weight: 700; font-size: 14px; color: var(--ink); line-height: 1.2;}
+  .tool-btn .ts { font-size: 11px; color: var(--ink-soft); margin-top: 2px; line-height: 1.2;}
+  .tool-btn .tb {
+    position: absolute;
+    top: 12px; right: 12px;
+    background: var(--red-500);
+    color: white;
+    font-size: 11px;
+    font-weight: 800;
+    padding: 2px 8px;
+    border-radius: 10px;
+    box-shadow: 0 2px 0 var(--red-600);
+    animation: bellPulse 1.4s infinite;
+  }
+
+  /* Admin members list */
+  .admin-members { padding: 4px 20px 20px; display: flex; flex-direction: column; gap: 10px; }
+  .a-member {
+    background: var(--cream-50);
+    border-radius: 18px;
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: var(--shadow-sm);
+    cursor: pointer;
+    transition: transform 0.15s;
+  }
+  .a-member:active { transform: scale(0.98); }
+  .a-member .av-small {
+    width: 38px; height: 38px;
+    border-radius: 12px;
+    display: grid; place-items: center;
+    color: white;
+    font-weight: 700;
+    font-size: 14px;
+    box-shadow: 0 2px 0 rgba(0,0,0,0.15);
+    flex-shrink: 0;
+  }
+  .a-member .info { flex: 1; line-height: 1.2; min-width: 0; }
+  .a-member .info .n { font-weight: 600; font-size: 14px; }
+  .a-member .info .s { font-size: 11px; color: var(--ink-soft); }
+  .a-member .arrow { color: var(--ink-soft); font-size: 18px; }
+
+  /* Admin FAB (เพิ่มสมาชิก) — yellow */
+  .admin-fab {
+    position: fixed;
+    bottom: calc(var(--nav-height) + 10px);
+    left: 50%;
+    transform: translateX(-50%);
+    width: calc(100% - 32px);
+    max-width: 398px;
+    padding: 16px;
+    background: linear-gradient(135deg, var(--gold-400), var(--gold-500));
+    color: var(--green-700);
+    border: none;
+    border-radius: 22px;
+    font-size: 16px;
+    font-weight: 800;
+    font-family: inherit;
+    cursor: pointer;
+    box-shadow: 0 10px 0 var(--gold-600), 0 18px 32px rgba(232,154,14,0.45);
+    z-index: 90;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.12s, opacity 0.2s;
+  }
+  .admin-fab.hidden { opacity: 0; pointer-events: none; transform: translateX(-50%) translateY(120%);}
+  .admin-fab:active { transform: translateX(-50%) translateY(4px); box-shadow: 0 3px 0 var(--gold-600); }
+  .admin-fab .plus {
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    background: var(--green-600);
+    color: white;
+    display: grid; place-items: center;
+    font-size: 20px;
+    box-shadow: inset -1px -1px 2px rgba(0,0,0,0.2), inset 1px 1px 2px rgba(255,255,255,0.4);
+  }
+
+  /* Bottom nav 5-col for teacher */
+  .bottom-nav-inner.with-admin {
+    grid-template-columns: repeat(5, 1fr);
+  }
+  .nav-item.admin-nav .ico { font-size: 22px; }
+  .nav-item.admin-nav.active {
+    background: linear-gradient(135deg, var(--gold-400), var(--gold-500));
+    color: var(--green-700);
+    box-shadow: 0 4px 0 var(--gold-600), 0 6px 12px rgba(232,154,14,0.4);
+  }
+
+  /* color swatches for member modal */
+  .color-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 8px;
+  }
+  .color-pick {
+    aspect-ratio: 1;
+    border-radius: 12px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.1s;
+  }
+  .color-pick.sel { transform: scale(1.15); box-shadow: 0 0 0 3px var(--gold-500); }
+  .color-pick.c1 { background: linear-gradient(135deg, #FF8B7A, #E0594A);}
+  .color-pick.c2 { background: linear-gradient(135deg, #7AB8E0, #4D8FCA);}
+  .color-pick.c3 { background: linear-gradient(135deg, #B89AE0, #8266CA);}
+  .color-pick.c4 { background: linear-gradient(135deg, var(--green-400), var(--green-500));}
+  .color-pick.c5 { background: linear-gradient(135deg, var(--gold-400), var(--gold-500));}
+  .color-pick.c6 { background: linear-gradient(135deg, #E08AB8, #C44D8F);}
+
+  .role-toggle {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .role-opt {
+    padding: 12px 8px;
+    background: var(--cream-100);
+    border: none;
+    border-radius: 14px;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: var(--shadow-sm);
+    color: var(--ink-soft);
+  }
+  .role-opt.sel {
+    background: linear-gradient(135deg, var(--green-400), var(--green-500));
+    color: white;
+    box-shadow: 0 4px 0 var(--green-700);
+  }
+  .role-opt.sel.teacher {
+    background: linear-gradient(135deg, var(--gold-400), var(--gold-500));
+    color: var(--green-700);
+    box-shadow: 0 4px 0 var(--gold-600);
   }
 
   /* ============== ROLE BADGE + BELL ============== */
@@ -2023,6 +2291,46 @@
     </div>
   </div>
 
+  <!-- ============== VIEW: ADMIN (teacher only) ============== -->
+  <div class="view" id="view-admin">
+    <div class="admin-stats">
+      <div class="a-card green"><div class="icoSmall">💰</div><div class="n">฿<span id="aSales">0</span></div><div class="l">ยอดวันนี้</div></div>
+      <div class="a-card"><div class="icoSmall">🧾</div><div class="n" id="aBills">0</div><div class="l">บิลวันนี้</div></div>
+      <div class="a-card alert"><div class="icoSmall">📋</div><div class="n" id="aPending">0</div><div class="l">คำขอรอ</div></div>
+      <div class="a-card alert"><div class="icoSmall">🚫</div><div class="n" id="aVoided">0</div><div class="l">บิลยกเลิก</div></div>
+      <div class="a-card"><div class="icoSmall">⚠️</div><div class="n" id="aLow">0</div><div class="l">สินค้าใกล้หมด</div></div>
+      <div class="a-card green"><div class="icoSmall">👥</div><div class="n" id="aMembers">0</div><div class="l">สมาชิก</div></div>
+    </div>
+
+    <div class="admin-section-head">เครื่องมือบริหาร</div>
+    <div class="admin-tools">
+      <button class="tool-btn" onclick="openRequests()">
+        <div class="ti">📋</div>
+        <div class="tt">คำขออนุมัติ</div>
+        <div class="ts">นักเรียนขอแก้สต็อก</div>
+        <span class="tb" id="toolReqBadge" style="display:none;">0</span>
+      </button>
+      <button class="tool-btn green" onclick="setView('shares')">
+        <div class="ti">💎</div>
+        <div class="tt">หุ้น & ปันผล</div>
+        <div class="ts">จ่ายปันผลสิ้นปี</div>
+      </button>
+      <button class="tool-btn red" onclick="showVoidedList()">
+        <div class="ti">🚫</div>
+        <div class="tt">บิลที่ยกเลิก</div>
+        <div class="ts">ดูประวัติยกเลิก</div>
+      </button>
+      <button class="tool-btn blue" onclick="setView('report')">
+        <div class="ti">📊</div>
+        <div class="tt">รายงานละเอียด</div>
+        <div class="ts">Export Excel/PDF</div>
+      </button>
+    </div>
+
+    <div class="admin-section-head">จัดการสมาชิก</div>
+    <div class="admin-members" id="adminMembers"></div>
+  </div>
+
   <!-- ============== VIEW: SHARES ============== -->
   <div class="view" id="view-shares">
     <div class="hero-shares">
@@ -2096,6 +2404,12 @@
   <button class="pay-btn" onclick="openPay()">ชำระเงิน →</button>
 </div>
 
+<!-- ============== ADMIN FAB ============== -->
+<button class="admin-fab hidden" id="adminFab" onclick="openMemberModal()">
+  <span class="plus">+</span>
+  เพิ่มสมาชิกใหม่
+</button>
+
 <!-- ============== SHARE FAB ============== -->
 <button class="share-fab hidden" id="shareFab" onclick="openBuyShare()">
   <span class="plus">+</span>
@@ -2123,6 +2437,9 @@
     <button class="nav-item" data-view="shares" onclick="setView('shares')">
       <span class="ico">💎</span><span class="lbl">หุ้น</span>
     </button>
+    <button class="nav-item admin-nav" data-view="admin" onclick="setView('admin')" style="display:none;" id="navAdmin">
+      <span class="ico">👑</span><span class="lbl">Admin</span>
+    </button>
   </div>
 </nav>
 
@@ -2138,6 +2455,8 @@
     <div style="font-size:13px;color:var(--ink-soft);margin-bottom:8px;text-align:center;">เลือกจำนวนเงินที่ลูกค้าให้</div>
     <div class="cash-grid">
       <button class="cash-btn" onclick="setCash('exact')">พอดี</button>
+      <button class="cash-btn" onclick="setCash(5)">฿5</button>
+      <button class="cash-btn" onclick="setCash(10)">฿10</button>
       <button class="cash-btn" onclick="setCash(20)">฿20</button>
       <button class="cash-btn" onclick="setCash(50)">฿50</button>
       <button class="cash-btn" onclick="setCash(100)">฿100</button>
@@ -2243,6 +2562,60 @@
     <div class="actions" style="margin-top:18px;">
       <button class="btn btn-ghost" onclick="closeDetail()">ปิด</button>
       <button class="btn btn-primary" onclick="buyForDetail()">+ ซื้อหุ้นเพิ่ม</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============== MEMBER MODAL (admin) ============== -->
+<div class="modal-bg" id="memberModal" onclick="if(event.target===this)closeMemberModal()">
+  <div class="modal">
+    <div class="modal-close"></div>
+    <h3 id="memberModalTitle">เพิ่มสมาชิกใหม่</h3>
+
+    <div class="field">
+      <label>รหัสนักเรียน</label>
+      <input type="text" id="mCode" placeholder="เช่น 05421 หรือ T0001" />
+    </div>
+    <div class="field">
+      <label>ชื่อ-นามสกุล</label>
+      <input type="text" id="mName" placeholder="เช่น น้องนภา ศรีสุข" />
+    </div>
+    <div class="field">
+      <label>ชั้น / ห้อง</label>
+      <input type="text" id="mClass" placeholder="เช่น ม.5/2 หรือ ครูที่ปรึกษา" />
+    </div>
+    <div class="field">
+      <label>ตัวอักษร avatar (2 ตัว)</label>
+      <input type="text" id="mAvatar" maxlength="2" placeholder="เช่น นภ" />
+    </div>
+    <div class="field">
+      <label>สี avatar</label>
+      <div class="color-grid" id="colorGrid"></div>
+    </div>
+    <div class="field">
+      <label>บทบาท</label>
+      <div class="role-toggle">
+        <button class="role-opt sel" id="roleStudent" onclick="selectRole('student')">👨‍🎓 นักเรียน</button>
+        <button class="role-opt teacher" id="roleTeacher" onclick="selectRole('teacher')">👨‍🏫 ครู</button>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="btn btn-ghost" onclick="closeMemberModal()">ยกเลิก</button>
+      <button class="btn btn-danger" id="mDeleteBtn" onclick="deleteMember()" style="display:none;">ลบ</button>
+      <button class="btn btn-primary" onclick="saveMember()">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============== VOIDED SALES MODAL ============== -->
+<div class="modal-bg" id="voidedListModal" onclick="if(event.target===this)closeVoidedList()">
+  <div class="modal">
+    <div class="modal-close"></div>
+    <h3>🚫 บิลที่ยกเลิก</h3>
+    <div id="voidedList" style="max-height:60vh;overflow-y:auto;"></div>
+    <div class="actions" style="margin-top:14px;">
+      <button class="btn btn-ghost" onclick="closeVoidedList()">ปิด</button>
     </div>
   </div>
 </div>
@@ -2370,6 +2743,7 @@ const VIEW_META = {
   stock:  { title: 'จัดการสต็อก',     sub: 'สหกรณ์โรงเรียน',         showCart: false },
   report: { title: 'รายงานยอดขาย',   sub: 'สหกรณ์โรงเรียน',         showCart: false },
   shares: { title: 'หุ้น & ปันผล',    sub: 'สหกรณ์โรงเรียน',         showCart: false },
+  admin:  { title: '👑 หน้าครู',       sub: 'จัดการระบบสหกรณ์',        showCart: false },
 };
 
 function setView(name) {
@@ -2380,11 +2754,15 @@ function setView(name) {
   document.getElementById('headerSub').textContent = meta.sub;
   document.getElementById('cartBar').classList.toggle('hidden', !meta.showCart);
   document.getElementById('stockFab').classList.toggle('hidden', name !== 'stock');
-  document.getElementById('shareFab').classList.toggle('hidden', !(name === 'shares' && shareView === 'members'));
+  document.getElementById('shareFab').classList.toggle('hidden', !(name === 'shares' && shareView === 'members' && isTeacher()));
+  document.getElementById('adminFab').classList.toggle('hidden', name !== 'admin');
+  // toggle yellow admin theme on body
+  document.body.classList.toggle('admin-mode', name === 'admin');
   if (name === 'stock') renderStock();
   if (name === 'pos') renderProducts();
   if (name === 'report') renderReport();
   if (name === 'shares') { renderShareHero(); renderMembers(); applyRoleVisibility(); }
+  if (name === 'admin') renderAdmin();
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -3215,6 +3593,18 @@ function setUser(m) {
     : '<span class="role-badge student">นักเรียน</span>';
   document.getElementById('userName').innerHTML = `${m.name} (รหัส ${m.code})${badge}`;
   localStorage.setItem('coopUser', m.id);
+  // toggle admin nav button + 5-column layout
+  const navAdmin = document.getElementById('navAdmin');
+  const navInner = document.querySelector('.bottom-nav-inner');
+  if (isTeacher()) {
+    navAdmin.style.display = 'flex';
+    navInner.classList.add('with-admin');
+  } else {
+    navAdmin.style.display = 'none';
+    navInner.classList.remove('with-admin');
+    // if student happens to be on admin view, redirect
+    if (document.getElementById('view-admin').classList.contains('active')) setView('pos');
+  }
   updateTodaySales();
   updateBellBadge();
   applyRoleVisibility();
@@ -3228,6 +3618,12 @@ function updateBellBadge() {
   const count = isTeacher() ? n : pendingRequests.filter(r => r.status==='pending' && r.requestedById === currentUser?.id).length;
   badge.textContent = count;
   badge.style.display = count > 0 ? 'grid' : 'none';
+  // Also update admin tool badge if visible
+  const toolBadge = document.getElementById('toolReqBadge');
+  if (toolBadge) {
+    if (n > 0 && isTeacher()) { toolBadge.style.display = 'inline-block'; toolBadge.textContent = n; }
+    else toolBadge.style.display = 'none';
+  }
 }
 
 function applyRoleVisibility() {
@@ -3286,7 +3682,11 @@ function logout() {
   if (!confirm(`ออกจากระบบ${currentUser ? ' ' + currentUser.name : ''}?`)) return;
   localStorage.removeItem('coopUser');
   currentUser = null;
+  document.body.classList.remove('admin-mode');
+  document.querySelector('.bottom-nav-inner').classList.remove('with-admin');
+  document.getElementById('navAdmin').style.display = 'none';
   document.getElementById('loginScreen').classList.remove('hidden');
+  setView('pos');
 }
 
 // Enter key in login
@@ -3954,6 +4354,202 @@ function voidSale() {
   renderProducts();
   showToast(`ยกเลิกบิล #${s.id} เรียบร้อย`);
 }
+
+// ============== ADMIN VIEW ==============
+function renderAdmin() {
+  if (!isTeacher()) { setView('pos'); return; }
+
+  // Today's metrics
+  const today = new Date().toDateString();
+  const todaysSales = sales.filter(s => !s.isVoided && s.date.toDateString() === today);
+  const totalToday = todaysSales.reduce((sum, s) => sum + s.total, 0);
+  document.getElementById('aSales').textContent = totalToday.toLocaleString();
+  document.getElementById('aBills').textContent = todaysSales.length;
+
+  // Pending requests
+  const pending = pendingRequests.filter(r => r.status === 'pending').length;
+  document.getElementById('aPending').textContent = pending;
+
+  // Voided sales (all time)
+  const voided = sales.filter(s => s.isVoided).length;
+  document.getElementById('aVoided').textContent = voided;
+
+  // Low/out stock
+  const lowOut = products.filter(p => stockStatus(p) !== 'ok').length;
+  document.getElementById('aLow').textContent = lowOut;
+
+  // Members
+  document.getElementById('aMembers').textContent = members.length;
+
+  // Tool badge
+  const toolBadge = document.getElementById('toolReqBadge');
+  if (pending > 0) {
+    toolBadge.style.display = 'inline-block';
+    toolBadge.textContent = pending;
+  } else {
+    toolBadge.style.display = 'none';
+  }
+
+  // Members list (teacher first, then students by class)
+  const sorted = [...members].sort((a,b) => {
+    if (a.role !== b.role) return a.role === 'teacher' ? -1 : 1;
+    return (a.class || '').localeCompare(b.class || '') || a.name.localeCompare(b.name);
+  });
+  document.getElementById('adminMembers').innerHTML = sorted.map(m => `
+    <div class="a-member" onclick="openMemberModal(${m.id})">
+      <div class="av-small av-${m.color}">${m.avatar}</div>
+      <div class="info">
+        <div class="n">${m.name} ${m.role === 'teacher' ? '<span class="role-badge teacher">ครู</span>' : ''}</div>
+        <div class="s">${m.class} · รหัส ${m.code}</div>
+      </div>
+      <div class="arrow">›</div>
+    </div>
+  `).join('');
+}
+
+// ============== MEMBER CRUD ==============
+let editingMemberId = null;
+let selectedColor = 1;
+let selectedMemberRole = 'student';
+
+function renderColorGrid() {
+  const grid = document.getElementById('colorGrid');
+  grid.innerHTML = [1,2,3,4,5,6].map(c =>
+    `<button class="color-pick c${c} ${c === selectedColor ? 'sel' : ''}" onclick="selectColor(${c})"></button>`
+  ).join('');
+}
+function selectColor(c) { selectedColor = c; renderColorGrid(); }
+
+function selectRole(r) {
+  selectedMemberRole = r;
+  document.getElementById('roleStudent').classList.toggle('sel', r === 'student');
+  document.getElementById('roleTeacher').classList.toggle('sel', r === 'teacher');
+}
+
+function openMemberModal(id = null) {
+  if (!isTeacher()) return;
+  editingMemberId = id;
+  if (id) {
+    const m = members.find(x => x.id === id);
+    document.getElementById('memberModalTitle').textContent = 'แก้ไขสมาชิก';
+    document.getElementById('mCode').value = m.code;
+    document.getElementById('mName').value = m.name;
+    document.getElementById('mClass').value = m.class || '';
+    document.getElementById('mAvatar').value = m.avatar;
+    selectedColor = m.color || 1;
+    selectRole(m.role || 'student');
+    document.getElementById('mDeleteBtn').style.display = m.id === currentUser?.id ? 'none' : 'block';
+  } else {
+    document.getElementById('memberModalTitle').textContent = 'เพิ่มสมาชิกใหม่';
+    document.getElementById('mCode').value = '';
+    document.getElementById('mName').value = '';
+    document.getElementById('mClass').value = '';
+    document.getElementById('mAvatar').value = '';
+    selectedColor = 1;
+    selectRole('student');
+    document.getElementById('mDeleteBtn').style.display = 'none';
+  }
+  renderColorGrid();
+  document.getElementById('memberModal').classList.add('show');
+}
+function closeMemberModal() { document.getElementById('memberModal').classList.remove('show'); }
+
+async function sbSaveMember(m, isNew) {
+  if (!sb) return;
+  try {
+    if (isNew) {
+      const { data, error } = await sb.from('members').insert({
+        code: m.code, name: m.name, class: m.class,
+        avatar: m.avatar, color: m.color, role: m.role,
+        pin: m.role === 'teacher' ? '9999' : '1234'
+      }).select().single();
+      if (error) throw error;
+      m.id = data.id;
+    } else {
+      await sb.from('members').update({
+        code: m.code, name: m.name, class: m.class,
+        avatar: m.avatar, color: m.color, role: m.role
+      }).eq('id', m.id);
+    }
+  } catch (e) { console.error('saveMember', e); }
+}
+
+async function sbDeleteMember(id) {
+  if (!sb) return;
+  try { await sb.from('members').delete().eq('id', id); }
+  catch (e) { console.error('deleteMember', e); }
+}
+
+function saveMember() {
+  const code = document.getElementById('mCode').value.trim();
+  const name = document.getElementById('mName').value.trim();
+  const klass = document.getElementById('mClass').value.trim();
+  const avatar = document.getElementById('mAvatar').value.trim() || name.charAt(2) || '?';
+  if (!code) { showToast('กรุณาใส่รหัส', true); return; }
+  if (!name) { showToast('กรุณาใส่ชื่อ', true); return; }
+
+  // unique code check (except editing self)
+  const dup = members.find(x => x.code === code && x.id !== editingMemberId);
+  if (dup) { showToast('รหัสนี้มีแล้ว', true); return; }
+
+  if (editingMemberId) {
+    const m = members.find(x => x.id === editingMemberId);
+    m.code = code; m.name = name; m.class = klass;
+    m.avatar = avatar; m.color = selectedColor; m.role = selectedMemberRole;
+    sbSaveMember(m, false);
+    showToast('แก้ไขสมาชิกเรียบร้อย');
+    // if editing current user, refresh display
+    if (m.id === currentUser?.id) setUser(m);
+  } else {
+    const newId = Math.max(0, ...members.map(x => x.id)) + 1;
+    const newM = {
+      id: newId, code, name, class: klass,
+      avatar, color: selectedColor, role: selectedMemberRole
+    };
+    members.push(newM);
+    sbSaveMember(newM, true);
+    showToast(`เพิ่ม "${name}" เรียบร้อย`);
+  }
+  closeMemberModal();
+  renderAdmin();
+  renderQuickGrid();
+}
+
+function deleteMember() {
+  if (!editingMemberId) return;
+  const m = members.find(x => x.id === editingMemberId);
+  if (m.id === currentUser?.id) { showToast('ลบบัญชีตัวเองไม่ได้', true); return; }
+  if (!confirm(`ลบสมาชิก "${m.name}"?\nประวัติการขาย/หุ้นยังอยู่ในระบบ`)) return;
+  sbDeleteMember(editingMemberId);
+  const idx = members.findIndex(x => x.id === editingMemberId);
+  if (idx >= 0) members.splice(idx, 1);
+  closeMemberModal();
+  showToast('ลบเรียบร้อย');
+  renderAdmin();
+  renderQuickGrid();
+}
+
+// ============== VOIDED LIST ==============
+function showVoidedList() {
+  const voided = sales.filter(s => s.isVoided).sort((a,b) => b.voidedAt - a.voidedAt);
+  document.getElementById('voidedList').innerHTML = voided.length === 0
+    ? `<div style="text-align:center;color:var(--ink-soft);padding:30px;">ยังไม่มีบิลที่ยกเลิก</div>`
+    : voided.map(s => `
+      <div class="txn voided" style="cursor:pointer;padding:12px;border-radius:14px;background:var(--cream-100);margin-bottom:8px;" onclick="closeVoidedList();openSaleDetail(${s.id})">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div class="txn-icon">${s.items[0]?.emoji || '🧾'}</div>
+          <div class="txn-info" style="flex:1;">
+            <div class="t">บิล #${s.id} <span class="void-badge">ยกเลิก</span></div>
+            <div class="s">${thDateTime(s.date)} · ${s.seller}</div>
+            <div class="s" style="color:var(--red-500);">โดย ${s.voidedByName || '-'} · ${s.voidReason || 'ไม่ระบุ'}</div>
+          </div>
+          <div class="txn-amt">฿${s.total.toLocaleString()}</div>
+        </div>
+      </div>
+    `).join('');
+  document.getElementById('voidedListModal').classList.add('show');
+}
+function closeVoidedList() { document.getElementById('voidedListModal').classList.remove('show'); }
 
 // Initial cloud load (if configured)
 (async () => {

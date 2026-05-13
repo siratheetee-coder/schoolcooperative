@@ -64,6 +64,18 @@ create table if not exists sale_items (
 );
 create index if not exists sale_items_sale_idx on sale_items (sale_id);
 
+-- 7. SHIFT ASSIGNMENTS (ตารางเวรขาย — recurring รายสัปดาห์)
+create table if not exists shift_assignments (
+  id bigserial primary key,
+  day_of_week int not null check (day_of_week between 1 and 5),  -- 1=จันทร์, 5=ศุกร์
+  slot text not null check (slot in ('morning','lunch','after')), -- เช้า, กลางวัน, หลังเลิก
+  member_id bigint references members(id) on delete cascade,
+  member_name text,
+  created_at timestamptz default now(),
+  unique (day_of_week, slot, member_id)
+);
+create index if not exists shift_dow_idx on shift_assignments (day_of_week, slot);
+
 -- 6. PENDING REQUESTS (นักเรียนขออนุมัติ → ครูอนุมัติ)
 create table if not exists pending_requests (
   id bigserial primary key,
@@ -96,12 +108,13 @@ create index if not exists share_txns_member_idx on share_txns (member_id);
 -- ROW LEVEL SECURITY (เปิดให้ทุกคนอ่าน-เขียนได้สำหรับ prototype)
 -- ⚠️ ก่อน production ควรเข้มงวดกว่านี้!
 -- ============================================================
-alter table products          enable row level security;
-alter table members           enable row level security;
-alter table sales             enable row level security;
-alter table sale_items        enable row level security;
-alter table share_txns        enable row level security;
-alter table pending_requests  enable row level security;
+alter table products           enable row level security;
+alter table members            enable row level security;
+alter table sales              enable row level security;
+alter table sale_items         enable row level security;
+alter table share_txns         enable row level security;
+alter table pending_requests   enable row level security;
+alter table shift_assignments  enable row level security;
 
 drop policy if exists "open" on products;
 drop policy if exists "open" on members;
@@ -109,13 +122,15 @@ drop policy if exists "open" on sales;
 drop policy if exists "open" on sale_items;
 drop policy if exists "open" on share_txns;
 drop policy if exists "open" on pending_requests;
+drop policy if exists "open" on shift_assignments;
 
-create policy "open" on products          for all using (true) with check (true);
-create policy "open" on members           for all using (true) with check (true);
-create policy "open" on sales             for all using (true) with check (true);
-create policy "open" on sale_items        for all using (true) with check (true);
-create policy "open" on share_txns        for all using (true) with check (true);
-create policy "open" on pending_requests  for all using (true) with check (true);
+create policy "open" on products           for all using (true) with check (true);
+create policy "open" on members            for all using (true) with check (true);
+create policy "open" on sales              for all using (true) with check (true);
+create policy "open" on sale_items         for all using (true) with check (true);
+create policy "open" on share_txns         for all using (true) with check (true);
+create policy "open" on pending_requests   for all using (true) with check (true);
+create policy "open" on shift_assignments  for all using (true) with check (true);
 
 -- ============================================================
 -- REALTIME (เปิดให้ตารางส่ง event ผ่าน WebSocket)
@@ -126,6 +141,7 @@ alter publication supabase_realtime add table sale_items;
 alter publication supabase_realtime add table pending_requests;
 alter publication supabase_realtime add table share_txns;
 alter publication supabase_realtime add table members;
+alter publication supabase_realtime add table shift_assignments;
 -- ถ้า error "already member of publication" ไม่ต้องสนใจ
 
 -- ============================================================
@@ -156,6 +172,33 @@ insert into members (code, name, class, avatar, color, pin, role) values
   ('06127', 'น้องน้ำ ขำขัน',     'ม.6/1', 'น้', 1, '1234', 'student'),
   ('03128', 'น้องเจ ภูมิใจ',     'ม.3/1', 'เจ', 2, '1234', 'student')
 on conflict (code) do update set role = excluded.role;
+
+-- Shift assignments (ตารางเวรเริ่มต้น — สมาชิก 8 คน หมุนเวียน 5 วัน × 3 ช่วง)
+insert into shift_assignments (day_of_week, slot, member_id, member_name) values
+  -- จันทร์
+  (1, 'morning', 2, 'น้องบอส ใจดี'),       -- เบรค 10:00
+  (1, 'lunch',   3, 'น้องแพรว มงคล'),     -- 12:00
+  (1, 'lunch',   1, 'น้องนภา ศรีสุข'),
+  (1, 'after',   4, 'น้องเก่ง วงศ์ทอง'),   -- 15:00
+  -- อังคาร
+  (2, 'morning', 5, 'น้องฟ้า สวยงาม'),
+  (2, 'lunch',   6, 'น้องโอ๊ต พิทักษ์'),
+  (2, 'lunch',   7, 'น้องน้ำ ขำขัน'),
+  (2, 'after',   8, 'น้องเจ ภูมิใจ'),
+  -- พุธ
+  (3, 'morning', 1, 'น้องนภา ศรีสุข'),
+  (3, 'lunch',   2, 'น้องบอส ใจดี'),
+  (3, 'after',   3, 'น้องแพรว มงคล'),
+  -- พฤหัสบดี
+  (4, 'morning', 4, 'น้องเก่ง วงศ์ทอง'),
+  (4, 'lunch',   5, 'น้องฟ้า สวยงาม'),
+  (4, 'lunch',   6, 'น้องโอ๊ต พิทักษ์'),
+  (4, 'after',   7, 'น้องน้ำ ขำขัน'),
+  -- ศุกร์
+  (5, 'morning', 8, 'น้องเจ ภูมิใจ'),
+  (5, 'lunch',   1, 'น้องนภา ศรีสุข'),
+  (5, 'after',   2, 'น้องบอส ใจดี')
+on conflict do nothing;
 
 -- Share transactions (initial holdings)
 insert into share_txns (member_id, type, shares, amount, date) values

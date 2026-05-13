@@ -777,6 +777,200 @@
     box-shadow: 0 4px 0 var(--gold-600), 0 6px 12px rgba(232,154,14,0.4);
   }
 
+  /* ============== SHIFT SCHEDULE ============== */
+  .shift-grid { padding: 4px 20px 20px; }
+  .day-card {
+    background: var(--cream-50);
+    border-radius: 20px;
+    padding: 14px;
+    margin-bottom: 12px;
+    box-shadow: var(--shadow-md);
+    border: 1px solid rgba(255,255,255,0.6);
+  }
+  .day-card.today {
+    border: 2px solid var(--gold-500);
+    background: linear-gradient(145deg, #FFF8E5, var(--cream-100));
+    box-shadow: var(--shadow-md), 0 0 0 4px rgba(255,182,39,0.15);
+  }
+  .day-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 2px dashed var(--cream-300);
+  }
+  .day-name { font-weight: 800; font-size: 15px; color: var(--green-700); }
+  .day-card.today .day-name { color: var(--gold-600); }
+  .day-tag {
+    background: linear-gradient(135deg, var(--gold-400), var(--gold-500));
+    color: var(--green-700);
+    padding: 3px 10px;
+    border-radius: 10px;
+    font-size: 10px;
+    font-weight: 800;
+    box-shadow: 0 2px 0 var(--gold-600);
+  }
+
+  .slot-row {
+    display: flex;
+    gap: 10px;
+    padding: 8px 0;
+    align-items: flex-start;
+  }
+  .slot-row + .slot-row { border-top: 1px dashed var(--cream-200); }
+  .slot-info {
+    width: 90px;
+    flex-shrink: 0;
+    line-height: 1.2;
+  }
+  .slot-info .ico { font-size: 18px; margin-bottom: 2px; }
+  .slot-info .name { font-size: 12px; font-weight: 700; color: var(--ink); }
+  .slot-info .time { font-size: 10px; color: var(--ink-soft); }
+  .slot-row.now .slot-info .name { color: var(--green-600); }
+  .slot-row.now {
+    background: linear-gradient(90deg, rgba(70,166,151,0.08), transparent);
+    border-radius: 12px;
+    padding: 8px 6px;
+    margin: 0 -6px;
+  }
+  .slot-row.now .slot-info::after {
+    content: "ตอนนี้";
+    display: inline-block;
+    margin-left: 6px;
+    padding: 1px 6px;
+    background: var(--green-500);
+    color: white;
+    border-radius: 6px;
+    font-size: 9px;
+    font-weight: 800;
+    vertical-align: top;
+  }
+
+  .slot-people {
+    flex: 1;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+    min-height: 32px;
+  }
+  .slot-person {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--cream-100);
+    border-radius: 12px;
+    padding: 4px 10px 4px 4px;
+    box-shadow: var(--shadow-sm);
+  }
+  .slot-person .av {
+    width: 24px; height: 24px;
+    border-radius: 8px;
+    display: grid; place-items: center;
+    color: white;
+    font-weight: 700;
+    font-size: 10px;
+  }
+  .slot-person .pn {
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .slot-empty {
+    font-size: 11px;
+    color: var(--ink-soft);
+    font-style: italic;
+  }
+  .slot-edit-btn {
+    background: var(--cream-100);
+    border: none;
+    border-radius: 10px;
+    padding: 6px 10px;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--green-600);
+    cursor: pointer;
+    box-shadow: var(--shadow-sm);
+  }
+  .slot-edit-btn:active { box-shadow: var(--shadow-inset); transform: scale(0.95); }
+
+  /* shift edit modal — student picker */
+  .picker-list {
+    max-height: 50vh;
+    overflow-y: auto;
+    background: var(--cream-100);
+    border-radius: 16px;
+    padding: 6px;
+    box-shadow: var(--shadow-inset);
+  }
+  .picker-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: background 0.1s;
+  }
+  .picker-item:hover { background: rgba(255,255,255,0.5); }
+  .picker-item.sel { background: linear-gradient(135deg, rgba(70,166,151,0.2), rgba(45,125,111,0.15)); }
+  .picker-item .pav {
+    width: 32px; height: 32px;
+    border-radius: 10px;
+    display: grid; place-items: center;
+    color: white;
+    font-weight: 700;
+    font-size: 12px;
+    flex-shrink: 0;
+  }
+  .picker-item .pinfo { flex: 1; line-height: 1.2; }
+  .picker-item .pinfo .pn { font-weight: 600; font-size: 13px; }
+  .picker-item .pinfo .ps { font-size: 11px; color: var(--ink-soft); }
+  .picker-check {
+    width: 24px; height: 24px;
+    border-radius: 8px;
+    border: 2px solid var(--cream-300);
+    background: white;
+    display: grid; place-items: center;
+    color: transparent;
+    font-weight: 900;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+  .picker-item.sel .picker-check {
+    background: var(--green-500);
+    border-color: var(--green-600);
+    color: white;
+  }
+
+  /* Today shift card on POS */
+  .today-shift {
+    margin: 0 20px 4px;
+    background: linear-gradient(135deg, #FFFBF3, var(--cream-100));
+    border-radius: 18px;
+    padding: 10px 14px;
+    box-shadow: var(--shadow-sm);
+    border-left: 4px solid var(--gold-500);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 14px;
+  }
+  .today-shift .icoBig {
+    width: 38px; height: 38px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--gold-400), var(--gold-500));
+    color: var(--green-700);
+    display: grid; place-items: center;
+    font-size: 18px;
+    box-shadow: 0 3px 0 var(--gold-600);
+    flex-shrink: 0;
+  }
+  .today-shift .ti { flex: 1; line-height: 1.25; min-width: 0;}
+  .today-shift .ti .tt { font-size: 11px; color: var(--ink-soft); font-weight: 600; }
+  .today-shift .ti .tp { font-size: 13px; font-weight: 700; color: var(--green-700); }
+
   /* color swatches for member modal */
   .color-grid {
     display: grid;
@@ -2261,6 +2455,13 @@
 
   <!-- ============== VIEW: POS ============== -->
   <div class="view active" id="view-pos">
+    <div class="today-shift" id="todayShift" style="display:none;">
+      <div class="icoBig">📅</div>
+      <div class="ti">
+        <div class="tt">เวรขายตอนนี้</div>
+        <div class="tp" id="todayShiftText">-</div>
+      </div>
+    </div>
     <div class="tabs">
       <button class="tab active">🍱 ทั้งหมด</button>
       <button class="tab">🥤 เครื่องดื่ม</button>
@@ -2401,6 +2602,9 @@
         <div class="ts">Export Excel/PDF</div>
       </button>
     </div>
+
+    <div class="admin-section-head">📅 ตารางเวรขาย</div>
+    <div class="shift-grid" id="shiftGrid"></div>
 
     <div class="admin-section-head">จัดการสมาชิก</div>
     <div class="admin-members" id="adminMembers"></div>
@@ -2641,6 +2845,21 @@
   </div>
 </div>
 
+<!-- ============== SHIFT EDIT MODAL ============== -->
+<div class="modal-bg" id="shiftModal" onclick="if(event.target===this)closeShiftEdit()">
+  <div class="modal">
+    <div class="modal-close"></div>
+    <h3 id="shiftModalTitle">จัดเวร</h3>
+    <div style="text-align:center;font-size:12px;color:var(--ink-soft);margin-bottom:14px;" id="shiftModalSub"></div>
+    <div class="picker-list" id="shiftPicker"></div>
+    <div style="font-size:11px;color:var(--ink-soft);text-align:center;margin-top:10px;">แตะเลือกหลายคนได้</div>
+    <div class="actions" style="margin-top:14px;">
+      <button class="btn btn-ghost" onclick="closeShiftEdit()">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveShiftEdit()">บันทึก</button>
+    </div>
+  </div>
+</div>
+
 <!-- ============== MEMBER MODAL (admin) ============== -->
 <div class="modal-bg" id="memberModal" onclick="if(event.target===this)closeMemberModal()">
   <div class="modal">
@@ -2834,10 +3053,10 @@ function setView(name) {
   // toggle yellow admin theme on body
   document.body.classList.toggle('admin-mode', name === 'admin');
   if (name === 'stock') renderStock();
-  if (name === 'pos') renderProducts();
+  if (name === 'pos') { renderProducts(); renderTodayShift(); }
   if (name === 'report') renderReport();
   if (name === 'shares') { renderShareHero(); renderMembers(); applyRoleVisibility(); }
-  if (name === 'admin') renderAdmin();
+  if (name === 'admin') { renderAdmin(); renderShiftGrid(); }
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -3443,6 +3662,41 @@ const members = [
 let nextRequestId = 1;
 const pendingRequests = [];
 
+// Shift assignments
+let nextShiftId = 1;
+const shifts = [];
+// seed (matching schema seed; cleared if Supabase loaded)
+[
+  [1,'morning',2], [1,'lunch',3], [1,'lunch',1], [1,'after',4],
+  [2,'morning',5], [2,'lunch',6], [2,'lunch',7], [2,'after',8],
+  [3,'morning',1], [3,'lunch',2], [3,'after',3],
+  [4,'morning',4], [4,'lunch',5], [4,'lunch',6], [4,'after',7],
+  [5,'morning',8], [5,'lunch',1], [5,'after',2],
+].forEach(([dow, slot, mid]) => {
+  const m = members.find(x => x.id === mid);
+  if (m) shifts.push({ id: nextShiftId++, dayOfWeek: dow, slot, memberId: mid, memberName: m.name });
+});
+
+const DAY_NAMES = ['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์'];
+const SLOT_META = {
+  morning: { ico: '🌅', name: 'เบรคเช้า', time: '10:00-10:20' },
+  lunch:   { ico: '🍱', name: 'พักกลางวัน', time: '12:00-13:00' },
+  after:   { ico: '🏃', name: 'หลังเลิกเรียน', time: '15:00-16:00' },
+};
+
+function currentSlot() {
+  const h = new Date().getHours();
+  if (h < 11) return 'morning';
+  if (h < 14) return 'lunch';
+  return 'after';
+}
+function todayDow() {
+  return new Date().getDay(); // 0=Sun, 1-5=Mon-Fri, 6=Sat
+}
+function shiftsFor(dow, slot) {
+  return shifts.filter(s => s.dayOfWeek === dow && s.slot === slot);
+}
+
 function isTeacher() { return currentUser && currentUser.role === 'teacher'; }
 function pendingCount() { return pendingRequests.filter(r => r.status === 'pending').length; }
 
@@ -3683,6 +3937,7 @@ function setUser(m) {
   updateTodaySales();
   updateBellBadge();
   applyRoleVisibility();
+  renderTodayShift();
   document.getElementById('loginScreen').classList.add('hidden');
 }
 
@@ -3886,6 +4141,20 @@ async function loadFromCloud() {
         voidedAt: s.voided_at ? new Date(s.voided_at) : null
       }));
       nextBillId = sls.length ? Math.max(...sls.map(x => x.id)) + 1 : 1000;
+    }
+
+    // shift assignments
+    const { data: sh } = await sb.from('shift_assignments').select('*').order('day_of_week').order('slot');
+    if (sh) {
+      shifts.length = 0;
+      sh.forEach(s => shifts.push({
+        id: s.id,
+        dayOfWeek: s.day_of_week,
+        slot: s.slot,
+        memberId: s.member_id,
+        memberName: s.member_name
+      }));
+      nextShiftId = sh.length ? Math.max(...sh.map(x => x.id)) + 1 : 1;
     }
 
     // pending requests
@@ -4430,6 +4699,150 @@ function voidSale() {
   showToast(`ยกเลิกบิล #${s.id} เรียบร้อย`);
 }
 
+// ============== SHIFT SCHEDULE ==============
+function renderShiftGrid() {
+  const grid = document.getElementById('shiftGrid');
+  if (!grid) return;
+  const todayD = todayDow();
+  const nowSlot = currentSlot();
+  const slots = ['morning','lunch','after'];
+
+  grid.innerHTML = [1,2,3,4,5].map(dow => {
+    const isToday = dow === todayD;
+    return `
+      <div class="day-card ${isToday ? 'today' : ''}">
+        <div class="day-head">
+          <span class="day-name">${DAY_NAMES[dow]}</span>
+          ${isToday ? '<span class="day-tag">วันนี้</span>' : ''}
+        </div>
+        ${slots.map(slot => {
+          const sm = SLOT_META[slot];
+          const assigns = shiftsFor(dow, slot);
+          const isNow = isToday && slot === nowSlot;
+          return `
+            <div class="slot-row ${isNow ? 'now' : ''}">
+              <div class="slot-info">
+                <div class="ico">${sm.ico}</div>
+                <div class="name">${sm.name}</div>
+                <div class="time">${sm.time}</div>
+              </div>
+              <div class="slot-people">
+                ${assigns.length === 0
+                  ? '<span class="slot-empty">ไม่มีคนเวร</span>'
+                  : assigns.map(a => {
+                      const m = members.find(x => x.id === a.memberId);
+                      const av = m ? m.avatar : '?';
+                      const color = m ? m.color : 1;
+                      const shortName = a.memberName.replace('น้อง','').split(' ')[0];
+                      return `<div class="slot-person"><div class="av av-${color}">${av}</div><div class="pn">${shortName}</div></div>`;
+                    }).join('')
+                }
+                ${isTeacher() ? `<button class="slot-edit-btn" onclick="openShiftEdit(${dow},'${slot}')">${assigns.length === 0 ? '+ เพิ่ม' : 'แก้ไข'}</button>` : ''}
+              </div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    `;
+  }).join('');
+}
+
+// Today shift indicator on POS
+function renderTodayShift() {
+  const el = document.getElementById('todayShift');
+  const txt = document.getElementById('todayShiftText');
+  if (!el || !txt) return;
+  const dow = todayDow();
+  if (dow === 0 || dow === 6) {
+    el.style.display = 'none';
+    return;
+  }
+  const slot = currentSlot();
+  const sm = SLOT_META[slot];
+  const assigns = shiftsFor(dow, slot);
+  el.style.display = 'flex';
+  if (assigns.length === 0) {
+    txt.innerHTML = `${sm.ico} ${sm.name} · <span style="color:var(--ink-soft);">ยังไม่มีคนเวร</span>`;
+  } else {
+    const names = assigns.map(a => a.memberName.replace('น้อง','').split(' ')[0]).join(', ');
+    txt.innerHTML = `${sm.ico} ${sm.name} · <b>${names}</b>`;
+  }
+}
+
+// Shift editor (teacher)
+let editingShift = null; // { dow, slot, selectedIds: Set }
+function openShiftEdit(dow, slot) {
+  if (!isTeacher()) return;
+  const sm = SLOT_META[slot];
+  const current = shiftsFor(dow, slot).map(a => a.memberId);
+  editingShift = { dow, slot, selectedIds: new Set(current) };
+  document.getElementById('shiftModalTitle').textContent = `${DAY_NAMES[dow]} · ${sm.name}`;
+  document.getElementById('shiftModalSub').textContent = `${sm.ico} ${sm.time}`;
+  renderShiftPicker();
+  document.getElementById('shiftModal').classList.add('show');
+}
+function closeShiftEdit() { document.getElementById('shiftModal').classList.remove('show'); }
+
+function renderShiftPicker() {
+  const list = document.getElementById('shiftPicker');
+  const sel = editingShift.selectedIds;
+  // Only students for selling shifts (skip teachers)
+  const candidates = members.filter(m => m.role === 'student');
+  list.innerHTML = candidates.map(m => `
+    <div class="picker-item ${sel.has(m.id) ? 'sel' : ''}" onclick="toggleShiftPick(${m.id})">
+      <div class="pav av-${m.color}">${m.avatar}</div>
+      <div class="pinfo">
+        <div class="pn">${m.name}</div>
+        <div class="ps">${m.class} · รหัส ${m.code}</div>
+      </div>
+      <div class="picker-check">✓</div>
+    </div>
+  `).join('');
+}
+function toggleShiftPick(id) {
+  if (editingShift.selectedIds.has(id)) editingShift.selectedIds.delete(id);
+  else editingShift.selectedIds.add(id);
+  renderShiftPicker();
+}
+
+async function sbDeleteShifts(dow, slot) {
+  if (!sb) return;
+  try { await sb.from('shift_assignments').delete().eq('day_of_week', dow).eq('slot', slot); }
+  catch (e) { console.error('deleteShifts', e); }
+}
+async function sbInsertShift(s) {
+  if (!sb) return;
+  try {
+    const { data, error } = await sb.from('shift_assignments').insert({
+      day_of_week: s.dayOfWeek, slot: s.slot,
+      member_id: s.memberId, member_name: s.memberName
+    }).select().single();
+    if (error) throw error;
+    s.id = data.id;
+  } catch (e) { console.error('insertShift', e); }
+}
+
+async function saveShiftEdit() {
+  const { dow, slot, selectedIds } = editingShift;
+  // remove old in-memory
+  for (let i = shifts.length - 1; i >= 0; i--) {
+    if (shifts[i].dayOfWeek === dow && shifts[i].slot === slot) shifts.splice(i, 1);
+  }
+  await sbDeleteShifts(dow, slot);
+  // add new
+  for (const mid of selectedIds) {
+    const m = members.find(x => x.id === mid);
+    if (!m) continue;
+    const newS = { id: nextShiftId++, dayOfWeek: dow, slot, memberId: mid, memberName: m.name };
+    shifts.push(newS);
+    sbInsertShift(newS);
+  }
+  closeShiftEdit();
+  renderShiftGrid();
+  renderTodayShift();
+  showToast('บันทึกตารางเวรเรียบร้อย');
+}
+
 // ============== ADMIN VIEW ==============
 function renderAdmin() {
   if (!isTeacher()) { setView('pos'); return; }
@@ -4786,6 +5199,32 @@ function startRealtime() {
     })
     .subscribe();
   realtimeChannels.push(salesChannel);
+
+  // === SHIFT ASSIGNMENTS (live schedule updates) ===
+  const shiftChannel = sb.channel('coop-shifts')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'shift_assignments' }, payload => {
+      if (payload.eventType === 'INSERT') {
+        const s = payload.new;
+        if (!shifts.find(x => x.id === s.id)) {
+          shifts.push({ id: s.id, dayOfWeek: s.day_of_week, slot: s.slot, memberId: s.member_id, memberName: s.member_name });
+        }
+      } else if (payload.eventType === 'DELETE') {
+        const idx = shifts.findIndex(x => x.id === payload.old.id);
+        if (idx >= 0) shifts.splice(idx, 1);
+      } else if (payload.eventType === 'UPDATE') {
+        const local = shifts.find(x => x.id === payload.new.id);
+        if (local) {
+          local.dayOfWeek = payload.new.day_of_week;
+          local.slot = payload.new.slot;
+          local.memberId = payload.new.member_id;
+          local.memberName = payload.new.member_name;
+        }
+      }
+      if (document.getElementById('view-pos').classList.contains('active')) renderTodayShift();
+      if (document.getElementById('view-admin').classList.contains('active')) renderShiftGrid();
+    })
+    .subscribe();
+  realtimeChannels.push(shiftChannel);
 
   // === SHARE TXNS (live dividend pay) ===
   const shareChannel = sb.channel('coop-shares')

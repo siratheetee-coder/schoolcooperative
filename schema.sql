@@ -118,6 +118,17 @@ create policy "open" on share_txns        for all using (true) with check (true)
 create policy "open" on pending_requests  for all using (true) with check (true);
 
 -- ============================================================
+-- REALTIME (เปิดให้ตารางส่ง event ผ่าน WebSocket)
+-- ============================================================
+alter publication supabase_realtime add table products;
+alter publication supabase_realtime add table sales;
+alter publication supabase_realtime add table sale_items;
+alter publication supabase_realtime add table pending_requests;
+alter publication supabase_realtime add table share_txns;
+alter publication supabase_realtime add table members;
+-- ถ้า error "already member of publication" ไม่ต้องสนใจ
+
+-- ============================================================
 -- SEED DATA
 -- ============================================================
 

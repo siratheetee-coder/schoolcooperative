@@ -1006,6 +1006,70 @@
     50% { opacity: 0.4; }
   }
 
+  /* ============== NOTIFICATION BANNER ============== */
+  .noti-banner {
+    position: fixed;
+    top: 14px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-150%);
+    width: calc(100% - 32px);
+    max-width: 398px;
+    background: linear-gradient(135deg, #7AB8E0, #4D8FCA);
+    color: white;
+    padding: 12px 16px;
+    border-radius: 18px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 6px 0 #2D6FA3, 0 12px 24px rgba(0,0,0,0.35);
+    z-index: 500;
+    transition: transform 0.4s cubic-bezier(0.2,0.9,0.3,1.3);
+  }
+  .noti-banner.show { transform: translateX(-50%) translateY(0); }
+  .noti-banner .ico {
+    width: 36px; height: 36px;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.25);
+    display: grid; place-items: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  .noti-banner .txt { flex: 1; line-height: 1.2; }
+  .noti-banner .txt .t { font-weight: 800; font-size: 13px; }
+  .noti-banner .txt .s { font-size: 11px; opacity: 0.9; }
+  .noti-banner button {
+    border: none;
+    background: white;
+    color: #2D6FA3;
+    padding: 8px 14px;
+    border-radius: 12px;
+    font-family: inherit;
+    font-weight: 700;
+    font-size: 12px;
+    cursor: pointer;
+    box-shadow: 0 3px 0 rgba(0,0,0,0.2);
+  }
+  .noti-banner button:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(0,0,0,0.2); }
+  .noti-banner .close {
+    background: transparent;
+    color: white;
+    box-shadow: none;
+    padding: 6px;
+    font-size: 16px;
+  }
+
+  /* Realtime indicator (live dot) */
+  .live-dot {
+    display: inline-block;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: #5FFA9C;
+    box-shadow: 0 0 6px #5FFA9C;
+    margin-left: 6px;
+    animation: cloudPulse 1.5s infinite;
+    vertical-align: middle;
+  }
+
   /* ============== INSTALL BANNER ============== */
   .install-banner {
     position: fixed;
@@ -2110,6 +2174,17 @@
 </style>
 </head>
 <body>
+
+<!-- ============== NOTIFICATION BANNER ============== -->
+<div class="noti-banner" id="notiBanner">
+  <div class="ico">🔔</div>
+  <div class="txt">
+    <div class="t">เปิดการแจ้งเตือน?</div>
+    <div class="s">รับแจ้งเมื่อมีคำขอ/อนุมัติทันที</div>
+  </div>
+  <button onclick="enableNotifications()">เปิด</button>
+  <button class="close" onclick="dismissNoti()">✕</button>
+</div>
 
 <!-- ============== CLOUD STATUS ============== -->
 <div class="cloud-pill local" id="cloudPill">
@@ -4551,12 +4626,220 @@ function showVoidedList() {
 }
 function closeVoidedList() { document.getElementById('voidedListModal').classList.remove('show'); }
 
+// ============== NOTIFICATIONS + REALTIME ==============
+let notiPermission = 'default';
+let realtimeChannels = [];
+
+function maybeShowNotiBanner() {
+  if (!('Notification' in window)) return;
+  notiPermission = Notification.permission;
+  if (notiPermission === 'default' && localStorage.getItem('notiDismissed') !== '1' && currentUser) {
+    setTimeout(() => document.getElementById('notiBanner').classList.add('show'), 2500);
+  }
+}
+
+async function enableNotifications() {
+  if (!('Notification' in window)) { showToast('Browser นี้ไม่รองรับ', true); return; }
+  notiPermission = await Notification.requestPermission();
+  document.getElementById('notiBanner').classList.remove('show');
+  if (notiPermission === 'granted') {
+    showToast('🔔 เปิดแจ้งเตือนแล้ว');
+    new Notification('สหกรณ์โรงเรียน', {
+      body: 'พร้อมรับแจ้งเตือนแล้ว',
+      icon: 'icon.svg'
+    });
+  } else {
+    localStorage.setItem('notiDismissed', '1');
+  }
+}
+function dismissNoti() {
+  document.getElementById('notiBanner').classList.remove('show');
+  localStorage.setItem('notiDismissed', '1');
+}
+
+function notify(title, body, opts = {}) {
+  // In-app toast always
+  showToast(`${title} — ${body}`.slice(0, 80));
+  // Browser notification (when tab not focused or in background)
+  if (notiPermission === 'granted') {
+    try {
+      const noti = new Notification(title, {
+        body, icon: 'icon.svg', badge: 'icon.svg',
+        tag: opts.tag, renotify: true, ...opts
+      });
+      // tap to focus
+      noti.onclick = () => { window.focus(); noti.close(); if (opts.onClick) opts.onClick(); };
+    } catch (e) { console.warn('Notification failed', e); }
+  }
+}
+
+function stopRealtime() {
+  realtimeChannels.forEach(ch => sb && sb.removeChannel(ch));
+  realtimeChannels = [];
+}
+
+function startRealtime() {
+  if (!sb || !currentUser) return;
+  stopRealtime();
+
+  // === PENDING REQUESTS ===
+  const reqChannel = sb.channel('coop-requests')
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'pending_requests' }, payload => {
+      const r = payload.new;
+      if (pendingRequests.find(x => x.id === r.id)) return;
+      pendingRequests.push({
+        id: r.id, requestedById: r.requested_by_id, requestedByName: r.requested_by_name,
+        type: r.type, payload: r.payload, summary: r.summary,
+        status: r.status, requestedAt: new Date(r.requested_at),
+        reviewedById: r.reviewed_by_id, reviewedByName: r.reviewed_by_name,
+        reviewedAt: r.reviewed_at ? new Date(r.reviewed_at) : null, notes: r.notes
+      });
+      updateBellBadge();
+      if (document.getElementById('requestsModal').classList.contains('show')) renderRequests();
+      if (document.getElementById('view-admin').classList.contains('active')) renderAdmin();
+      // Notify teachers (but not the one who created the request)
+      if (isTeacher() && r.requested_by_id !== currentUser.id) {
+        notify('📋 คำขอใหม่', `${r.requested_by_name}: ${r.summary}`, { tag: `req-${r.id}` });
+      }
+    })
+    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'pending_requests' }, payload => {
+      const r = payload.new;
+      const local = pendingRequests.find(x => x.id === r.id);
+      if (local) {
+        local.status = r.status;
+        local.reviewedById = r.reviewed_by_id;
+        local.reviewedByName = r.reviewed_by_name;
+        local.reviewedAt = r.reviewed_at ? new Date(r.reviewed_at) : null;
+        local.notes = r.notes;
+      }
+      updateBellBadge();
+      if (document.getElementById('requestsModal').classList.contains('show')) renderRequests();
+      if (document.getElementById('view-admin').classList.contains('active')) renderAdmin();
+      // Notify the requester when their request is reviewed (not by themselves)
+      if (r.requested_by_id === currentUser.id && r.reviewed_by_id !== currentUser.id) {
+        if (r.status === 'approved') {
+          notify('✅ ครูอนุมัติแล้ว', r.summary, { tag: `req-${r.id}` });
+        } else if (r.status === 'rejected') {
+          notify('❌ คำขอถูกปฏิเสธ', r.summary + (r.notes ? ' — ' + r.notes : ''), { tag: `req-${r.id}` });
+        }
+      }
+    })
+    .subscribe();
+  realtimeChannels.push(reqChannel);
+
+  // === PRODUCTS (live stock updates) ===
+  const prodChannel = sb.channel('coop-products')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, payload => {
+      if (payload.eventType === 'INSERT') {
+        const p = payload.new;
+        if (!products.find(x => x.id === p.id)) {
+          products.push({ id: p.id, name: p.name, emoji: p.emoji, price: p.price, stock: p.stock, lowAt: p.low_at, unit: p.unit || '/ชิ้น' });
+        }
+      } else if (payload.eventType === 'UPDATE') {
+        const p = payload.new;
+        const local = products.find(x => x.id === p.id);
+        if (local) {
+          local.name = p.name; local.price = p.price; local.emoji = p.emoji;
+          local.stock = p.stock; local.lowAt = p.low_at; local.unit = p.unit || '/ชิ้น';
+        }
+      } else if (payload.eventType === 'DELETE') {
+        const idx = products.findIndex(x => x.id === payload.old.id);
+        if (idx >= 0) products.splice(idx, 1);
+      }
+      if (document.getElementById('view-pos').classList.contains('active')) renderProducts();
+      if (document.getElementById('view-stock').classList.contains('active')) renderStock();
+      if (document.getElementById('view-admin').classList.contains('active')) renderAdmin();
+    })
+    .subscribe();
+  realtimeChannels.push(prodChannel);
+
+  // === SALES (live new bills) ===
+  const salesChannel = sb.channel('coop-sales')
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'sales' }, async payload => {
+      const s = payload.new;
+      if (sales.find(x => x.id === s.id)) return;
+      const { data: items } = await sb.from('sale_items').select('*').eq('sale_id', s.id);
+      sales.push({
+        id: s.id, date: new Date(s.date), seller: s.seller_name || '-', total: s.total,
+        items: (items || []).map(i => ({ id: i.product_id, name: i.name, emoji: i.emoji, price: i.price, qty: i.qty })),
+        isVoided: !!s.is_voided
+      });
+      if (document.getElementById('view-report').classList.contains('active')) renderReport();
+      if (document.getElementById('view-admin').classList.contains('active')) renderAdmin();
+      updateTodaySales();
+    })
+    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'sales' }, payload => {
+      const s = payload.new;
+      const local = sales.find(x => x.id === s.id);
+      if (local && s.is_voided && !local.isVoided) {
+        local.isVoided = true;
+        local.voidReason = s.void_reason;
+        local.voidedByName = s.voided_by_name;
+        local.voidedAt = s.voided_at ? new Date(s.voided_at) : null;
+        if (document.getElementById('view-report').classList.contains('active')) renderReport();
+        if (document.getElementById('view-admin').classList.contains('active')) renderAdmin();
+        // Notify the original seller if their sale was voided by someone else
+        if (s.voided_by_id !== currentUser.id && local.seller && local.seller.includes(currentUser.name.replace('น้อง',''))) {
+          notify('🚫 บิลถูกยกเลิก', `บิล #${s.id} ยอด ฿${s.total} โดยครู`, { tag: `void-${s.id}` });
+        }
+      }
+    })
+    .subscribe();
+  realtimeChannels.push(salesChannel);
+
+  // === SHARE TXNS (live dividend pay) ===
+  const shareChannel = sb.channel('coop-shares')
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'share_txns' }, payload => {
+      const t = payload.new;
+      if (shareTxns.find(x => x.id === t.id)) return;
+      shareTxns.push({
+        id: t.id, memberId: t.member_id, type: t.type,
+        shares: t.shares || 0, amount: t.amount, date: new Date(t.date)
+      });
+      if (document.getElementById('view-shares').classList.contains('active')) {
+        renderShareHero(); renderMembers();
+        if (shareView === 'dividend') renderDividend();
+      }
+      // Notify member when they receive dividend
+      if (t.type === 'dividend' && t.member_id === currentUser.id) {
+        notify('🎁 รับปันผลแล้ว!', `฿${t.amount.toLocaleString()} เข้าบัญชีหุ้นของคุณ`, { tag: `div-${t.id}` });
+      }
+    })
+    .subscribe();
+  realtimeChannels.push(shareChannel);
+
+  // Visual indicator: live dot next to cloud pill
+  const cloudText = document.getElementById('cloudText');
+  if (cloudText && sb) cloudText.innerHTML = '☁ Cloud<span class="live-dot"></span>';
+}
+
+// Hook: start realtime + ask permission after login
+const _origSetUser = setUser;
+setUser = function(m) {
+  _origSetUser(m);
+  if (sb) startRealtime();
+  maybeShowNotiBanner();
+};
+
+// Hook: stop on logout
+const _origLogout = logout;
+logout = function() {
+  const oldUser = currentUser;
+  _origLogout();
+  if (oldUser !== currentUser) stopRealtime();
+};
+
 // Initial cloud load (if configured)
 (async () => {
   showCloudStatus();
   if (sb) {
     await loadFromCloud();
     showToast('🟢 เชื่อม Supabase สำเร็จ');
+    // start realtime if user already logged in
+    if (currentUser) {
+      startRealtime();
+      maybeShowNotiBanner();
+    }
   }
 })();
 

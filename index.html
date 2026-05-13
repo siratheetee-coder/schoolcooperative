@@ -971,6 +971,77 @@
   .today-shift .ti .tt { font-size: 11px; color: var(--ink-soft); font-weight: 600; }
   .today-shift .ti .tp { font-size: 13px; font-weight: 700; color: var(--green-700); }
 
+  /* ============== AUDIT LOG ============== */
+  .audit-filter {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    margin-bottom: 12px;
+    scrollbar-width: none;
+  }
+  .audit-filter::-webkit-scrollbar { display: none; }
+  .audit-filter button {
+    flex-shrink: 0;
+    padding: 7px 12px;
+    background: var(--cream-100);
+    border: none;
+    border-radius: 12px;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ink-soft);
+    cursor: pointer;
+    box-shadow: var(--shadow-sm);
+  }
+  .audit-filter button.active {
+    background: linear-gradient(135deg, var(--green-400), var(--green-500));
+    color: white;
+    box-shadow: 0 3px 0 var(--green-700);
+    transform: translateY(-1px);
+  }
+  .audit-list {
+    max-height: 60vh;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .audit-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 12px;
+    background: var(--cream-100);
+    border-radius: 14px;
+    border-left: 3px solid var(--cream-300);
+    box-shadow: var(--shadow-sm);
+  }
+  .audit-item.critical { border-left-color: var(--red-500); background: linear-gradient(135deg, #FFF1EE, var(--cream-100)); }
+  .audit-item.money { border-left-color: var(--gold-500); }
+  .audit-item.stock { border-left-color: #4D8FCA; }
+  .audit-item.share { border-left-color: var(--green-500); }
+  .audit-icon {
+    width: 32px; height: 32px;
+    border-radius: 10px;
+    display: grid; place-items: center;
+    font-size: 14px;
+    flex-shrink: 0;
+    background: white;
+    box-shadow: var(--shadow-sm);
+  }
+  .audit-content { flex: 1; line-height: 1.3; min-width: 0; }
+  .audit-action { font-weight: 700; font-size: 13px; color: var(--ink); }
+  .audit-target { font-size: 12px; color: var(--ink-soft); margin-top: 1px; word-break: break-word;}
+  .audit-meta { font-size: 11px; color: var(--ink-soft); margin-top: 4px; display: flex; gap: 6px; flex-wrap: wrap; }
+  .audit-meta .actor {
+    background: rgba(232,154,14,0.15);
+    color: var(--green-700);
+    padding: 1px 6px;
+    border-radius: 6px;
+    font-weight: 600;
+  }
+  .audit-meta .actor.teacher { background: linear-gradient(135deg, var(--gold-400), var(--gold-500)); color: var(--green-700); }
+
   /* color swatches for member modal */
   .color-grid {
     display: grid;
@@ -2627,6 +2698,11 @@
         <div class="tt">รายงานละเอียด</div>
         <div class="ts">Export Excel/PDF</div>
       </button>
+      <button class="tool-btn" onclick="openAuditLog()" style="grid-column:1/-1;">
+        <div class="ti" style="background:linear-gradient(135deg,#9C7CB8,#7B4F9F);color:white;box-shadow:0 4px 0 #5A3577;">📜</div>
+        <div class="tt">ประวัติการใช้งาน (Audit Log)</div>
+        <div class="ts">บันทึกทุกการกระทำสำคัญ — เห็นใครทำอะไรเมื่อไหร่</div>
+      </button>
     </div>
 
     <div class="admin-section-head">📅 ตารางเวรขาย</div>
@@ -2934,6 +3010,21 @@
       <button class="btn btn-ghost" onclick="closeMemberModal()">ยกเลิก</button>
       <button class="btn btn-danger" id="mDeleteBtn" onclick="deleteMember()" style="display:none;">ลบ</button>
       <button class="btn btn-primary" onclick="saveMember()">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============== AUDIT LOG MODAL ============== -->
+<div class="modal-bg" id="auditModal" onclick="if(event.target===this)closeAuditLog()">
+  <div class="modal">
+    <div class="modal-close"></div>
+    <h3>📜 ประวัติการใช้งาน (Audit Log)</h3>
+    <div style="text-align:center;font-size:12px;color:var(--ink-soft);margin-bottom:12px;">บันทึกทุกการกระทำสำคัญในระบบ — แก้/ลบไม่ได้</div>
+    <div class="audit-filter" id="auditFilter"></div>
+    <div class="audit-list" id="auditList"></div>
+    <div class="actions" style="margin-top:14px;">
+      <button class="btn btn-ghost" onclick="closeAuditLog()">ปิด</button>
+      <button class="btn btn-primary" onclick="exportAuditCsv()">📥 Export CSV</button>
     </div>
   </div>
 </div>
@@ -3761,6 +3852,29 @@ const members = [
 let nextRequestId = 1;
 const pendingRequests = [];
 
+// Audit logs
+let nextAuditId = 1;
+const auditLogs = [];
+
+const AUDIT_META = {
+  create_sale:     { ico: '🛒', label: 'ขายของ',           cat: 'money' },
+  void_sale:       { ico: '🚫', label: 'ยกเลิกบิล',         cat: 'critical' },
+  add_product:     { ico: '➕', label: 'เพิ่มสินค้า',       cat: 'stock' },
+  edit_product:    { ico: '✏️', label: 'แก้ไขสินค้า',      cat: 'stock' },
+  delete_product:  { ico: '🗑️', label: 'ลบสินค้า',         cat: 'critical' },
+  restock:         { ico: '📦', label: 'เติมสต็อก',         cat: 'stock' },
+  add_member:      { ico: '👤', label: 'เพิ่มสมาชิก',       cat: '' },
+  edit_member:     { ico: '✏️', label: 'แก้ไขสมาชิก',      cat: '' },
+  delete_member:   { ico: '🗑️', label: 'ลบสมาชิก',         cat: 'critical' },
+  buy_share:       { ico: '💎', label: 'ซื้อหุ้น',          cat: 'share' },
+  pay_dividend:    { ico: '🎁', label: 'จ่ายปันผล',         cat: 'share' },
+  approve_request: { ico: '✅', label: 'อนุมัติคำขอ',       cat: '' },
+  reject_request:  { ico: '❌', label: 'ปฏิเสธคำขอ',        cat: '' },
+  submit_request:  { ico: '📤', label: 'ส่งคำขออนุมัติ',    cat: '' },
+  shift_change:    { ico: '📅', label: 'แก้ตารางเวร',       cat: '' },
+  login:           { ico: '🔓', label: 'เข้าสู่ระบบ',       cat: '' },
+};
+
 // Shift assignments
 let nextShiftId = 1;
 const shifts = [];
@@ -4243,6 +4357,20 @@ async function loadFromCloud() {
       nextBillId = sls.length ? Math.max(...sls.map(x => x.id)) + 1 : 1000;
     }
 
+    // audit logs (last 500)
+    const { data: alogs } = await sb.from('audit_logs').select('*').order('created_at', { ascending: false }).limit(500);
+    if (alogs) {
+      auditLogs.length = 0;
+      alogs.forEach(a => auditLogs.push({
+        id: a.id,
+        actorId: a.actor_id, actorName: a.actor_name, actorRole: a.actor_role,
+        action: a.action, targetType: a.target_type, targetId: a.target_id,
+        targetName: a.target_name, metadata: a.metadata,
+        createdAt: new Date(a.created_at)
+      }));
+      nextAuditId = alogs.length ? Math.max(...alogs.map(x => x.id)) + 1 : 1;
+    }
+
     // shift assignments
     const { data: sh } = await sb.from('shift_assignments').select('*').order('day_of_week').order('slot');
     if (sh) {
@@ -4382,6 +4510,10 @@ confirmPay = function() {
     };
     sales.push(sale);
     sbSaveSale(sale);
+    logAudit('create_sale', 'sale', sale.id, `บิล #${sale.id}`, {
+      total, items: items.map(i => `${i.name}×${i.qty}`).join(', '),
+      note: `ขาย ${items.length} รายการ ฿${total}`
+    });
   }
   closePay();
   cart.clear();
@@ -4446,6 +4578,10 @@ confirmBuyShare = function() {
   shareTxns.push(txn);
   sbSaveShareTxn(txn);
   const m = members.find(x => x.id === mid);
+  logAudit('buy_share', 'member', mid, m.name, {
+    shares: q, amount: q * SHARE_PRICE,
+    note: `${q} หุ้น · ฿${q * SHARE_PRICE}`
+  });
   showToast(`${m.name} ซื้อหุ้น ${q} หุ้นเรียบร้อย`);
   closeBuyShare();
   renderMembers();
@@ -4459,6 +4595,7 @@ payDividend = function() {
   if (rate <= 0) { showToast('กรุณาตั้งอัตราปันผล', true); return; }
   if (!confirm(`จ่ายปันผล ${rate}% สำหรับปี ${year}?\n\nระบบจะบันทึกประวัติให้สมาชิกทุกคน`)) return;
   let count = 0;
+  let totalDiv = 0;
   members.forEach(m => {
     const sh = memberShares(m.id);
     if (sh > 0) {
@@ -4470,7 +4607,12 @@ payDividend = function() {
       shareTxns.push(txn);
       sbSaveShareTxn(txn);
       count++;
+      totalDiv += div;
     }
+  });
+  logAudit('pay_dividend', 'cooperative', null, `ปีงบประมาณ ${year}`, {
+    rate, members: count, total: totalDiv,
+    note: `${rate}% × ${count} คน · รวม ฿${totalDiv.toLocaleString()}`
   });
   showToast(`จ่ายปันผลให้สมาชิก ${count} คนเรียบร้อย`);
 };
@@ -4536,6 +4678,7 @@ function submitRequest(type, payload, summary) {
   };
   pendingRequests.push(req);
   sbSaveRequest(req);
+  logAudit('submit_request', 'request', req.id, summary, { type, payload });
   updateBellBadge();
   showToast('📤 ส่งคำขอให้ครูอนุมัติแล้ว');
 }
@@ -4582,6 +4725,9 @@ function approveRequest(id) {
   req.reviewedByName = currentUser.name;
   req.reviewedAt = new Date();
   sbUpdateRequest(req);
+  logAudit('approve_request', 'request', req.id, req.summary, {
+    requested_by: req.requestedByName, type: req.type
+  });
   renderRequests();
   renderStock();
   renderProducts();
@@ -4600,6 +4746,9 @@ function rejectRequest(id) {
   req.reviewedAt = new Date();
   req.notes = reason;
   sbUpdateRequest(req);
+  logAudit('reject_request', 'request', req.id, req.summary, {
+    requested_by: req.requestedByName, reason
+  });
   renderRequests();
   updateBellBadge();
   showToast('ปฏิเสธคำขอแล้ว');
@@ -4680,14 +4829,32 @@ saveProduct = function() {
   if (isTeacher()) {
     if (editingProductId) {
       const p = products.find(x => x.id === editingProductId);
+      const before = { name: p.name, price: p.price, cost: p.cost, stock: p.stock };
       p.name = name; p.price = price; p.cost = cost; p.category = category; p.emoji = selectedEmoji;
       p.stock += addQty;
       sbSaveProduct(p, false);
+      if (addQty > 0) {
+        logAudit('restock', 'product', p.id, p.name, {
+          addQty, before: before.stock, after: p.stock,
+          note: `เติม +${addQty} ${p.unit.replace('/','')} (${before.stock} → ${p.stock})`
+        });
+      }
+      const fieldsChanged = before.name !== name || before.price !== price || before.cost !== cost;
+      if (fieldsChanged) {
+        logAudit('edit_product', 'product', p.id, p.name, {
+          before: `ราคา ฿${before.price} ต้นทุน ฿${before.cost}`,
+          after: `ราคา ฿${price} ต้นทุน ฿${cost}`
+        });
+      }
       showToast(addQty > 0 ? `เพิ่มสต็อก ${name} +${addQty}` : 'แก้ไขเรียบร้อย');
     } else {
       const newP = { id: nextProductId++, name, price, cost, category, emoji: selectedEmoji, stock: addQty, lowAt: 10, unit: '/ชิ้น' };
       products.push(newP);
       sbSaveProduct(newP, true);
+      logAudit('add_product', 'product', newP.id, name, {
+        price, cost, stock: addQty,
+        note: `ราคา ฿${price} · ต้นทุน ฿${cost} · เริ่ม ${addQty} ชิ้น`
+      });
       showToast(`เพิ่ม "${name}" เรียบร้อย`);
     }
     closeProductModal();
@@ -4729,6 +4896,9 @@ deleteProduct = function() {
     sbDeleteProduct(editingProductId);
     products = products.filter(x => x.id !== editingProductId);
     cart.delete(editingProductId);
+    logAudit('delete_product', 'product', p.id, p.name, {
+      note: `เคยมีสต็อก ${p.stock}, ราคา ฿${p.price}`
+    });
     closeProductModal();
     showToast('ลบเรียบร้อย');
     renderStock();
@@ -4800,6 +4970,10 @@ function voidSale() {
     if (p) p.stock += it.qty;
   });
   sbVoidSale(s);
+  logAudit('void_sale', 'sale', s.id, `บิล #${s.id}`, {
+    total: s.total, reason, seller: s.seller,
+    note: `ยกเลิกบิล ฿${s.total} · เหตุผล: ${reason || 'ไม่ระบุ'}`
+  });
   closeSaleDetail();
   renderReport();
   renderProducts();
@@ -4931,23 +5105,131 @@ async function sbInsertShift(s) {
 
 async function saveShiftEdit() {
   const { dow, slot, selectedIds } = editingShift;
-  // remove old in-memory
+  const oldNames = shifts.filter(s => s.dayOfWeek === dow && s.slot === slot).map(s => s.memberName);
   for (let i = shifts.length - 1; i >= 0; i--) {
     if (shifts[i].dayOfWeek === dow && shifts[i].slot === slot) shifts.splice(i, 1);
   }
   await sbDeleteShifts(dow, slot);
-  // add new
+  const newNames = [];
   for (const mid of selectedIds) {
     const m = members.find(x => x.id === mid);
     if (!m) continue;
     const newS = { id: nextShiftId++, dayOfWeek: dow, slot, memberId: mid, memberName: m.name };
     shifts.push(newS);
     sbInsertShift(newS);
+    newNames.push(m.name);
   }
+  logAudit('shift_change', 'shift', null,
+    `${DAY_NAMES[dow]} · ${SLOT_META[slot].name}`,
+    { before: oldNames.join(', ') || '(ว่าง)', after: newNames.join(', ') || '(ว่าง)' }
+  );
   closeShiftEdit();
   renderShiftGrid();
   renderTodayShift();
   showToast('บันทึกตารางเวรเรียบร้อย');
+}
+
+// ============== AUDIT LOG ==============
+async function sbInsertAudit(entry) {
+  if (!sb) return;
+  try {
+    const { data, error } = await sb.from('audit_logs').insert({
+      actor_id: entry.actorId, actor_name: entry.actorName, actor_role: entry.actorRole,
+      action: entry.action, target_type: entry.targetType,
+      target_id: entry.targetId ? String(entry.targetId) : null,
+      target_name: entry.targetName, metadata: entry.metadata,
+      created_at: entry.createdAt.toISOString()
+    }).select().single();
+    if (error) throw error;
+    entry.id = data.id;
+  } catch (e) { console.error('audit failed', e); }
+}
+
+function logAudit(action, targetType, targetId, targetName, metadata = null) {
+  if (!currentUser) return;
+  const entry = {
+    id: nextAuditId++,
+    actorId: currentUser.id,
+    actorName: currentUser.name,
+    actorRole: currentUser.role,
+    action, targetType, targetId, targetName,
+    metadata,
+    createdAt: new Date()
+  };
+  auditLogs.push(entry);
+  sbInsertAudit(entry);
+}
+
+let auditFilter = 'all';
+function openAuditLog() {
+  if (!isTeacher()) return;
+  auditFilter = 'all';
+  renderAuditFilter();
+  renderAuditList();
+  document.getElementById('auditModal').classList.add('show');
+}
+function closeAuditLog() { document.getElementById('auditModal').classList.remove('show'); }
+
+function renderAuditFilter() {
+  const filters = [
+    { id: 'all',      label: 'ทั้งหมด' },
+    { id: 'critical', label: '🚨 สำคัญ' },
+    { id: 'money',    label: '💰 เงิน' },
+    { id: 'stock',    label: '📦 สต็อก' },
+    { id: 'share',    label: '💎 หุ้น' },
+  ];
+  document.getElementById('auditFilter').innerHTML = filters.map(f =>
+    `<button class="${auditFilter === f.id ? 'active' : ''}" onclick="setAuditFilter('${f.id}')">${f.label}</button>`
+  ).join('');
+}
+function setAuditFilter(f) {
+  auditFilter = f;
+  renderAuditFilter();
+  renderAuditList();
+}
+
+function renderAuditList() {
+  const sorted = [...auditLogs].sort((a,b) => b.createdAt - a.createdAt);
+  const filtered = auditFilter === 'all'
+    ? sorted
+    : sorted.filter(e => (AUDIT_META[e.action]?.cat || '') === auditFilter);
+
+  document.getElementById('auditList').innerHTML = filtered.length === 0
+    ? `<div style="text-align:center;color:var(--ink-soft);padding:30px;font-size:13px;">ไม่มีรายการ</div>`
+    : filtered.slice(0, 200).map(e => {
+      const meta = AUDIT_META[e.action] || { ico: '•', label: e.action, cat: '' };
+      const isTeacher = e.actorRole === 'teacher';
+      return `
+        <div class="audit-item ${meta.cat}">
+          <div class="audit-icon">${meta.ico}</div>
+          <div class="audit-content">
+            <div class="audit-action">${meta.label}${e.targetName ? ` <span style="color:var(--ink-soft);font-weight:600;"> · ${e.targetName}</span>` : ''}</div>
+            ${e.metadata && e.metadata.note ? `<div class="audit-target">${e.metadata.note}</div>` : ''}
+            ${e.metadata && e.metadata.before && e.metadata.after ? `<div class="audit-target">จาก <b>${e.metadata.before}</b> → <b>${e.metadata.after}</b></div>` : ''}
+            <div class="audit-meta">
+              <span class="actor ${isTeacher ? 'teacher' : ''}">${isTeacher ? '👨‍🏫' : '👨‍🎓'} ${e.actorName}</span>
+              <span>${thDateTime(e.createdAt)}</span>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+}
+
+function exportAuditCsv() {
+  const rows = [['เวลา', 'ผู้กระทำ', 'บทบาท', 'การกระทำ', 'เป้าหมาย', 'รายละเอียด']];
+  [...auditLogs].sort((a,b) => b.createdAt - a.createdAt).forEach(e => {
+    const meta = AUDIT_META[e.action] || { label: e.action };
+    const detail = e.metadata ? JSON.stringify(e.metadata).replace(/"/g, "'") : '';
+    rows.push([
+      thDateTime(e.createdAt), e.actorName,
+      e.actorRole === 'teacher' ? 'ครู' : 'นักเรียน',
+      meta.label, e.targetName || '', detail
+    ]);
+  });
+  const csv = '﻿' + rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\r\n');
+  saveBlob(csv, `audit-log-${new Date().toISOString().slice(0,10)}.csv`, 'text/csv;charset=utf-8;');
+  showToast('Export CSV เรียบร้อย');
 }
 
 // ============== ADMIN VIEW ==============
@@ -5089,11 +5371,14 @@ function saveMember() {
 
   if (editingMemberId) {
     const m = members.find(x => x.id === editingMemberId);
+    const before = `${m.name} (${m.role})`;
     m.code = code; m.name = name; m.class = klass;
     m.avatar = avatar; m.color = selectedColor; m.role = selectedMemberRole;
     sbSaveMember(m, false);
+    logAudit('edit_member', 'member', m.id, name, {
+      before, after: `${name} (${selectedMemberRole})`
+    });
     showToast('แก้ไขสมาชิกเรียบร้อย');
-    // if editing current user, refresh display
     if (m.id === currentUser?.id) setUser(m);
   } else {
     const newId = Math.max(0, ...members.map(x => x.id)) + 1;
@@ -5103,6 +5388,9 @@ function saveMember() {
     };
     members.push(newM);
     sbSaveMember(newM, true);
+    logAudit('add_member', 'member', newM.id, name, {
+      note: `${selectedMemberRole === 'teacher' ? 'ครู' : 'นักเรียน'} · ${klass} · รหัส ${code}`
+    });
     showToast(`เพิ่ม "${name}" เรียบร้อย`);
   }
   closeMemberModal();
@@ -5118,6 +5406,9 @@ function deleteMember() {
   sbDeleteMember(editingMemberId);
   const idx = members.findIndex(x => x.id === editingMemberId);
   if (idx >= 0) members.splice(idx, 1);
+  logAudit('delete_member', 'member', m.id, m.name, {
+    note: `${m.class} · รหัส ${m.code}`
+  });
   closeMemberModal();
   showToast('ลบเรียบร้อย');
   renderAdmin();
@@ -5307,6 +5598,24 @@ function startRealtime() {
     })
     .subscribe();
   realtimeChannels.push(salesChannel);
+
+  // === AUDIT LOGS (live for teachers) ===
+  if (isTeacher()) {
+    const auditChannel = sb.channel('coop-audit')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'audit_logs' }, payload => {
+        const a = payload.new;
+        if (auditLogs.find(x => x.id === a.id)) return;
+        auditLogs.unshift({
+          id: a.id, actorId: a.actor_id, actorName: a.actor_name, actorRole: a.actor_role,
+          action: a.action, targetType: a.target_type, targetId: a.target_id,
+          targetName: a.target_name, metadata: a.metadata,
+          createdAt: new Date(a.created_at)
+        });
+        if (document.getElementById('auditModal').classList.contains('show')) renderAuditList();
+      })
+      .subscribe();
+    realtimeChannels.push(auditChannel);
+  }
 
   // === SHIFT ASSIGNMENTS (live schedule updates) ===
   const shiftChannel = sb.channel('coop-shifts')

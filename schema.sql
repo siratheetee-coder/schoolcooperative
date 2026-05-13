@@ -72,6 +72,23 @@ create table if not exists sale_items (
 alter table sale_items add column if not exists cost int default 0;
 create index if not exists sale_items_sale_idx on sale_items (sale_id);
 
+-- 8. AUDIT LOGS (บันทึกทุกการกระทำสำคัญ — ป้องกันการทุจริต)
+create table if not exists audit_logs (
+  id bigserial primary key,
+  actor_id bigint references members(id) on delete set null,
+  actor_name text,
+  actor_role text,
+  action text not null,
+  target_type text,
+  target_id text,
+  target_name text,
+  metadata jsonb,
+  created_at timestamptz default now()
+);
+create index if not exists audit_created_idx on audit_logs (created_at desc);
+create index if not exists audit_actor_idx on audit_logs (actor_id);
+create index if not exists audit_action_idx on audit_logs (action);
+
 -- 7. SHIFT ASSIGNMENTS (ตารางเวรขาย — recurring รายสัปดาห์)
 create table if not exists shift_assignments (
   id bigserial primary key,
@@ -123,6 +140,7 @@ alter table sale_items         enable row level security;
 alter table share_txns         enable row level security;
 alter table pending_requests   enable row level security;
 alter table shift_assignments  enable row level security;
+alter table audit_logs         enable row level security;
 
 drop policy if exists "open" on products;
 drop policy if exists "open" on members;
@@ -131,6 +149,7 @@ drop policy if exists "open" on sale_items;
 drop policy if exists "open" on share_txns;
 drop policy if exists "open" on pending_requests;
 drop policy if exists "open" on shift_assignments;
+drop policy if exists "open" on audit_logs;
 
 create policy "open" on products           for all using (true) with check (true);
 create policy "open" on members            for all using (true) with check (true);
@@ -139,6 +158,10 @@ create policy "open" on sale_items         for all using (true) with check (true
 create policy "open" on share_txns         for all using (true) with check (true);
 create policy "open" on pending_requests   for all using (true) with check (true);
 create policy "open" on shift_assignments  for all using (true) with check (true);
+-- audit_logs: write open, but ห้ามแก้/ลบ (เพื่อรักษาความน่าเชื่อถือ)
+create policy "audit_insert" on audit_logs for insert with check (true);
+create policy "audit_select" on audit_logs for select using (true);
+-- ไม่มี update/delete policy → ทุกคนแก้/ลบไม่ได้
 
 -- ============================================================
 -- REALTIME (เปิดให้ตารางส่ง event ผ่าน WebSocket)

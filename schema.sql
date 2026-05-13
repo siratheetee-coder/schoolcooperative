@@ -9,12 +9,17 @@ create table if not exists products (
   name text not null,
   emoji text default '🍱',
   price int not null default 0,
+  cost int not null default 0,
+  category text default 'other' check (category in ('drink','snack','stationery','book','other')),
   stock int not null default 0,
   low_at int not null default 10,
   unit text default '/ชิ้น',
   is_active boolean default true,
   created_at timestamptz default now()
 );
+-- อัปเกรดตารางเดิม
+alter table products add column if not exists cost int default 0;
+alter table products add column if not exists category text default 'other';
 
 -- 2. MEMBERS
 create table if not exists members (
@@ -52,7 +57,7 @@ alter table sales add column if not exists voided_by_name text;
 alter table sales add column if not exists voided_at timestamptz;
 create index if not exists sales_date_idx on sales (date desc);
 
--- 4. SALE ITEMS (line items)
+-- 4. SALE ITEMS (line items) — เก็บ snapshot ทั้งราคาขายและต้นทุนตอนขาย
 create table if not exists sale_items (
   id bigserial primary key,
   sale_id bigint references sales(id) on delete cascade,
@@ -60,8 +65,11 @@ create table if not exists sale_items (
   name text,
   emoji text,
   price int,
+  cost int default 0,
   qty int
 );
+-- อัปเกรดตารางเดิม
+alter table sale_items add column if not exists cost int default 0;
 create index if not exists sale_items_sale_idx on sale_items (sale_id);
 
 -- 7. SHIFT ASSIGNMENTS (ตารางเวรขาย — recurring รายสัปดาห์)
@@ -155,16 +163,16 @@ end $$;
 -- SEED DATA
 -- ============================================================
 
--- Products
-insert into products (name, emoji, price, stock, low_at, unit) values
-  ('นมจืด',          '🥛', 10, 24,  10, '/กล่อง'),
-  ('ขนมปังไส้ครีม',   '🥐', 12, 8,   10, '/ชิ้น'),
-  ('น้ำดื่ม',         '💧', 7,  42,  15, '/ขวด'),
-  ('ดินสอ HB',       '✏️', 8,  60,  20, '/แท่ง'),
-  ('ยางลบ',          '🧽', 5,  0,   10, '/ก้อน'),
-  ('สมุดเส้น',       '📒', 15, 18,  10, '/เล่ม'),
-  ('ลูกอม',          '🍬', 2,  120, 30, '/เม็ด'),
-  ('ช็อกโกแลต',     '🍫', 18, 4,   10, '/แท่ง')
+-- Products (cost ~60-70% ของ price → margin 30-40%)
+insert into products (name, emoji, price, cost, category, stock, low_at, unit) values
+  ('นมจืด',          '🥛', 10, 7,  'drink',     24,  10, '/กล่อง'),
+  ('ขนมปังไส้ครีม',   '🥐', 12, 8,  'snack',     8,   10, '/ชิ้น'),
+  ('น้ำดื่ม',         '💧', 7,  4,  'drink',     42,  15, '/ขวด'),
+  ('ดินสอ HB',       '✏️', 8,  5,  'stationery',60,  20, '/แท่ง'),
+  ('ยางลบ',          '🧽', 5,  3,  'stationery',0,   10, '/ก้อน'),
+  ('สมุดเส้น',       '📒', 15, 10, 'book',      18,  10, '/เล่ม'),
+  ('ลูกอม',          '🍬', 2,  1,  'snack',     120, 30, '/เม็ด'),
+  ('ช็อกโกแลต',     '🍫', 18, 12, 'snack',     4,   10, '/แท่ง')
 on conflict do nothing;
 
 -- Members (8 นักเรียน + 1 ครู)

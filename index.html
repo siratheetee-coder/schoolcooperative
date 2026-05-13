@@ -1773,6 +1773,37 @@
     box-shadow: var(--shadow-sm);
   }
   .quick-btn:active { box-shadow: var(--shadow-inset); transform: scale(0.96); }
+
+  /* Category picker (in product modal) */
+  .cat-btn {
+    padding: 10px 6px;
+    background: var(--cream-100);
+    border: none;
+    border-radius: 12px;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ink-soft);
+    cursor: pointer;
+    box-shadow: var(--shadow-sm);
+    transition: all 0.15s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+  }
+  .cat-btn .ico { font-size: 18px; }
+  .cat-btn.sel {
+    background: linear-gradient(135deg, var(--green-400), var(--green-500));
+    color: white;
+    box-shadow: 0 3px 0 var(--green-700);
+    transform: translateY(-1px);
+  }
+
+  /* Profit cell color in reports */
+  .profit-positive { color: var(--green-500); }
+  .profit-negative { color: var(--red-500); }
+
   .actions { display: flex; gap: 10px; margin-top: 8px; }
   .btn {
     flex: 1;
@@ -2462,13 +2493,7 @@
         <div class="tp" id="todayShiftText">-</div>
       </div>
     </div>
-    <div class="tabs">
-      <button class="tab active">🍱 ทั้งหมด</button>
-      <button class="tab">🥤 เครื่องดื่ม</button>
-      <button class="tab">🍪 ขนม</button>
-      <button class="tab">✏️ เครื่องเขียน</button>
-      <button class="tab">📒 สมุด</button>
-    </div>
+    <div class="tabs" id="categoryTabs"></div>
     <div class="section-head">
       <h2>เลือกสินค้า</h2>
       <span class="count" id="prodCount">0 รายการ</span>
@@ -2510,25 +2535,26 @@
     <div class="summary">
       <div class="sum-card green">
         <div class="ico">💰</div>
-        <div class="lbl">ยอดขาย</div>
+        <div class="lbl">ยอดขาย (Revenue)</div>
         <div class="val">฿<span id="sumSales">0</span></div>
         <div class="delta up" id="sumSalesDelta">↑ 0% จากก่อนหน้า</div>
       </div>
       <div class="sum-card gold">
+        <div class="ico">💵</div>
+        <div class="lbl">กำไรสุทธิ (Profit)</div>
+        <div class="val">฿<span id="sumProfit">0</span></div>
+        <div class="delta up" id="sumMargin">Margin 0%</div>
+      </div>
+      <div class="sum-card blue">
+        <div class="ico">📉</div>
+        <div class="lbl">ต้นทุนสินค้า (COGS)</div>
+        <div class="val">฿<span id="sumCost">0</span></div>
+      </div>
+      <div class="sum-card red">
         <div class="ico">🧾</div>
         <div class="lbl">จำนวนบิล</div>
         <div class="val"><span id="sumBills">0</span><span class="unit">บิล</span></div>
         <div class="delta up" id="sumBillsDelta">↑ 0% จากก่อนหน้า</div>
-      </div>
-      <div class="sum-card blue">
-        <div class="ico">📦</div>
-        <div class="lbl">สินค้าที่ขาย</div>
-        <div class="val"><span id="sumItems">0</span><span class="unit">ชิ้น</span></div>
-      </div>
-      <div class="sum-card red">
-        <div class="ico">📈</div>
-        <div class="lbl">เฉลี่ย/บิล</div>
-        <div class="val">฿<span id="sumAvg">0</span></div>
       </div>
     </div>
 
@@ -2764,8 +2790,18 @@
     </div>
 
     <div class="field">
-      <label>ราคา (บาท)</label>
+      <label>ราคาขาย (บาท)</label>
       <input type="number" id="pPrice" placeholder="0" inputmode="numeric" />
+    </div>
+
+    <div class="field">
+      <label>ราคาต้นทุน (บาท) <span style="color:var(--ink-soft);font-weight:400;">— สำหรับคำนวณกำไร</span></label>
+      <input type="number" id="pCost" placeholder="0" inputmode="numeric" />
+    </div>
+
+    <div class="field">
+      <label>หมวดหมู่</label>
+      <div class="quick-add" id="catPicker" style="grid-template-columns:repeat(3,1fr);"></div>
     </div>
 
     <div class="field">
@@ -2958,17 +2994,28 @@
 <script>
 // ============== SHARED DATA ==============
 let products = [
-  { id: 1, name: 'นมจืด',        emoji: '🥛', price: 10, stock: 24,  lowAt: 10, unit: '/กล่อง' },
-  { id: 2, name: 'ขนมปังไส้ครีม', emoji: '🥐', price: 12, stock: 8,   lowAt: 10, unit: '/ชิ้น' },
-  { id: 3, name: 'น้ำดื่ม',       emoji: '💧', price: 7,  stock: 42,  lowAt: 15, unit: '/ขวด' },
-  { id: 4, name: 'ดินสอ HB',     emoji: '✏️', price: 8,  stock: 60,  lowAt: 20, unit: '/แท่ง' },
-  { id: 5, name: 'ยางลบ',        emoji: '🧽', price: 5,  stock: 0,   lowAt: 10, unit: '/ก้อน' },
-  { id: 6, name: 'สมุดเส้น',     emoji: '📒', price: 15, stock: 18,  lowAt: 10, unit: '/เล่ม' },
-  { id: 7, name: 'ลูกอม',        emoji: '🍬', price: 2,  stock: 120, lowAt: 30, unit: '/เม็ด' },
-  { id: 8, name: 'ช็อกโกแลต',   emoji: '🍫', price: 18, stock: 4,   lowAt: 10, unit: '/แท่ง' },
+  { id: 1, name: 'นมจืด',        emoji: '🥛', price: 10, cost: 7,  category: 'drink',      stock: 24,  lowAt: 10, unit: '/กล่อง' },
+  { id: 2, name: 'ขนมปังไส้ครีม', emoji: '🥐', price: 12, cost: 8,  category: 'snack',      stock: 8,   lowAt: 10, unit: '/ชิ้น' },
+  { id: 3, name: 'น้ำดื่ม',       emoji: '💧', price: 7,  cost: 4,  category: 'drink',      stock: 42,  lowAt: 15, unit: '/ขวด' },
+  { id: 4, name: 'ดินสอ HB',     emoji: '✏️', price: 8,  cost: 5,  category: 'stationery', stock: 60,  lowAt: 20, unit: '/แท่ง' },
+  { id: 5, name: 'ยางลบ',        emoji: '🧽', price: 5,  cost: 3,  category: 'stationery', stock: 0,   lowAt: 10, unit: '/ก้อน' },
+  { id: 6, name: 'สมุดเส้น',     emoji: '📒', price: 15, cost: 10, category: 'book',       stock: 18,  lowAt: 10, unit: '/เล่ม' },
+  { id: 7, name: 'ลูกอม',        emoji: '🍬', price: 2,  cost: 1,  category: 'snack',      stock: 120, lowAt: 30, unit: '/เม็ด' },
+  { id: 8, name: 'ช็อกโกแลต',   emoji: '🍫', price: 18, cost: 12, category: 'snack',      stock: 4,   lowAt: 10, unit: '/แท่ง' },
 ];
 let nextProductId = 9;
 const EMOJIS = ['🥛','🥐','💧','✏️','🧽','📒','🍬','🍫','🍪','🍞','🧃','🍙','🍡','🍩','🧁','🍎','🍊','🍌','🥪','🍔','📏','📐','✂️','🖍️','🖊️','📌','📎','🔖'];
+
+// Categories
+const CATEGORIES = [
+  { id: 'all',        ico: '🍱', name: 'ทั้งหมด' },
+  { id: 'drink',      ico: '🥤', name: 'เครื่องดื่ม' },
+  { id: 'snack',      ico: '🍪', name: 'ขนม' },
+  { id: 'stationery', ico: '✏️', name: 'เครื่องเขียน' },
+  { id: 'book',       ico: '📒', name: 'สมุด' },
+  { id: 'other',      ico: '📦', name: 'อื่นๆ' },
+];
+let currentCategory = 'all';
 
 function stockStatus(p) {
   if (p.stock <= 0) return 'out';
@@ -3063,9 +3110,24 @@ function setView(name) {
 // ============== POS LOGIC ==============
 const cart = new Map();
 
+function renderCategoryTabs() {
+  const tabs = document.getElementById('categoryTabs');
+  tabs.innerHTML = CATEGORIES.map(c =>
+    `<button class="tab ${currentCategory === c.id ? 'active' : ''}" onclick="setCategory('${c.id}')">${c.ico} ${c.name}</button>`
+  ).join('');
+}
+function setCategory(c) {
+  currentCategory = c;
+  renderCategoryTabs();
+  renderProducts();
+}
+
 function renderProducts() {
   const grid = document.getElementById('grid');
-  grid.innerHTML = products.map(p => {
+  const filtered = currentCategory === 'all'
+    ? products
+    : products.filter(p => (p.category || 'other') === currentCategory);
+  grid.innerHTML = filtered.map(p => {
     const out = p.stock <= 0;
     const remaining = p.stock - (cart.get(p.id) || 0);
     return `
@@ -3251,27 +3313,48 @@ function renderEmojis() {
 }
 function selectEmoji(e) { selectedEmoji = e; renderEmojis(); }
 
+let selectedProductCategory = 'other';
+function renderCatPicker() {
+  const picker = document.getElementById('catPicker');
+  if (!picker) return;
+  // skip 'all' (only for filter)
+  picker.innerHTML = CATEGORIES.filter(c => c.id !== 'all').map(c =>
+    `<button class="cat-btn ${selectedProductCategory === c.id ? 'sel' : ''}" onclick="selectProductCategory('${c.id}')">
+      <span class="ico">${c.ico}</span>${c.name}
+    </button>`
+  ).join('');
+}
+function selectProductCategory(c) {
+  selectedProductCategory = c;
+  renderCatPicker();
+}
+
 function openProductModal(id = null) {
   editingProductId = id;
   if (id) {
     const p = products.find(x => x.id === id);
     selectedEmoji = p.emoji;
+    selectedProductCategory = p.category || 'other';
     document.getElementById('productTitle').textContent = 'แก้ไขสินค้า';
     document.getElementById('pName').value = p.name;
     document.getElementById('pPrice').value = p.price;
+    document.getElementById('pCost').value = p.cost || 0;
     document.getElementById('pStock').value = '';
     document.getElementById('curStock').textContent = p.stock;
     document.getElementById('pDeleteBtn').style.display = 'block';
   } else {
     selectedEmoji = '🍱';
+    selectedProductCategory = 'other';
     document.getElementById('productTitle').textContent = 'เพิ่มสินค้าใหม่';
     document.getElementById('pName').value = '';
     document.getElementById('pPrice').value = '';
+    document.getElementById('pCost').value = '';
     document.getElementById('pStock').value = '';
     document.getElementById('curStock').textContent = '0';
     document.getElementById('pDeleteBtn').style.display = 'none';
   }
   renderEmojis();
+  renderCatPicker();
   document.getElementById('productModal').classList.add('show');
 }
 
@@ -3367,9 +3450,10 @@ function renderReport() {
   document.getElementById('periodLabel').innerHTML = PERIOD_LABELS[currentPeriod]();
 
   const totalSales = cur.reduce((s,x) => s + x.total, 0);
+  const totalCost  = cur.reduce((s,x) => s + x.items.reduce((a,i) => a + (i.cost||0) * i.qty, 0), 0);
+  const totalProfit = totalSales - totalCost;
+  const margin = totalSales > 0 ? Math.round(totalProfit / totalSales * 100) : 0;
   const totalBills = cur.length;
-  const totalItems = cur.reduce((s,x) => s + x.items.reduce((a,i) => a+i.qty, 0), 0);
-  const avg = totalBills ? Math.round(totalSales / totalBills) : 0;
 
   const prevSales = prev.reduce((s,x) => s + x.total, 0);
   const prevBills = prev.length;
@@ -3377,9 +3461,13 @@ function renderReport() {
   const bd = prevBills > 0 ? Math.round((totalBills - prevBills) / prevBills * 100) : 0;
 
   document.getElementById('sumSales').textContent = totalSales.toLocaleString();
+  document.getElementById('sumProfit').textContent = totalProfit.toLocaleString();
+  document.getElementById('sumCost').textContent = totalCost.toLocaleString();
   document.getElementById('sumBills').textContent = totalBills.toLocaleString();
-  document.getElementById('sumItems').textContent = totalItems.toLocaleString();
-  document.getElementById('sumAvg').textContent = avg.toLocaleString();
+
+  const mgEl = document.getElementById('sumMargin');
+  mgEl.className = 'delta ' + (margin >= 0 ? 'up' : 'down');
+  mgEl.textContent = `Margin ${margin}%${totalCost === 0 ? ' (ยังไม่ใส่ต้นทุน)' : ''}`;
 
   const sdEl = document.getElementById('sumSalesDelta');
   sdEl.className = 'delta ' + (sd >= 0 ? 'up' : 'down');
@@ -3393,21 +3481,25 @@ function renderReport() {
   // Top products
   const totals = {};
   cur.forEach(s => s.items.forEach(i => {
-    if (!totals[i.id]) totals[i.id] = { ...i, qty: 0, revenue: 0 };
+    if (!totals[i.id]) totals[i.id] = { ...i, qty: 0, revenue: 0, cost: 0 };
     totals[i.id].qty += i.qty;
     totals[i.id].revenue += i.qty * i.price;
+    totals[i.id].cost += i.qty * (i.cost || 0);
   }));
   const top = Object.values(totals).sort((a,b) => b.revenue - a.revenue).slice(0, 5);
   const maxRev = top[0]?.revenue || 1;
   document.getElementById('topList').innerHTML = top.length === 0
     ? `<div style="text-align:center;color:var(--ink-soft);padding:14px;font-size:13px;">ยังไม่มีข้อมูล</div>`
-    : top.map((p, idx) => `
+    : top.map((p, idx) => {
+      const profit = p.revenue - p.cost;
+      const margin = p.revenue ? Math.round(profit / p.revenue * 100) : 0;
+      return `
       <div class="top-item">
         <div class="rank ${idx < 3 ? 'rank-'+(idx+1) : 'rank-x'}">${idx+1}</div>
         <div class="top-emoji">${p.emoji}</div>
         <div class="top-info">
           <div class="top-name">${p.name}</div>
-          <div class="top-meta">ขายได้ ${p.qty.toLocaleString()} ชิ้น</div>
+          <div class="top-meta">ขายได้ ${p.qty.toLocaleString()} ชิ้น · กำไร <span class="${profit>=0?'profit-positive':'profit-negative'}">฿${profit.toLocaleString()}</span> (${margin}%)</div>
           <div class="top-bar-wrap"><div class="top-bar-fill" style="width:${p.revenue/maxRev*100}%"></div></div>
         </div>
         <div class="top-value">
@@ -3415,7 +3507,7 @@ function renderReport() {
           <div class="s">รายได้</div>
         </div>
       </div>
-    `).join('');
+    `;}).join('');
 
   // include voided in recent list so teacher can see them; subtotal already excludes voided
   const recentAll = filterSales(currentPeriod, 0, true).sort((a,b) => b.date - a.date).slice(0, 10);
@@ -3487,13 +3579,15 @@ function setPeriod(p) {
 // ============== DOWNLOAD REPORT ==============
 function buildReportRows() {
   const cur = filterSales();
-  const rows = [['บิล#', 'วันที่', 'เวลา', 'ผู้ขาย', 'รายการ', 'จำนวน', 'ราคารวม (บาท)']];
+  const rows = [['บิล#', 'วันที่', 'เวลา', 'ผู้ขาย', 'รายการ', 'จำนวน', 'ยอดขาย', 'ต้นทุน', 'กำไร']];
   cur.forEach(s => {
     const dd = `${s.date.getDate()}/${s.date.getMonth()+1}/${s.date.getFullYear()+543}`;
     const hh = `${String(s.date.getHours()).padStart(2,'0')}:${String(s.date.getMinutes()).padStart(2,'0')}`;
     const itemsStr = s.items.map(i => `${i.name} x${i.qty}`).join(', ');
     const qty = s.items.reduce((a,i) => a+i.qty, 0);
-    rows.push([s.id, dd, hh, s.seller, itemsStr, qty, s.total]);
+    const cost = s.items.reduce((a,i) => a + (i.cost||0) * i.qty, 0);
+    const profit = s.total - cost;
+    rows.push([s.id, dd, hh, s.seller, itemsStr, qty, s.total, cost, profit]);
   });
   return rows;
 }
@@ -3525,6 +3619,9 @@ function downloadReport(type) {
   const cur = filterSales();
   const totalSales = cur.reduce((s,x) => s + x.total, 0);
   const totalQty = cur.reduce((s,x) => s + x.items.reduce((a,i) => a+i.qty, 0), 0);
+  const totalCost = cur.reduce((s,x) => s + x.items.reduce((a,i) => a + (i.cost||0) * i.qty, 0), 0);
+  const totalProfit = totalSales - totalCost;
+  const margin = totalSales > 0 ? Math.round(totalProfit / totalSales * 100) : 0;
   const avg = cur.length ? Math.round(totalSales/cur.length) : 0;
   const esc = v => String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   const periodText = PERIOD_LABELS[currentPeriod]().replace(/<\/?b>/g,'');
@@ -3556,15 +3653,16 @@ function downloadReport(type) {
 </Styles>
 <Worksheet ss:Name="รายงานยอดขาย">
  <Table ss:DefaultColumnWidth="80">
-  <Column ss:Width="65"/><Column ss:Width="90"/><Column ss:Width="55"/><Column ss:Width="130"/><Column ss:Width="280"/><Column ss:Width="60"/><Column ss:Width="100"/>
+  <Column ss:Width="65"/><Column ss:Width="90"/><Column ss:Width="55"/><Column ss:Width="130"/><Column ss:Width="260"/><Column ss:Width="55"/><Column ss:Width="85"/><Column ss:Width="85"/><Column ss:Width="85"/>
   <Row ss:Height="36"><Cell ss:StyleID="sTitle" ss:MergeAcross="${colCount-1}"><Data ss:Type="String">รายงานยอดขาย — สหกรณ์โรงเรียน</Data></Cell></Row>
   <Row ss:Height="22"><Cell ss:StyleID="sSubtitle" ss:MergeAcross="${colCount-1}"><Data ss:Type="String">${esc(periodText)} · พิมพ์เมื่อ ${esc(thDateTime(new Date()))}</Data></Cell></Row>
   <Row><Cell><Data ss:Type="String"></Data></Cell></Row>
   <Row ss:Height="26">${headerCells}</Row>
   ${dataRows}
-  <Row><Cell ss:StyleID="sTotalLabel" ss:MergeAcross="4"><Data ss:Type="String">รวมทั้งหมด</Data></Cell><Cell ss:StyleID="sTotalNum"><Data ss:Type="Number">${totalQty}</Data></Cell><Cell ss:StyleID="sTotalNum"><Data ss:Type="Number">${totalSales}</Data></Cell></Row>
-  <Row><Cell ss:StyleID="sSubLabel" ss:MergeAcross="5"><Data ss:Type="String">จำนวนบิลทั้งหมด</Data></Cell><Cell ss:StyleID="sSubNum"><Data ss:Type="Number">${cur.length}</Data></Cell></Row>
-  <Row><Cell ss:StyleID="sSubLabel" ss:MergeAcross="5"><Data ss:Type="String">ยอดเฉลี่ยต่อบิล</Data></Cell><Cell ss:StyleID="sSubNum"><Data ss:Type="Number">${avg}</Data></Cell></Row>
+  <Row><Cell ss:StyleID="sTotalLabel" ss:MergeAcross="4"><Data ss:Type="String">รวมทั้งหมด</Data></Cell><Cell ss:StyleID="sTotalNum"><Data ss:Type="Number">${totalQty}</Data></Cell><Cell ss:StyleID="sTotalNum"><Data ss:Type="Number">${totalSales}</Data></Cell><Cell ss:StyleID="sTotalNum"><Data ss:Type="Number">${totalCost}</Data></Cell><Cell ss:StyleID="sTotalNum"><Data ss:Type="Number">${totalProfit}</Data></Cell></Row>
+  <Row><Cell ss:StyleID="sSubLabel" ss:MergeAcross="7"><Data ss:Type="String">จำนวนบิลทั้งหมด</Data></Cell><Cell ss:StyleID="sSubNum"><Data ss:Type="Number">${cur.length}</Data></Cell></Row>
+  <Row><Cell ss:StyleID="sSubLabel" ss:MergeAcross="7"><Data ss:Type="String">ยอดเฉลี่ยต่อบิล (฿)</Data></Cell><Cell ss:StyleID="sSubNum"><Data ss:Type="Number">${avg}</Data></Cell></Row>
+  <Row><Cell ss:StyleID="sSubLabel" ss:MergeAcross="7"><Data ss:Type="String">อัตรากำไรขั้นต้น (Margin %)</Data></Cell><Cell ss:StyleID="sSubNum"><Data ss:Type="Number">${margin}</Data></Cell></Row>
  </Table>
 </Worksheet>
 </Workbook>`;
@@ -3619,17 +3717,18 @@ tfoot tr.sub td { background:#F5EAD3; color:#226258; font-size:11px; padding:8px
 <div class="container">
   <div class="sum-cards">
     <div class="sum-card"><div class="l">💰 ยอดขายรวม</div><div class="v">฿${totalSales.toLocaleString()}</div></div>
-    <div class="sum-card gold"><div class="l">🧾 จำนวนบิล</div><div class="v">${cur.length.toLocaleString()}</div></div>
-    <div class="sum-card blue"><div class="l">📈 เฉลี่ย/บิล</div><div class="v">฿${avg.toLocaleString()}</div></div>
+    <div class="sum-card gold"><div class="l">💵 กำไรสุทธิ (${margin}%)</div><div class="v">฿${totalProfit.toLocaleString()}</div></div>
+    <div class="sum-card blue"><div class="l">📉 ต้นทุน + 🧾 ${cur.length} บิล</div><div class="v">฿${totalCost.toLocaleString()}</div></div>
   </div>
   <h2>📋 รายการขายทั้งหมด</h2>
   <table>
     <thead><tr>${rows[0].map((h,i) => `<th class="${i>=5?'num':''}">${h}</th>`).join('')}</tr></thead>
     <tbody>${rows.slice(1).map(r => `<tr>${r.map((c,i) => `<td class="${i>=5?'num':''}">${typeof c === 'number' ? c.toLocaleString() : c}</td>`).join('')}</tr>`).join('')}</tbody>
     <tfoot>
-      <tr><td class="label" colspan="5">รวมทั้งหมด</td><td class="num">${totalQty.toLocaleString()}</td><td class="num">฿${totalSales.toLocaleString()}</td></tr>
-      <tr class="sub"><td class="label" colspan="6">จำนวนบิลทั้งหมด</td><td class="num">${cur.length.toLocaleString()} บิล</td></tr>
-      <tr class="sub"><td class="label" colspan="6">ยอดเฉลี่ยต่อบิล</td><td class="num">฿${avg.toLocaleString()}</td></tr>
+      <tr><td class="label" colspan="5">รวมทั้งหมด</td><td class="num">${totalQty.toLocaleString()}</td><td class="num">฿${totalSales.toLocaleString()}</td><td class="num">฿${totalCost.toLocaleString()}</td><td class="num">฿${totalProfit.toLocaleString()}</td></tr>
+      <tr class="sub"><td class="label" colspan="8">จำนวนบิลทั้งหมด</td><td class="num">${cur.length.toLocaleString()} บิล</td></tr>
+      <tr class="sub"><td class="label" colspan="8">ยอดเฉลี่ยต่อบิล</td><td class="num">฿${avg.toLocaleString()}</td></tr>
+      <tr class="sub"><td class="label" colspan="8">อัตรากำไร (Margin)</td><td class="num">${margin}%</td></tr>
     </tfoot>
   </table>
   <div class="footer">
@@ -4103,7 +4202,8 @@ async function loadFromCloud() {
       products.length = 0;
       prods.forEach(p => products.push({
         id: p.id, name: p.name, emoji: p.emoji,
-        price: p.price, stock: p.stock, lowAt: p.low_at, unit: p.unit || '/ชิ้น'
+        price: p.price, cost: p.cost || 0, category: p.category || 'other',
+        stock: p.stock, lowAt: p.low_at, unit: p.unit || '/ชิ้น'
       }));
       nextProductId = Math.max(...products.map(p => p.id), 0) + 1;
     }
@@ -4121,7 +4221,7 @@ async function loadFromCloud() {
     const since = new Date(); since.setDate(since.getDate() - 365);
     const { data: sls } = await sb
       .from('sales')
-      .select('id,date,seller_name,total,is_voided,void_reason,voided_by_name,voided_at,sale_items(product_id,name,emoji,price,qty)')
+      .select('id,date,seller_name,total,is_voided,void_reason,voided_by_name,voided_at,sale_items(product_id,name,emoji,price,cost,qty)')
       .gte('date', since.toISOString())
       .order('date', { ascending: false })
       .limit(5000);
@@ -4132,7 +4232,7 @@ async function loadFromCloud() {
         date: new Date(s.date),
         seller: s.seller_name || '-',
         items: (s.sale_items || []).map(i => ({
-          id: i.product_id, name: i.name, emoji: i.emoji, price: i.price, qty: i.qty
+          id: i.product_id, name: i.name, emoji: i.emoji, price: i.price, cost: i.cost || 0, qty: i.qty
         })),
         total: s.total,
         isVoided: !!s.is_voided,
@@ -4210,7 +4310,7 @@ async function sbSaveSale(sale) {
     await sb.from('sale_items').insert(
       sale.items.map(i => ({
         sale_id: row.id, product_id: i.id,
-        name: i.name, emoji: i.emoji, price: i.price, qty: i.qty
+        name: i.name, emoji: i.emoji, price: i.price, cost: i.cost || 0, qty: i.qty
       }))
     );
     // update product stock
@@ -4227,6 +4327,7 @@ async function sbSaveProduct(p, isNew) {
     if (isNew) {
       const { data, error } = await sb.from('products').insert({
         name: p.name, emoji: p.emoji, price: p.price,
+        cost: p.cost || 0, category: p.category || 'other',
         stock: p.stock, low_at: p.lowAt, unit: p.unit
       }).select().single();
       if (error) throw error;
@@ -4234,6 +4335,7 @@ async function sbSaveProduct(p, isNew) {
     } else {
       await sb.from('products').update({
         name: p.name, emoji: p.emoji, price: p.price,
+        cost: p.cost || 0, category: p.category || 'other',
         stock: p.stock, low_at: p.lowAt
       }).eq('id', p.id);
     }
@@ -4267,7 +4369,7 @@ confirmPay = function() {
   cart.forEach((qty, id) => {
     const p = products.find(x => x.id === id);
     if (!p) return;
-    items.push({ id: p.id, name: p.name, emoji: p.emoji, price: p.price, qty });
+    items.push({ id: p.id, name: p.name, emoji: p.emoji, price: p.price, cost: p.cost || 0, qty });
     total += p.price * qty;
     p.stock = Math.max(0, p.stock - qty);
   });
@@ -4279,7 +4381,7 @@ confirmPay = function() {
       items, total
     };
     sales.push(sale);
-    sbSaveSale(sale); // async, non-blocking
+    sbSaveSale(sale);
   }
   closePay();
   cart.clear();
@@ -4448,6 +4550,7 @@ function approveRequest(id) {
   if (req.type === 'add_product') {
     const newP = {
       id: nextProductId++, name: p.name, price: p.price,
+      cost: p.cost || 0, category: p.category || 'other',
       emoji: p.emoji, stock: p.stock, lowAt: p.lowAt || 10, unit: p.unit || '/ชิ้น'
     };
     products.push(newP);
@@ -4456,6 +4559,8 @@ function approveRequest(id) {
     const prod = products.find(x => x.id === p.id);
     if (prod) {
       prod.name = p.name; prod.price = p.price; prod.emoji = p.emoji;
+      if (p.cost !== undefined) prod.cost = p.cost;
+      if (p.category) prod.category = p.category;
       sbSaveProduct(prod, false);
     }
   } else if (req.type === 'delete_product') {
@@ -4566,20 +4671,21 @@ function renderRequests() {
 saveProduct = function() {
   const name = document.getElementById('pName').value.trim();
   const price = parseInt(document.getElementById('pPrice').value) || 0;
+  const cost = parseInt(document.getElementById('pCost').value) || 0;
+  const category = selectedProductCategory;
   const addQty = parseInt(document.getElementById('pStock').value) || 0;
   if (!name) { showToast('กรุณาใส่ชื่อสินค้า', true); return; }
   if (price <= 0) { showToast('กรุณาใส่ราคา', true); return; }
 
   if (isTeacher()) {
-    // direct save
     if (editingProductId) {
       const p = products.find(x => x.id === editingProductId);
-      p.name = name; p.price = price; p.emoji = selectedEmoji;
+      p.name = name; p.price = price; p.cost = cost; p.category = category; p.emoji = selectedEmoji;
       p.stock += addQty;
       sbSaveProduct(p, false);
       showToast(addQty > 0 ? `เพิ่มสต็อก ${name} +${addQty}` : 'แก้ไขเรียบร้อย');
     } else {
-      const newP = { id: nextProductId++, name, price, emoji: selectedEmoji, stock: addQty, lowAt: 10, unit: '/ชิ้น' };
+      const newP = { id: nextProductId++, name, price, cost, category, emoji: selectedEmoji, stock: addQty, lowAt: 10, unit: '/ชิ้น' };
       products.push(newP);
       sbSaveProduct(newP, true);
       showToast(`เพิ่ม "${name}" เรียบร้อย`);
@@ -4597,19 +4703,20 @@ saveProduct = function() {
         { id: p.id, addQty },
         `เติมสต็อก "${p.name}" +${addQty} ${p.unit.replace('/','')}`);
     }
-    if (name !== p.name || price !== p.price || selectedEmoji !== p.emoji) {
+    const changed = name !== p.name || price !== p.price || cost !== (p.cost||0) || category !== (p.category||'other') || selectedEmoji !== p.emoji;
+    if (changed) {
       submitRequest('edit_product',
-        { id: p.id, name, price, emoji: selectedEmoji },
-        `แก้ไข "${p.name}" → ชื่อ: ${name}, ราคา: ฿${price}`);
+        { id: p.id, name, price, cost, category, emoji: selectedEmoji },
+        `แก้ไข "${p.name}" → ชื่อ: ${name}, ราคา: ฿${price}, ต้นทุน: ฿${cost}`);
     }
-    if (addQty === 0 && name === p.name && price === p.price && selectedEmoji === p.emoji) {
+    if (addQty === 0 && !changed) {
       showToast('ไม่มีการเปลี่ยนแปลง', true);
       return;
     }
   } else {
     submitRequest('add_product',
-      { name, price, emoji: selectedEmoji, stock: addQty, lowAt: 10, unit: '/ชิ้น' },
-      `เพิ่มสินค้าใหม่ "${name}" ราคา ฿${price} จำนวน ${addQty} ชิ้น`);
+      { name, price, cost, category, emoji: selectedEmoji, stock: addQty, lowAt: 10, unit: '/ชิ้น' },
+      `เพิ่มสินค้าใหม่ "${name}" ราคา ฿${price} ต้นทุน ฿${cost}`);
   }
   closeProductModal();
 };
@@ -5146,13 +5253,14 @@ function startRealtime() {
       if (payload.eventType === 'INSERT') {
         const p = payload.new;
         if (!products.find(x => x.id === p.id)) {
-          products.push({ id: p.id, name: p.name, emoji: p.emoji, price: p.price, stock: p.stock, lowAt: p.low_at, unit: p.unit || '/ชิ้น' });
+          products.push({ id: p.id, name: p.name, emoji: p.emoji, price: p.price, cost: p.cost || 0, category: p.category || 'other', stock: p.stock, lowAt: p.low_at, unit: p.unit || '/ชิ้น' });
         }
       } else if (payload.eventType === 'UPDATE') {
         const p = payload.new;
         const local = products.find(x => x.id === p.id);
         if (local) {
           local.name = p.name; local.price = p.price; local.emoji = p.emoji;
+          local.cost = p.cost || 0; local.category = p.category || 'other';
           local.stock = p.stock; local.lowAt = p.low_at; local.unit = p.unit || '/ชิ้น';
         }
       } else if (payload.eventType === 'DELETE') {
@@ -5323,6 +5431,7 @@ window.addEventListener('appinstalled', () => {
 });
 
 // ============== INIT ==============
+renderCategoryTabs();
 renderProducts();
 </script>
 

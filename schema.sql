@@ -134,15 +134,22 @@ create policy "open" on shift_assignments  for all using (true) with check (true
 
 -- ============================================================
 -- REALTIME (เปิดให้ตารางส่ง event ผ่าน WebSocket)
+-- ใช้ DO block ป้องกัน error เมื่อตารางอยู่ใน publication อยู่แล้ว
 -- ============================================================
-alter publication supabase_realtime add table products;
-alter publication supabase_realtime add table sales;
-alter publication supabase_realtime add table sale_items;
-alter publication supabase_realtime add table pending_requests;
-alter publication supabase_realtime add table share_txns;
-alter publication supabase_realtime add table members;
-alter publication supabase_realtime add table shift_assignments;
--- ถ้า error "already member of publication" ไม่ต้องสนใจ
+do $$
+declare
+  tbl text;
+begin
+  foreach tbl in array array['products','sales','sale_items','pending_requests','share_txns','members','shift_assignments']
+  loop
+    begin
+      execute format('alter publication supabase_realtime add table %I', tbl);
+    exception
+      when duplicate_object then null;  -- ตารางอยู่แล้ว ข้าม
+      when others then null;
+    end;
+  end loop;
+end $$;
 
 -- ============================================================
 -- SEED DATA

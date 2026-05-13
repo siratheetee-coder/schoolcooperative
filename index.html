@@ -3797,9 +3797,45 @@ tfoot td { background:linear-gradient(135deg,#FFC857,#FFB627); color:#174740; fo
 tfoot td.label { text-align:right;}
 tfoot td.num { text-align:right;}
 tfoot tr.sub td { background:#F5EAD3; color:#226258; font-size:11px; padding:8px; border-top:none;}
-.footer { margin-top:24px; padding-top:14px; border-top:1px dashed #E8D6B3; display:flex; justify-content:space-between; font-size:10px; color:#6B5E4C;}
-.stamp { display:inline-block; padding:4px 12px; border:2px solid #2D7D6F; color:#2D7D6F; border-radius:8px; font-weight:700; transform:rotate(-3deg);}
-@media print { body { background:white;} thead { display:table-header-group;} tfoot { display:table-footer-group;} tr { page-break-inside:avoid;}}
+.footer { margin-top:24px; padding-top:14px; border-top:1px dashed #E8D6B3; font-size:10px; color:#6B5E4C; text-align:center;}
+.action-bar {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  background: white;
+  border-top: 1px solid #E8D6B3;
+  padding: 12px 16px;
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  z-index: 1000;
+  box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
+}
+.action-bar button {
+  flex: 1; max-width: 200px;
+  padding: 14px;
+  border: none;
+  border-radius: 14px;
+  font-family: 'Sarabun', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.1s;
+}
+.btn-close {
+  background: #F5EAD3;
+  color: #2A2218;
+}
+.btn-print {
+  background: linear-gradient(135deg, #46A697, #2D7D6F);
+  color: white;
+  box-shadow: 0 4px 0 #174740;
+}
+.btn-print:active, .btn-close:active { transform: translateY(2px); }
+body { padding-bottom: 80px; }
+@media print {
+  body { background:white; padding-bottom: 0;}
+  .action-bar { display: none !important; }
+  thead { display:table-header-group;} tfoot { display:table-footer-group;} tr { page-break-inside:avoid;}
+}
 </style></head><body>
 <div class="header">
   <div class="brand"><div class="logo">🏫</div><div><h1>รายงานยอดขาย</h1><div class="org">สหกรณ์โรงเรียน · ร้านนักเรียน</div></div></div>
@@ -3823,11 +3859,23 @@ tfoot tr.sub td { background:#F5EAD3; color:#226258; font-size:11px; padding:8px
     </tfoot>
   </table>
   <div class="footer">
-    <div>เอกสารนี้สร้างโดยระบบสหกรณ์โรงเรียน</div>
-    <div class="stamp">✓ AUTO-GENERATED</div>
+    เอกสารนี้สร้างโดยระบบสหกรณ์โรงเรียน · พิมพ์เมื่อ ${thDateTime(new Date())}
   </div>
 </div>
-<script>window.onload=()=>setTimeout(()=>window.print(),400);<\/script>
+
+<div class="action-bar">
+  <button class="btn-close" onclick="closeReport()">✕ ปิดหน้านี้</button>
+  <button class="btn-print" onclick="window.print()">🖨️ พิมพ์ / บันทึก PDF</button>
+</div>
+
+<script>
+function closeReport() {
+  // try window.close (works for window.open); if blocked, navigate back
+  window.close();
+  setTimeout(() => { history.length > 1 ? history.back() : (location.href = 'about:blank'); }, 100);
+}
+window.onload = () => setTimeout(() => window.print(), 500);
+<\/script>
 </body></html>`);
     win.document.close();
     showToast('เปิดหน้าต่างพิมพ์ → เลือก "บันทึกเป็น PDF"');

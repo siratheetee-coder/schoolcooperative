@@ -70,7 +70,7 @@
     margin: 0 auto;
     min-height: 100vh;
     background: var(--cream-100);
-    padding-bottom: calc(var(--nav-height) + 80px);
+    padding-bottom: calc(var(--nav-height) + 120px + env(safe-area-inset-bottom, 0px));
     position: relative;
   }
 
@@ -346,7 +346,7 @@
   /* ============== CART BAR ============== */
   .cart-bar {
     position: fixed;
-    bottom: calc(var(--nav-height) + 10px);
+    bottom: calc(var(--nav-height) + 24px + env(safe-area-inset-bottom, 0px));
     left: 50%;
     transform: translateX(-50%);
     width: calc(100% - 32px);
@@ -732,7 +732,7 @@
   /* Admin FAB (เพิ่มสมาชิก) — yellow */
   .admin-fab {
     position: fixed;
-    bottom: calc(var(--nav-height) + 10px);
+    bottom: calc(var(--nav-height) + 24px + env(safe-area-inset-bottom, 0px));
     left: 50%;
     transform: translateX(-50%);
     width: calc(100% - 32px);
@@ -1569,7 +1569,7 @@
   /* ============== TOAST ============== */
   .toast {
     position: fixed;
-    bottom: calc(var(--nav-height) + 100px);
+    bottom: calc(var(--nav-height) + 130px + env(safe-area-inset-bottom, 0px));
     left: 50%;
     transform: translateX(-50%) translateY(150%);
     background: var(--green-600);
@@ -1747,7 +1747,7 @@
   /* ============== FAB (stock) ============== */
   .stock-fab {
     position: fixed;
-    bottom: calc(var(--nav-height) + 10px);
+    bottom: calc(var(--nav-height) + 24px + env(safe-area-inset-bottom, 0px));
     left: 50%;
     transform: translateX(-50%);
     width: calc(100% - 32px);
@@ -2317,7 +2317,7 @@
   /* FAB for shares */
   .share-fab {
     position: fixed;
-    bottom: calc(var(--nav-height) + 10px);
+    bottom: calc(var(--nav-height) + 24px + env(safe-area-inset-bottom, 0px));
     left: 50%;
     transform: translateX(-50%);
     width: calc(100% - 32px);

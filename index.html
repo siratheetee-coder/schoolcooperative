@@ -1099,6 +1099,118 @@
   .patronage-summary .l { font-weight: 700; font-size: 13px; }
   .patronage-summary .v { font-size: 17px; font-weight: 800; }
 
+  /* ============== BULK IMPORT ============== */
+  .bulk-help {
+    background: var(--cream-100);
+    border-radius: 14px;
+    padding: 10px 14px;
+    margin-bottom: 12px;
+    font-size: 12px;
+    color: var(--ink-soft);
+    box-shadow: var(--shadow-inset);
+  }
+  .bulk-help b { color: var(--green-700); }
+  .bulk-help code {
+    display: block;
+    background: white;
+    padding: 8px 10px;
+    border-radius: 8px;
+    margin-top: 6px;
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    color: var(--ink);
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+  .bulk-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .bulk-btn-secondary {
+    padding: 11px 8px;
+    background: var(--cream-100);
+    border: none;
+    border-radius: 12px;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--green-600);
+    cursor: pointer;
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+  .bulk-btn-secondary:active { box-shadow: var(--shadow-inset); transform: scale(0.97); }
+  .bulk-textarea {
+    width: 100%;
+    min-height: 140px;
+    padding: 12px;
+    border: none;
+    border-radius: 14px;
+    background: var(--cream-100);
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    color: var(--ink);
+    box-shadow: var(--shadow-inset);
+    outline: none;
+    resize: vertical;
+    line-height: 1.5;
+  }
+  .bulk-preview {
+    background: var(--cream-50);
+    border-radius: 14px;
+    padding: 12px;
+    margin-top: 12px;
+    max-height: 30vh;
+    overflow-y: auto;
+    box-shadow: var(--shadow-sm);
+  }
+  .bulk-preview table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11px;
+  }
+  .bulk-preview th {
+    background: var(--green-500);
+    color: white;
+    padding: 6px 8px;
+    text-align: left;
+    font-weight: 700;
+    position: sticky;
+    top: 0;
+  }
+  .bulk-preview td {
+    padding: 6px 8px;
+    border-bottom: 1px solid var(--cream-200);
+  }
+  .bulk-preview tr.error td {
+    background: #FFE0DC;
+    color: var(--red-600);
+  }
+  .bulk-preview tr.dup td {
+    background: #FFF3D6;
+    color: var(--gold-600);
+  }
+  .bulk-summary {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+  }
+  .bulk-pill {
+    padding: 4px 10px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 700;
+  }
+  .bulk-pill.ok { background: linear-gradient(135deg, var(--green-400), var(--green-500)); color: white; }
+  .bulk-pill.dup { background: var(--gold-500); color: var(--green-700); }
+  .bulk-pill.err { background: var(--red-500); color: white; }
+
   /* ============== AUDIT LOG ============== */
   .audit-filter {
     display: flex;
@@ -2827,10 +2939,15 @@
         <div class="tt">รายงานละเอียด</div>
         <div class="ts">Export Excel/PDF</div>
       </button>
-      <button class="tool-btn" onclick="openAuditLog()" style="grid-column:1/-1;">
+      <button class="tool-btn" onclick="openBulkImport()">
+        <div class="ti" style="background:linear-gradient(135deg,#7AB8E0,#4D8FCA);color:white;box-shadow:0 4px 0 #2D6FA3;">📥</div>
+        <div class="tt">นำเข้าสมาชิกหลายคน</div>
+        <div class="ts">Paste จาก Excel หรือ CSV</div>
+      </button>
+      <button class="tool-btn" onclick="openAuditLog()">
         <div class="ti" style="background:linear-gradient(135deg,#9C7CB8,#7B4F9F);color:white;box-shadow:0 4px 0 #5A3577;">📜</div>
-        <div class="tt">ประวัติการใช้งาน (Audit Log)</div>
-        <div class="ts">บันทึกทุกการกระทำสำคัญ — เห็นใครทำอะไรเมื่อไหร่</div>
+        <div class="tt">ประวัติ Audit Log</div>
+        <div class="ts">บันทึกทุกการกระทำ</div>
       </button>
     </div>
 
@@ -3198,6 +3315,46 @@
     <div class="buyer-grid" id="buyerGrid"></div>
     <div class="actions" style="margin-top:14px;">
       <button class="btn btn-ghost" onclick="closeBuyerPicker()">ยกเลิก</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============== BULK IMPORT MODAL ============== -->
+<div class="modal-bg" id="bulkModal" onclick="if(event.target===this)closeBulkImport()">
+  <div class="modal">
+    <div class="modal-close"></div>
+    <h3>📥 นำเข้าสมาชิกหลายคน</h3>
+
+    <div class="bulk-help">
+      <b>วิธีใช้:</b> ใส่ข้อมูล 1 คน/บรรทัด ใช้ comma คั่นช่อง (คัดลอกจาก Excel ก็ได้)
+      <code>รหัส,ชื่อ,ห้อง,Avatar,สี,บทบาท</code>
+      <div style="margin-top:6px;font-size:11px;">
+        <b>จำเป็น:</b> รหัส + ชื่อ &nbsp;|&nbsp;
+        <b>เลือกได้:</b> ห้อง, Avatar (2 ตัว), สี (1-6), บทบาท (<i>student</i>/<i>teacher</i>)
+      </div>
+    </div>
+
+    <div class="bulk-actions">
+      <button class="bulk-btn-secondary" onclick="downloadTemplate()">📋 Template</button>
+      <label class="bulk-btn-secondary" style="cursor:pointer;">
+        📂 อัปโหลด CSV
+        <input type="file" id="bulkFile" accept=".csv,.txt,.tsv" style="display:none;" onchange="loadBulkFile(event)" />
+      </label>
+    </div>
+
+    <textarea class="bulk-textarea" id="bulkText" placeholder="วางข้อมูลที่นี่... ตัวอย่าง:
+05421,น้องนภา ศรีสุข,ม.5/2,นภ,1,student
+05422,น้องบอส ใจดี,ม.5/2,บอ,2,student
+T0002,ครูสมหญิง สุขใจ,ครูที่ปรึกษา,สม,5,teacher" oninput="parseBulkPreview()"></textarea>
+
+    <div id="bulkPreviewWrap" style="display:none;">
+      <div class="bulk-preview" id="bulkPreview"></div>
+      <div class="bulk-summary" id="bulkSummary"></div>
+    </div>
+
+    <div class="actions" style="margin-top:14px;">
+      <button class="btn btn-ghost" onclick="closeBulkImport()">ยกเลิก</button>
+      <button class="btn btn-primary" id="bulkConfirmBtn" onclick="confirmBulkImport()" disabled>นำเข้า</button>
     </div>
   </div>
 </div>
@@ -5502,6 +5659,158 @@ async function saveShiftEdit() {
   renderShiftGrid();
   renderTodayShift();
   showToast('บันทึกตารางเวรเรียบร้อย');
+}
+
+// ============== BULK IMPORT ==============
+let bulkParsed = [];
+
+function openBulkImport() {
+  if (!isTeacher()) return;
+  document.getElementById('bulkText').value = '';
+  document.getElementById('bulkPreviewWrap').style.display = 'none';
+  document.getElementById('bulkConfirmBtn').disabled = true;
+  bulkParsed = [];
+  document.getElementById('bulkModal').classList.add('show');
+}
+function closeBulkImport() { document.getElementById('bulkModal').classList.remove('show'); }
+
+function downloadTemplate() {
+  const csv = '﻿' + 'รหัส,ชื่อ,ห้อง,Avatar,สี,บทบาท\r\n' +
+    '05421,น้องนภา ศรีสุข,ม.5/2,นภ,1,student\r\n' +
+    '05422,น้องบอส ใจดี,ม.5/2,บอ,2,student\r\n' +
+    'T0002,ครูสมหญิง,ครูที่ปรึกษา,สม,5,teacher\r\n';
+  saveBlob(csv, 'template-members.csv', 'text/csv;charset=utf-8;');
+  showToast('ดาวน์โหลด Template เรียบร้อย');
+}
+
+function loadBulkFile(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    document.getElementById('bulkText').value = ev.target.result;
+    parseBulkPreview();
+  };
+  reader.readAsText(file, 'UTF-8');
+}
+
+function parseBulkPreview() {
+  const text = document.getElementById('bulkText').value.trim();
+  if (!text) {
+    document.getElementById('bulkPreviewWrap').style.display = 'none';
+    document.getElementById('bulkConfirmBtn').disabled = true;
+    bulkParsed = [];
+    return;
+  }
+
+  // Split lines, detect delimiter (comma vs tab)
+  const lines = text.split(/\r?\n/).map(l => l.trim()).filter(l => l);
+  const tabCount = lines[0].split('\t').length;
+  const commaCount = lines[0].split(',').length;
+  const delim = tabCount > commaCount ? '\t' : ',';
+
+  // Detect header row
+  let startIdx = 0;
+  const firstCols = lines[0].split(delim).map(c => c.trim().toLowerCase());
+  if (firstCols.some(c => c === 'รหัส' || c === 'code' || c === 'ชื่อ' || c === 'name')) {
+    startIdx = 1;
+  }
+
+  // existing codes (for duplicate detection)
+  const existingCodes = new Set(members.map(m => m.code));
+  const seenCodes = new Set();
+
+  bulkParsed = lines.slice(startIdx).map((line, idx) => {
+    const cols = line.split(delim).map(c => c.trim().replace(/^"|"$/g, ''));
+    const code = cols[0] || '';
+    const name = cols[1] || '';
+    const klass = cols[2] || '';
+    const avatar = (cols[3] || name.charAt(2) || '?').slice(0, 2);
+    const colorRaw = parseInt(cols[4]) || 0;
+    const color = colorRaw >= 1 && colorRaw <= 6 ? colorRaw : ((idx % 6) + 1);
+    const role = (cols[5] || '').toLowerCase() === 'teacher' ? 'teacher' : 'student';
+
+    const errors = [];
+    if (!code) errors.push('ขาดรหัส');
+    if (!name) errors.push('ขาดชื่อ');
+    let status = 'ok';
+    if (errors.length) status = 'error';
+    else if (existingCodes.has(code) || seenCodes.has(code)) status = 'dup';
+    seenCodes.add(code);
+
+    return { rowNum: idx + 1, code, name, class: klass, avatar, color, role, status, errors };
+  });
+
+  renderBulkPreview();
+}
+
+function renderBulkPreview() {
+  const wrap = document.getElementById('bulkPreviewWrap');
+  const preview = document.getElementById('bulkPreview');
+  wrap.style.display = 'block';
+
+  preview.innerHTML = `
+    <table>
+      <thead>
+        <tr><th>#</th><th>รหัส</th><th>ชื่อ</th><th>ห้อง</th><th>Avatar</th><th>สี</th><th>บทบาท</th><th>สถานะ</th></tr>
+      </thead>
+      <tbody>
+        ${bulkParsed.map(r => `
+          <tr class="${r.status === 'error' ? 'error' : r.status === 'dup' ? 'dup' : ''}">
+            <td>${r.rowNum}</td>
+            <td>${r.code || '<i>-</i>'}</td>
+            <td>${r.name || '<i>-</i>'}</td>
+            <td>${r.class || '-'}</td>
+            <td>${r.avatar}</td>
+            <td>${r.color}</td>
+            <td>${r.role === 'teacher' ? '👨‍🏫 ครู' : '👨‍🎓 นักเรียน'}</td>
+            <td>${r.status === 'error' ? '❌ ' + r.errors.join(', ') : r.status === 'dup' ? '⚠️ รหัสซ้ำ' : '✅'}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `;
+
+  const ok = bulkParsed.filter(r => r.status === 'ok').length;
+  const dup = bulkParsed.filter(r => r.status === 'dup').length;
+  const err = bulkParsed.filter(r => r.status === 'error').length;
+
+  document.getElementById('bulkSummary').innerHTML = `
+    <span class="bulk-pill ok">✓ พร้อมเพิ่ม ${ok} คน</span>
+    ${dup > 0 ? `<span class="bulk-pill dup">⚠️ ซ้ำ ${dup} คน (จะข้าม)</span>` : ''}
+    ${err > 0 ? `<span class="bulk-pill err">✕ ผิดพลาด ${err} คน (จะข้าม)</span>` : ''}
+  `;
+
+  document.getElementById('bulkConfirmBtn').disabled = ok === 0;
+  document.getElementById('bulkConfirmBtn').textContent = `นำเข้า ${ok} คน`;
+}
+
+async function confirmBulkImport() {
+  const toImport = bulkParsed.filter(r => r.status === 'ok');
+  if (toImport.length === 0) { showToast('ไม่มีข้อมูลที่ถูกต้อง', true); return; }
+  if (!confirm(`ยืนยันเพิ่มสมาชิกใหม่ ${toImport.length} คน?`)) return;
+
+  let success = 0;
+  for (const r of toImport) {
+    const newId = Math.max(0, ...members.map(x => x.id)) + 1;
+    const newM = {
+      id: newId, code: r.code, name: r.name, class: r.class,
+      avatar: r.avatar, color: r.color, role: r.role
+    };
+    members.push(newM);
+    await sbSaveMember(newM, true);
+    success++;
+  }
+
+  logAudit('add_member', 'bulk_import', null, `Bulk import ${success} คน`, {
+    count: success,
+    members: toImport.slice(0, 10).map(r => r.name).join(', ') + (toImport.length > 10 ? '...' : '')
+  });
+
+  showToast(`✅ เพิ่ม ${success} คนเรียบร้อย`);
+  closeBulkImport();
+  renderAdmin();
+  renderQuickGrid();
 }
 
 // ============== AUDIT LOG ==============

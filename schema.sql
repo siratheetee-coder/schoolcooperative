@@ -226,47 +226,55 @@ insert into members (code, name, class, avatar, color, pin, role) values
   ('03128', 'น้องเจ ภูมิใจ',     'ม.3/1', 'เจ', 2, '1234', 'student')
 on conflict (code) do update set role = excluded.role;
 
--- Shift assignments (ตารางเวรเริ่มต้น — สมาชิก 8 คน หมุนเวียน 5 วัน × 3 ช่วง)
-insert into shift_assignments (day_of_week, slot, member_id, member_name) values
+-- Shift assignments (ตารางเวรเริ่มต้น — ใช้รหัสนักเรียน lookup id จริงจาก members)
+insert into shift_assignments (day_of_week, slot, member_id, member_name)
+select v.dow, v.slot, m.id, m.name
+from (values
   -- จันทร์
-  (1, 'morning', 2, 'น้องบอส ใจดี'),       -- เบรค 10:00
-  (1, 'lunch',   3, 'น้องแพรว มงคล'),     -- 12:00
-  (1, 'lunch',   1, 'น้องนภา ศรีสุข'),
-  (1, 'after',   4, 'น้องเก่ง วงศ์ทอง'),   -- 15:00
+  (1, 'morning', '05422'),  -- น้องบอส
+  (1, 'lunch',   '05323'),  -- น้องแพรว
+  (1, 'lunch',   '05421'),  -- น้องนภา
+  (1, 'after',   '05524'),  -- น้องเก่ง
   -- อังคาร
-  (2, 'morning', 5, 'น้องฟ้า สวยงาม'),
-  (2, 'lunch',   6, 'น้องโอ๊ต พิทักษ์'),
-  (2, 'lunch',   7, 'น้องน้ำ ขำขัน'),
-  (2, 'after',   8, 'น้องเจ ภูมิใจ'),
+  (2, 'morning', '04125'),  -- น้องฟ้า
+  (2, 'lunch',   '04226'),  -- น้องโอ๊ต
+  (2, 'lunch',   '06127'),  -- น้องน้ำ
+  (2, 'after',   '03128'),  -- น้องเจ
   -- พุธ
-  (3, 'morning', 1, 'น้องนภา ศรีสุข'),
-  (3, 'lunch',   2, 'น้องบอส ใจดี'),
-  (3, 'after',   3, 'น้องแพรว มงคล'),
+  (3, 'morning', '05421'),
+  (3, 'lunch',   '05422'),
+  (3, 'after',   '05323'),
   -- พฤหัสบดี
-  (4, 'morning', 4, 'น้องเก่ง วงศ์ทอง'),
-  (4, 'lunch',   5, 'น้องฟ้า สวยงาม'),
-  (4, 'lunch',   6, 'น้องโอ๊ต พิทักษ์'),
-  (4, 'after',   7, 'น้องน้ำ ขำขัน'),
+  (4, 'morning', '05524'),
+  (4, 'lunch',   '04125'),
+  (4, 'lunch',   '04226'),
+  (4, 'after',   '06127'),
   -- ศุกร์
-  (5, 'morning', 8, 'น้องเจ ภูมิใจ'),
-  (5, 'lunch',   1, 'น้องนภา ศรีสุข'),
-  (5, 'after',   2, 'น้องบอส ใจดี')
+  (5, 'morning', '03128'),
+  (5, 'lunch',   '05421'),
+  (5, 'after',   '05422')
+) as v(dow, slot, code)
+join members m on m.code = v.code
 on conflict do nothing;
 
--- Share transactions (initial holdings)
-insert into share_txns (member_id, type, shares, amount, date) values
-  (1, 'buy', 30,  300,  '2025-05-20'),
-  (1, 'buy', 20,  200,  '2025-08-15'),
-  (1, 'buy', 10,  100,  '2026-02-10'),
-  (2, 'buy', 50,  500,  '2025-05-22'),
-  (2, 'buy', 15,  150,  '2026-01-08'),
-  (3, 'buy', 25,  250,  '2025-06-01'),
-  (3, 'buy', 25,  250,  '2025-11-15'),
-  (4, 'buy', 100, 1000, '2025-05-15'),
-  (5, 'buy', 20,  200,  '2025-07-10'),
-  (5, 'buy', 10,  100,  '2026-03-05'),
-  (6, 'buy', 15,  150,  '2025-09-20'),
-  (7, 'buy', 80,  800,  '2025-05-18'),
-  (7, 'buy', 20,  200,  '2026-04-12'),
-  (8, 'buy', 12,  120,  '2025-10-05')
+-- Share transactions (initial holdings) — lookup member_id จากรหัส
+insert into share_txns (member_id, type, shares, amount, date)
+select m.id, 'buy', v.shares, v.amount, v.dt::timestamptz
+from (values
+  ('05421', 30,  300,  '2025-05-20'),
+  ('05421', 20,  200,  '2025-08-15'),
+  ('05421', 10,  100,  '2026-02-10'),
+  ('05422', 50,  500,  '2025-05-22'),
+  ('05422', 15,  150,  '2026-01-08'),
+  ('05323', 25,  250,  '2025-06-01'),
+  ('05323', 25,  250,  '2025-11-15'),
+  ('05524', 100, 1000, '2025-05-15'),
+  ('04125', 20,  200,  '2025-07-10'),
+  ('04125', 10,  100,  '2026-03-05'),
+  ('04226', 15,  150,  '2025-09-20'),
+  ('06127', 80,  800,  '2025-05-18'),
+  ('06127', 20,  200,  '2026-04-12'),
+  ('03128', 12,  120,  '2025-10-05')
+) as v(code, shares, amount, dt)
+join members m on m.code = v.code
 on conflict do nothing;

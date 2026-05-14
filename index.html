@@ -971,6 +971,124 @@
   .today-shift .ti .tt { font-size: 11px; color: var(--ink-soft); font-weight: 600; }
   .today-shift .ti .tp { font-size: 13px; font-weight: 700; color: var(--green-700); }
 
+  /* ============== BUYER PILL ============== */
+  .buyer-row {
+    background: var(--cream-100);
+    border-radius: 16px;
+    padding: 10px 14px;
+    margin: 0 0 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: var(--shadow-inset);
+  }
+  .buyer-row .lbl { font-size: 12px; color: var(--ink-soft); font-weight: 600; flex-shrink: 0; }
+  .buyer-row .name {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--ink);
+    min-width: 0;
+  }
+  .buyer-row .name .av {
+    width: 26px; height: 26px;
+    border-radius: 8px;
+    display: grid; place-items: center;
+    color: white;
+    font-weight: 700;
+    font-size: 11px;
+    flex-shrink: 0;
+  }
+  .buyer-row .name .av.general {
+    background: var(--cream-300);
+    color: var(--ink-soft);
+  }
+  .buyer-row .change-btn {
+    border: none;
+    background: linear-gradient(135deg, var(--green-400), var(--green-500));
+    color: white;
+    padding: 7px 12px;
+    border-radius: 10px;
+    font-family: inherit;
+    font-weight: 700;
+    font-size: 12px;
+    cursor: pointer;
+    box-shadow: 0 3px 0 var(--green-700);
+    flex-shrink: 0;
+  }
+  .buyer-row .change-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--green-700); }
+
+  /* member picker (in pay flow) */
+  .buyer-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    max-height: 280px;
+    overflow-y: auto;
+    padding: 4px;
+  }
+  .buyer-cell {
+    background: var(--cream-100);
+    border: 2px solid transparent;
+    border-radius: 14px;
+    padding: 10px 4px;
+    cursor: pointer;
+    font-family: inherit;
+    box-shadow: var(--shadow-sm);
+    transition: all 0.12s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+  .buyer-cell.general {
+    border-color: var(--green-500);
+    background: linear-gradient(135deg, #BFE8DD, #FFFBF3);
+  }
+  .buyer-cell:active { transform: scale(0.95); }
+  .buyer-cell .bav {
+    width: 36px; height: 36px;
+    border-radius: 12px;
+    display: grid; place-items: center;
+    color: white;
+    font-weight: 700;
+    font-size: 13px;
+    box-shadow:
+      inset 1px 1px 1px rgba(255,255,255,0.3),
+      inset -1px -1px 1px rgba(0,0,0,0.15),
+      0 2px 0 rgba(0,0,0,0.15);
+  }
+  .buyer-cell .bav.general { background: var(--cream-300); color: var(--ink-soft); box-shadow: var(--shadow-sm); }
+  .buyer-cell .bn {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--ink);
+    line-height: 1.1;
+    text-align: center;
+    max-width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Patronage tab adopts dividend styling */
+  .patronage-summary {
+    background: linear-gradient(135deg, #FFE9B8, var(--gold-400));
+    color: var(--green-700);
+    border-radius: 14px;
+    padding: 12px 14px;
+    margin-top: 8px;
+    box-shadow: 0 3px 0 var(--gold-600);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .patronage-summary .l { font-weight: 700; font-size: 13px; }
+  .patronage-summary .v { font-size: 17px; font-weight: 800; }
+
   /* ============== AUDIT LOG ============== */
   .audit-filter {
     display: flex;
@@ -2729,7 +2847,8 @@
 
     <div class="share-tabs">
       <button class="share-tab active" data-sv="members" onclick="setShareView('members')">👥 สมาชิก</button>
-      <button class="share-tab" data-sv="dividend" onclick="setShareView('dividend')">💎 คำนวณปันผล</button>
+      <button class="share-tab" data-sv="dividend" onclick="setShareView('dividend')">💎 ปันผล</button>
+      <button class="share-tab" data-sv="patronage" onclick="setShareView('patronage')">🎁 เฉลี่ยคืน</button>
     </div>
 
     <div class="share-view active" id="sv-members">
@@ -2767,6 +2886,37 @@
       </div>
 
       <button class="pay-div-btn" onclick="payDividend()">💸 จ่ายปันผลทั้งหมด</button>
+    </div>
+
+    <!-- PATRONAGE REFUND TAB -->
+    <div class="share-view" id="sv-patronage">
+      <div class="div-config" style="background:linear-gradient(135deg,var(--gold-500),var(--gold-600));color:var(--green-700);">
+        <h3>⚙️ ตั้งค่าเฉลี่ยคืน (Patronage Refund)</h3>
+        <div style="font-size:11px;opacity:0.85;margin-bottom:10px;">คืนเงินให้สมาชิกตาม % ของยอดที่ซื้อสะสมในปี — สูงสุดไม่เกิน 10%</div>
+        <div class="div-row">
+          <label>อัตราคืน (สูงสุด 10%)</label>
+          <input type="number" id="patRate" class="div-input" value="5" min="0" max="10" step="0.5" oninput="renderPatronage()" /> <span style="font-weight:700">%</span>
+        </div>
+        <div class="div-row">
+          <label>ปีการศึกษา (พ.ศ.)</label>
+          <input type="number" id="patYear" class="div-input" value="2569" oninput="renderPatronage()" />
+        </div>
+      </div>
+
+      <div class="preview-card">
+        <h3>📊 สรุปการคำนวณ <span class="pill" id="patYearPill">ปี 2569</span></h3>
+        <div class="calc-row"><span class="l">ยอดซื้อสะสม (สมาชิก)</span><span class="v">฿<span id="patTotalPurchase">0</span></span></div>
+        <div class="calc-row"><span class="l">อัตราเฉลี่ยคืน</span><span class="v"><span id="patCalcRate">5</span>%</span></div>
+        <div class="calc-row"><span class="l">สมาชิกที่จะได้รับ</span><span class="v"><span id="patCalcMembers">0</span> คน</span></div>
+        <div class="calc-row total"><span class="l">🎁 ยอดเฉลี่ยคืนรวม</span><span class="v">฿<span id="patCalcTotal">0</span></span></div>
+      </div>
+
+      <div class="preview-card">
+        <h3>👥 รายชื่อผู้ได้รับเฉลี่ยคืน <span class="pill"><span id="patCount">0</span> คน</span></h3>
+        <div class="div-list" id="patList"></div>
+      </div>
+
+      <button class="pay-div-btn" onclick="payPatronage()" style="background:linear-gradient(135deg,var(--gold-400),var(--gold-500));">🎁 จ่ายเฉลี่ยคืนทั้งหมด</button>
     </div>
   </div>
 
@@ -2829,6 +2979,16 @@
   <div class="modal">
     <div class="modal-close"></div>
     <h3>รับเงินสด</h3>
+
+    <div class="buyer-row">
+      <span class="lbl">ผู้ซื้อ</span>
+      <div class="name" id="buyerName">
+        <span class="av general">👤</span>
+        <span>ลูกค้าทั่วไป</span>
+      </div>
+      <button class="change-btn" onclick="openBuyerPicker()">เปลี่ยน</button>
+    </div>
+
     <div class="total-display">
       <div class="lbl">ยอดที่ต้องชำระ</div>
       <div class="val">฿<span id="payTotal">0</span></div>
@@ -3010,6 +3170,23 @@
       <button class="btn btn-ghost" onclick="closeMemberModal()">ยกเลิก</button>
       <button class="btn btn-danger" id="mDeleteBtn" onclick="deleteMember()" style="display:none;">ลบ</button>
       <button class="btn btn-primary" onclick="saveMember()">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============== BUYER PICKER MODAL ============== -->
+<div class="modal-bg" id="buyerPickerModal" onclick="if(event.target===this)closeBuyerPicker()">
+  <div class="modal">
+    <div class="modal-close"></div>
+    <h3>👤 เลือกผู้ซื้อ</h3>
+    <div style="text-align:center;font-size:12px;color:var(--ink-soft);margin-bottom:12px;">ระบุเพื่อสะสมยอดสำหรับเฉลี่ยคืนสิ้นปี</div>
+    <div class="search-box" style="margin-bottom:12px;">
+      <span class="icon">🔍</span>
+      <input type="text" id="buyerSearch" placeholder="ค้นหารหัส/ชื่อ..." oninput="renderBuyerGrid()" />
+    </div>
+    <div class="buyer-grid" id="buyerGrid"></div>
+    <div class="actions" style="margin-top:14px;">
+      <button class="btn btn-ghost" onclick="closeBuyerPicker()">ยกเลิก</button>
     </div>
   </div>
 </div>
@@ -3200,6 +3377,55 @@ function setView(name) {
 
 // ============== POS LOGIC ==============
 const cart = new Map();
+let currentBuyer = null; // null = ลูกค้าทั่วไป
+
+function setBuyer(member) {
+  currentBuyer = member;
+  const el = document.getElementById('buyerName');
+  if (!el) return;
+  if (member) {
+    el.innerHTML = `<span class="av av-${member.color}">${member.avatar}</span><span>${member.name}</span>`;
+  } else {
+    el.innerHTML = `<span class="av general">👤</span><span>ลูกค้าทั่วไป</span>`;
+  }
+}
+
+function openBuyerPicker() {
+  document.getElementById('buyerSearch').value = '';
+  renderBuyerGrid();
+  document.getElementById('buyerPickerModal').classList.add('show');
+}
+function closeBuyerPicker() { document.getElementById('buyerPickerModal').classList.remove('show'); }
+
+function renderBuyerGrid() {
+  const q = document.getElementById('buyerSearch').value.trim().toLowerCase();
+  const grid = document.getElementById('buyerGrid');
+  const candidates = members.filter(m => m.role === 'student')
+    .filter(m => !q || m.name.toLowerCase().includes(q) || m.code.includes(q));
+  const general = `
+    <button class="buyer-cell general" onclick="pickBuyer(null)">
+      <div class="bav general">👤</div>
+      <div class="bn">ทั่วไป</div>
+    </button>
+  `;
+  const cells = candidates.map(m => `
+    <button class="buyer-cell" onclick="pickBuyer(${m.id})">
+      <div class="bav av-${m.color}">${m.avatar}</div>
+      <div class="bn">${m.name.replace('น้อง','').split(' ')[0]}</div>
+    </button>
+  `).join('');
+  grid.innerHTML = general + cells;
+}
+
+function pickBuyer(id) {
+  if (id === null) {
+    setBuyer(null);
+  } else {
+    const m = members.find(x => x.id === id);
+    setBuyer(m);
+  }
+  closeBuyerPicker();
+}
 
 function renderCategoryTabs() {
   const tabs = document.getElementById('categoryTabs');
@@ -4009,6 +4235,7 @@ function setShareView(v) {
   document.getElementById('shareFab').classList.toggle('hidden', v !== 'members' || !isTeacher());
   if (v === 'members') renderMembers();
   if (v === 'dividend') { renderDividend(); applyRoleVisibility(); }
+  if (v === 'patronage') { renderPatronage(); applyRoleVisibility(); }
 }
 
 function renderMembers() {
@@ -4092,16 +4319,19 @@ function openMemberDetail(mid) {
   const hist = shareTxns
     .filter(t => t.memberId === mid)
     .sort((a,b) => b.date - a.date)
-    .map(t => `
+    .map(t => {
+      const icons = { buy: '💎', dividend: '🎁', patronage: '🎁' };
+      const labels = { buy: `ซื้อหุ้น ${t.shares} หุ้น`, dividend: 'รับปันผล', patronage: 'รับเฉลี่ยคืน' };
+      return `
       <div class="hist">
-        <div class="hist-ico">${t.type === 'dividend' ? '🎁' : '💎'}</div>
+        <div class="hist-ico">${icons[t.type] || '•'}</div>
         <div class="hist-info">
-          <div class="t">${t.type === 'dividend' ? 'รับปันผล' : `ซื้อหุ้น ${t.shares} หุ้น`}</div>
+          <div class="t">${labels[t.type] || t.type}</div>
           <div class="s">${thDate(t.date)}</div>
         </div>
-        <div class="hist-val">${t.type === 'dividend' ? '+' : ''}฿${t.amount.toLocaleString()}</div>
+        <div class="hist-val">${t.type !== 'buy' ? '+' : ''}฿${t.amount.toLocaleString()}</div>
       </div>
-    `).join('');
+    `;}).join('');
   document.getElementById('detailHistory').innerHTML = hist || `<div style="color:var(--ink-soft);font-size:13px;text-align:center;padding:14px;">ยังไม่มีประวัติ</div>`;
   document.getElementById('detailModal').classList.add('show');
 }
@@ -4142,6 +4372,85 @@ function renderDividend() {
       </div>
     `).join('');
 }
+// ============== PATRONAGE REFUND ==============
+const PATRONAGE_MAX = 10; // %
+
+function memberPurchaseTotal(memberId, year) {
+  // year is พ.ศ. (e.g. 2569). Convert to ค.ศ.
+  const ce = year - 543;
+  return sales
+    .filter(s => !s.isVoided && s.buyerId === memberId && s.date.getFullYear() === ce)
+    .reduce((sum, s) => sum + s.total, 0);
+}
+
+function renderPatronage() {
+  let rate = parseFloat(document.getElementById('patRate').value) || 0;
+  if (rate > PATRONAGE_MAX) { rate = PATRONAGE_MAX; document.getElementById('patRate').value = PATRONAGE_MAX; }
+  if (rate < 0) { rate = 0; document.getElementById('patRate').value = 0; }
+  const year = parseInt(document.getElementById('patYear').value) || 2569;
+  document.getElementById('patYearPill').textContent = `ปี ${year}`;
+
+  // For each student member, get purchase total
+  const rows = members
+    .filter(m => m.role === 'student')
+    .map(m => ({ m, purchase: memberPurchaseTotal(m.id, year) }))
+    .filter(x => x.purchase > 0)
+    .map(({ m, purchase }) => ({ m, purchase, refund: Math.round(purchase * rate / 100) }))
+    .sort((a,b) => b.refund - a.refund);
+
+  const totalPurchase = rows.reduce((s,x) => s + x.purchase, 0);
+  const totalRefund = rows.reduce((s,x) => s + x.refund, 0);
+
+  document.getElementById('patTotalPurchase').textContent = totalPurchase.toLocaleString();
+  document.getElementById('patCalcRate').textContent = rate;
+  document.getElementById('patCalcMembers').textContent = rows.length;
+  document.getElementById('patCalcTotal').textContent = totalRefund.toLocaleString();
+  document.getElementById('patCount').textContent = rows.length;
+
+  document.getElementById('patList').innerHTML = rows.length === 0
+    ? `<div style="text-align:center;color:var(--ink-soft);padding:14px;font-size:13px;">ยังไม่มีสมาชิกที่ซื้อของในปี ${year}<br><span style="font-size:11px;">(ระบุ "ผู้ซื้อ" ตอนชำระเงินเพื่อสะสมยอด)</span></div>`
+    : rows.map(({m, purchase, refund}) => `
+      <div class="div-item">
+        <div class="av-small av-${m.color}">${m.avatar}</div>
+        <div class="div-info">
+          <div class="n">${m.name}</div>
+          <div class="s">ซื้อสะสม ฿${purchase.toLocaleString()} · ${m.class}</div>
+        </div>
+        <div class="div-amt">฿${refund.toLocaleString()}</div>
+      </div>
+    `).join('');
+}
+
+function payPatronage() {
+  if (!isTeacher()) { showToast('เฉพาะครูเท่านั้น', true); return; }
+  let rate = parseFloat(document.getElementById('patRate').value) || 0;
+  if (rate > PATRONAGE_MAX) rate = PATRONAGE_MAX;
+  const year = parseInt(document.getElementById('patYear').value) || 2569;
+  if (rate <= 0) { showToast('กรุณาตั้งอัตราเฉลี่ยคืน', true); return; }
+  if (!confirm(`จ่ายเฉลี่ยคืน ${rate}% สำหรับปี ${year}?\n\nระบบจะบันทึกประวัติให้สมาชิกทุกคนที่มียอดซื้อ`)) return;
+  let count = 0;
+  let totalRefund = 0;
+  members.filter(m => m.role === 'student').forEach(m => {
+    const purchase = memberPurchaseTotal(m.id, year);
+    if (purchase > 0) {
+      const refund = Math.round(purchase * rate / 100);
+      const txn = {
+        id: nextShareTxnId++, memberId: m.id, type: 'patronage',
+        shares: 0, amount: refund, date: new Date()
+      };
+      shareTxns.push(txn);
+      sbSaveShareTxn(txn);
+      count++;
+      totalRefund += refund;
+    }
+  });
+  logAudit('pay_dividend', 'cooperative', null, `เฉลี่ยคืน ปี ${year}`, {
+    rate, members: count, total: totalRefund, type: 'patronage',
+    note: `เฉลี่ยคืน ${rate}% × ${count} คน · รวม ฿${totalRefund.toLocaleString()}`
+  });
+  showToast(`จ่ายเฉลี่ยคืนให้ ${count} คน รวม ฿${totalRefund.toLocaleString()}`);
+}
+
 function payDividend() {
   const rate = parseFloat(document.getElementById('divRate').value) || 0;
   const year = document.getElementById('divYear').value || '2569';
@@ -4218,20 +4527,15 @@ function updateBellBadge() {
 }
 
 function applyRoleVisibility() {
-  // Hide dividend "pay" button for non-teacher
-  const payDivBtn = document.querySelector('.pay-div-btn');
-  if (payDivBtn) payDivBtn.style.display = isTeacher() ? 'block' : 'none';
-  // Hide dividend config for non-teacher (or show readonly)
-  const divConfig = document.querySelector('.div-config');
-  if (divConfig) {
-    const inputs = divConfig.querySelectorAll('.div-input');
-    inputs.forEach(inp => inp.readOnly = !isTeacher());
-    if (!isTeacher()) {
-      divConfig.style.opacity = '0.85';
-    } else {
-      divConfig.style.opacity = '1';
-    }
-  }
+  // Hide dividend/patronage "pay" buttons for non-teacher
+  document.querySelectorAll('.pay-div-btn').forEach(btn => {
+    btn.style.display = isTeacher() ? 'block' : 'none';
+  });
+  // Hide div-config (dividend + patronage) for non-teacher (or show readonly)
+  document.querySelectorAll('.div-config').forEach(cfg => {
+    cfg.querySelectorAll('.div-input').forEach(inp => inp.readOnly = !isTeacher());
+    cfg.style.opacity = isTeacher() ? '1' : '0.85';
+  });
   // Share FAB (ซื้อหุ้น) — teachers can do directly; students hidden (only teacher manages shares)
   const sf = document.getElementById('shareFab');
   if (sf && shareView === 'members') {
@@ -4383,7 +4687,7 @@ async function loadFromCloud() {
     const since = new Date(); since.setDate(since.getDate() - 365);
     const { data: sls } = await sb
       .from('sales')
-      .select('id,date,seller_name,total,is_voided,void_reason,voided_by_name,voided_at,sale_items(product_id,name,emoji,price,cost,qty)')
+      .select('id,date,seller_name,buyer_id,buyer_name,total,is_voided,void_reason,voided_by_name,voided_at,sale_items(product_id,name,emoji,price,cost,qty)')
       .gte('date', since.toISOString())
       .order('date', { ascending: false })
       .limit(5000);
@@ -4393,6 +4697,8 @@ async function loadFromCloud() {
         id: s.id,
         date: new Date(s.date),
         seller: s.seller_name || '-',
+        buyerId: s.buyer_id || null,
+        buyerName: s.buyer_name || null,
         items: (s.sale_items || []).map(i => ({
           id: i.product_id, name: i.name, emoji: i.emoji, price: i.price, cost: i.cost || 0, qty: i.qty
         })),
@@ -4479,7 +4785,13 @@ async function sbSaveSale(sale) {
   if (!sb) return;
   try {
     const { data: row, error } = await sb.from('sales')
-      .insert({ seller_name: sale.seller, total: sale.total, date: sale.date.toISOString() })
+      .insert({
+        seller_name: sale.seller,
+        buyer_id: sale.buyerId || null,
+        buyer_name: sale.buyerName || null,
+        total: sale.total,
+        date: sale.date.toISOString()
+      })
       .select().single();
     if (error) throw error;
     sale.id = row.id;
@@ -4554,17 +4866,21 @@ confirmPay = function() {
       id: nextBillId++,
       date: new Date(),
       seller: currentUser ? `${currentUser.name} ${currentUser.class}` : CURRENT_SELLER,
+      buyerId: currentBuyer ? currentBuyer.id : null,
+      buyerName: currentBuyer ? currentBuyer.name : null,
       items, total
     };
     sales.push(sale);
     sbSaveSale(sale);
-    logAudit('create_sale', 'sale', sale.id, `บิล #${sale.id}`, {
-      total, items: items.map(i => `${i.name}×${i.qty}`).join(', '),
+    logAudit('create_sale', 'sale', sale.id, `บิล #${sale.id}${currentBuyer ? ' · ' + currentBuyer.name : ''}`, {
+      total, buyer: currentBuyer ? currentBuyer.name : 'ลูกค้าทั่วไป',
+      items: items.map(i => `${i.name}×${i.qty}`).join(', '),
       note: `ขาย ${items.length} รายการ ฿${total}`
     });
   }
   closePay();
   cart.clear();
+  setBuyer(null); // reset buyer หลังขาย
   renderProducts();
   updateTodaySales();
   showToast(`บันทึกการขาย ฿${total} เรียบร้อย!`);
@@ -5620,8 +5936,10 @@ function startRealtime() {
       if (sales.find(x => x.id === s.id)) return;
       const { data: items } = await sb.from('sale_items').select('*').eq('sale_id', s.id);
       sales.push({
-        id: s.id, date: new Date(s.date), seller: s.seller_name || '-', total: s.total,
-        items: (items || []).map(i => ({ id: i.product_id, name: i.name, emoji: i.emoji, price: i.price, qty: i.qty })),
+        id: s.id, date: new Date(s.date), seller: s.seller_name || '-',
+        buyerId: s.buyer_id || null, buyerName: s.buyer_name || null,
+        total: s.total,
+        items: (items || []).map(i => ({ id: i.product_id, name: i.name, emoji: i.emoji, price: i.price, cost: i.cost || 0, qty: i.qty })),
         isVoided: !!s.is_voided
       });
       if (document.getElementById('view-report').classList.contains('active')) renderReport();

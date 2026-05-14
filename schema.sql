@@ -41,6 +41,8 @@ create table if not exists sales (
   id bigserial primary key,
   seller_id bigint references members(id) on delete set null,
   seller_name text,
+  buyer_id bigint references members(id) on delete set null,
+  buyer_name text,
   total int not null,
   date timestamptz default now(),
   is_voided boolean default false,
@@ -49,6 +51,10 @@ create table if not exists sales (
   voided_by_name text,
   voided_at timestamptz
 );
+-- อัปเกรดตารางเดิม
+alter table sales add column if not exists buyer_id bigint references members(id) on delete set null;
+alter table sales add column if not exists buyer_name text;
+create index if not exists sales_buyer_idx on sales (buyer_id);
 -- อัปเกรดตารางเดิม
 alter table sales add column if not exists is_voided boolean default false;
 alter table sales add column if not exists void_reason text;
@@ -118,15 +124,22 @@ create table if not exists pending_requests (
 );
 create index if not exists pending_requests_status_idx on pending_requests (status, requested_at desc);
 
--- 5. SHARE TRANSACTIONS (buy หุ้น / รับปันผล)
+-- 5. SHARE TRANSACTIONS (buy หุ้น / รับปันผล / เฉลี่ยคืน)
 create table if not exists share_txns (
   id bigserial primary key,
   member_id bigint references members(id) on delete cascade,
-  type text not null check (type in ('buy','dividend')),
+  type text not null check (type in ('buy','dividend','patronage')),
   shares int default 0,
   amount int not null,
   date timestamptz default now()
 );
+-- อัปเกรด constraint เดิมถ้ามี
+do $$
+begin
+  alter table share_txns drop constraint if exists share_txns_type_check;
+  alter table share_txns add constraint share_txns_type_check check (type in ('buy','dividend','patronage'));
+exception when others then null;
+end $$;
 create index if not exists share_txns_member_idx on share_txns (member_id);
 
 -- ============================================================

@@ -1101,6 +1101,68 @@
   .patronage-summary .l { font-weight: 700; font-size: 13px; }
   .patronage-summary .v { font-size: 17px; font-weight: 800; }
 
+  /* ============== BACKUP ============== */
+  .backup-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  .backup-stat {
+    background: var(--cream-100);
+    border-radius: 12px;
+    padding: 10px 8px;
+    text-align: center;
+    box-shadow: var(--shadow-sm);
+  }
+  .backup-stat .n { font-size: 18px; font-weight: 800; color: var(--green-600); line-height: 1.1; }
+  .backup-stat .l { font-size: 10px; color: var(--ink-soft); margin-top: 2px; font-weight: 600; }
+  .backup-info {
+    background: linear-gradient(135deg, #E8F4F0, var(--cream-50));
+    border-left: 4px solid var(--green-500);
+    border-radius: 12px;
+    padding: 12px 14px;
+    font-size: 12px;
+    color: var(--ink);
+    line-height: 1.5;
+    margin-bottom: 14px;
+  }
+  .backup-info b { color: var(--green-700); }
+  .backup-info ul { margin: 6px 0; padding-left: 20px; }
+  .backup-info code { background: white; padding: 1px 6px; border-radius: 4px; font-size: 11px; color: var(--gold-600); }
+  .backup-options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .backup-btn {
+    padding: 14px 10px;
+    border: none;
+    border-radius: 16px;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+  .backup-btn .ico { font-size: 24px; }
+  .backup-btn .sub { font-size: 10px; font-weight: 500; opacity: 0.85; }
+  .backup-json {
+    background: linear-gradient(135deg, var(--green-400), var(--green-500));
+    color: white;
+    box-shadow: 0 5px 0 var(--green-700), 0 8px 14px rgba(23,71,64,0.3);
+  }
+  .backup-csv {
+    background: linear-gradient(135deg, #FFC857, #FFB627);
+    color: var(--green-700);
+    box-shadow: 0 5px 0 var(--gold-600), 0 8px 14px rgba(232,154,14,0.3);
+  }
+  .backup-btn:active { transform: translateY(3px); box-shadow: 0 2px 0 rgba(0,0,0,0.2) !important; }
+
   /* ============== BULK IMPORT ============== */
   .bulk-help {
     background: var(--cream-100);
@@ -3032,6 +3094,11 @@
         <div class="tt">ประวัติ Audit Log</div>
         <div class="ts">บันทึกทุกการกระทำ</div>
       </button>
+      <button class="tool-btn" onclick="openBackup()" style="grid-column:1/-1;">
+        <div class="ti" style="background:linear-gradient(135deg,#5FB597,#2D7D6F);color:white;box-shadow:0 4px 0 #174740;">💾</div>
+        <div class="tt">สำรองข้อมูล (Backup)</div>
+        <div class="ts">ดาวน์โหลดข้อมูลทั้งหมด — เก็บไว้กันระบบล่ม</div>
+      </button>
     </div>
 
     <div class="admin-section-head">📅 ตารางเวรขาย</div>
@@ -3412,6 +3479,42 @@
     <div class="buyer-grid" id="buyerGrid"></div>
     <div class="actions" style="margin-top:14px;">
       <button class="btn btn-ghost" onclick="closeBuyerPicker()">ยกเลิก</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============== BACKUP MODAL ============== -->
+<div class="modal-bg" id="backupModal" onclick="if(event.target===this)closeBackup()">
+  <div class="modal">
+    <div class="modal-close"></div>
+    <h3>💾 สำรองข้อมูล (Backup)</h3>
+    <div style="text-align:center;font-size:12px;color:var(--ink-soft);margin-bottom:14px;">เก็บไฟล์ไว้ป้องกันระบบล่ม / ข้อมูลหาย</div>
+
+    <div class="backup-stats" id="backupStats"></div>
+
+    <div class="backup-info">
+      <b>💡 แนะนำ:</b> ดาวน์โหลดทุก<b>สัปดาห์</b> หรือ<b>สิ้นเดือน</b><br>
+      <ul style="margin:6px 0 0;">
+        <li><b>JSON</b> — ครบทุกอย่าง กู้คืนได้ในกรณีฉุกเฉิน</li>
+        <li><b>CSV (ZIP)</b> — เปิดด้วย Excel ดูข้อมูลได้</li>
+      </ul>
+    </div>
+
+    <div class="backup-options">
+      <button class="backup-btn backup-json" onclick="exportBackupJSON()">
+        <span class="ico">📦</span>
+        <span>JSON</span>
+        <span class="sub">ครบทุกตาราง</span>
+      </button>
+      <button class="backup-btn backup-csv" onclick="exportBackupCSV()">
+        <span class="ico">📊</span>
+        <span>CSV</span>
+        <span class="sub">เปิดด้วย Excel</span>
+      </button>
+    </div>
+
+    <div class="actions" style="margin-top:14px;">
+      <button class="btn btn-ghost" onclick="closeBackup()">ปิด</button>
     </div>
   </div>
 </div>
@@ -5822,6 +5925,129 @@ async function saveShiftEdit() {
   renderShiftGrid();
   renderTodayShift();
   showToast('บันทึกตารางเวรเรียบร้อย');
+}
+
+// ============== BACKUP ==============
+function openBackup() {
+  if (!isTeacher()) return;
+  renderBackupStats();
+  document.getElementById('backupModal').classList.add('show');
+}
+function closeBackup() { document.getElementById('backupModal').classList.remove('show'); }
+
+function renderBackupStats() {
+  const stats = [
+    { n: products.length, l: 'สินค้า' },
+    { n: members.length, l: 'สมาชิก' },
+    { n: sales.filter(s => !s.isVoided).length, l: 'บิลขาย' },
+    { n: shareTxns.length, l: 'หุ้น/ปันผล' },
+    { n: shifts.length, l: 'เวร' },
+    { n: auditLogs.length, l: 'Audit log' },
+  ];
+  document.getElementById('backupStats').innerHTML = stats.map(s => `
+    <div class="backup-stat"><div class="n">${s.n.toLocaleString()}</div><div class="l">${s.l}</div></div>
+  `).join('');
+}
+
+function buildBackupObject() {
+  return {
+    version: 1,
+    school: 'สหกรณ์โรงเรียนบ้านหินลาด',
+    exported_at: new Date().toISOString(),
+    exported_by: currentUser ? `${currentUser.name} (${currentUser.code})` : 'unknown',
+    stats: {
+      products: products.length,
+      members: members.length,
+      sales: sales.length,
+      share_txns: shareTxns.length,
+      shifts: shifts.length,
+      pending_requests: pendingRequests.length,
+      audit_logs: auditLogs.length,
+    },
+    data: {
+      products: products.map(p => ({
+        id: p.id, name: p.name, emoji: p.emoji, price: p.price,
+        cost: p.cost, category: p.category, image_url: p.imageUrl,
+        stock: p.stock, low_at: p.lowAt, unit: p.unit
+      })),
+      members: members.map(m => ({
+        id: m.id, code: m.code, name: m.name, class: m.class,
+        avatar: m.avatar, color: m.color, role: m.role
+      })),
+      sales: sales.map(s => ({
+        id: s.id, date: s.date.toISOString(), seller: s.seller,
+        buyer_id: s.buyerId, buyer_name: s.buyerName, total: s.total,
+        is_voided: s.isVoided, void_reason: s.voidReason,
+        voided_by_name: s.voidedByName,
+        voided_at: s.voidedAt ? s.voidedAt.toISOString() : null,
+        items: s.items
+      })),
+      share_txns: shareTxns.map(t => ({
+        id: t.id, member_id: t.memberId, type: t.type,
+        shares: t.shares, amount: t.amount, date: t.date.toISOString()
+      })),
+      shifts: shifts.map(s => ({
+        id: s.id, day_of_week: s.dayOfWeek, slot: s.slot,
+        member_id: s.memberId, member_name: s.memberName
+      })),
+      pending_requests: pendingRequests.map(r => ({
+        id: r.id, requested_by_id: r.requestedById, requested_by_name: r.requestedByName,
+        type: r.type, payload: r.payload, summary: r.summary, status: r.status,
+        requested_at: r.requestedAt.toISOString(),
+        reviewed_by_name: r.reviewedByName,
+        reviewed_at: r.reviewedAt ? r.reviewedAt.toISOString() : null,
+        notes: r.notes
+      })),
+      audit_logs: auditLogs.map(a => ({
+        id: a.id, actor_id: a.actorId, actor_name: a.actorName, actor_role: a.actorRole,
+        action: a.action, target_type: a.targetType, target_id: a.targetId,
+        target_name: a.targetName, metadata: a.metadata,
+        created_at: a.createdAt.toISOString()
+      })),
+    }
+  };
+}
+
+function exportBackupJSON() {
+  const backup = buildBackupObject();
+  const json = JSON.stringify(backup, null, 2);
+  const date = new Date().toISOString().slice(0, 10);
+  saveBlob(json, `backup-สหกรณ์-${date}.json`, 'application/json');
+  logAudit('add_member', 'system', null, 'Export JSON backup', { stats: backup.stats });
+  showToast('✅ ดาวน์โหลด JSON Backup เรียบร้อย');
+}
+
+function exportBackupCSV() {
+  // Build multiple CSVs, package as zip? For simplicity, download multiple files
+  const backup = buildBackupObject();
+  const date = new Date().toISOString().slice(0, 10);
+  const sheets = [
+    ['products', backup.data.products],
+    ['members', backup.data.members],
+    ['sales', backup.data.sales.map(s => ({ ...s, items: JSON.stringify(s.items) }))],
+    ['share_txns', backup.data.share_txns],
+    ['shifts', backup.data.shifts],
+    ['audit_logs', backup.data.audit_logs.map(a => ({ ...a, metadata: JSON.stringify(a.metadata) }))],
+  ];
+
+  // Single combined CSV with section headers (easy to open)
+  let combined = '﻿'; // BOM for Thai
+  for (const [name, rows] of sheets) {
+    if (rows.length === 0) continue;
+    combined += `\r\n=== ${name.toUpperCase()} (${rows.length} แถว) ===\r\n`;
+    const keys = Object.keys(rows[0]);
+    combined += keys.map(k => `"${k}"`).join(',') + '\r\n';
+    rows.forEach(r => {
+      combined += keys.map(k => {
+        const v = r[k];
+        if (v === null || v === undefined) return '""';
+        return `"${String(v).replace(/"/g, '""')}"`;
+      }).join(',') + '\r\n';
+    });
+  }
+  saveBlob(combined, `backup-สหกรณ์-${date}.csv`, 'text/csv;charset=utf-8;');
+  logAudit('add_member', 'system', null, 'Export CSV backup', { stats: backup.stats });
+  showToast('✅ ดาวน์โหลด CSV Backup เรียบร้อย');
 }
 
 // ============== BULK IMPORT ==============

@@ -4,7 +4,8 @@ const CORE_ASSETS = [
   './',
   './index.html',
   './manifest.webmanifest',
-  './icon.svg'
+  './icon.svg',
+  './logo-no-bg.png'
 ];
 
 // install: pre-cache core

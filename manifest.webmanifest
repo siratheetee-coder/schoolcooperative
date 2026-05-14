@@ -13,15 +13,15 @@
   "categories": ["education", "business", "productivity"],
   "icons": [
     {
-      "src": "icon.svg",
+      "src": "logo-no-bg.png",
       "sizes": "any",
-      "type": "image/svg+xml",
+      "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "icon.svg",
+      "src": "logo-no-bg.png",
       "sizes": "any",
-      "type": "image/svg+xml",
+      "type": "image/png",
       "purpose": "maskable"
     }
   ],
@@ -30,13 +30,13 @@
       "name": "หน้าขาย (POS)",
       "short_name": "ขาย",
       "url": "./index.html#pos",
-      "icons": [{ "src": "icon.svg", "sizes": "any", "type": "image/svg+xml" }]
+      "icons": [{ "src": "logo-no-bg.png", "sizes": "any", "type": "image/png" }]
     },
     {
       "name": "รายงานยอดขาย",
       "short_name": "รายงาน",
       "url": "./index.html#report",
-      "icons": [{ "src": "icon.svg", "sizes": "any", "type": "image/svg+xml" }]
+      "icons": [{ "src": "logo-no-bg.png", "sizes": "any", "type": "image/png" }]
     }
   ]
 }

@@ -2761,7 +2761,7 @@
     </div>
     <button class="login-btn" onclick="doLogin()">เข้าสู่ระบบ →</button>
 
-    <div class="quick-divider"><span>หรือเลือกบัญชีทดสอบ</span></div>
+    <div class="quick-divider"><span>แตะ Avatar เพื่อกรอกรหัสอัตโนมัติ</span></div>
     <div class="quick-grid" id="quickGrid"></div>
   </div>
 </div>
@@ -4737,8 +4737,11 @@ function doLogin() {
 function quickLogin(id) {
   const m = members.find(x => x.id === id);
   if (!m) return;
-  setUser(m);
-  showToast(`เข้าสู่ระบบ ${m.name}`);
+  // กรอกรหัสให้อัตโนมัติ แต่ยังต้องใส่ PIN เพื่อความปลอดภัย
+  document.getElementById('loginCode').value = m.code;
+  document.getElementById('loginPin').value = '';
+  document.getElementById('loginPin').focus();
+  showToast(`📝 เลือก ${m.name} — กรุณาใส่ PIN`);
 }
 
 function logout() {

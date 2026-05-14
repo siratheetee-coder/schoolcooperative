@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-<title>สหกรณ์โรงเรียน</title>
+<title>สหกรณ์โรงเรียนบ้านหินลาด</title>
 
 <!-- PWA -->
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2D7D6F">
-<meta name="description" content="ระบบจัดการร้านสหกรณ์โรงเรียนสำหรับนักเรียนผู้ขาย">
+<meta name="description" content="ระบบจัดการร้านสหกรณ์โรงเรียนบ้านหินลาดสำหรับนักเรียนผู้ขาย">
 
 <!-- iOS PWA support -->
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -112,12 +112,13 @@
   }
   .brand { display: flex; align-items: center; gap: 10px; }
   .brand-logo {
-    width: 42px; height: 42px;
-    border-radius: 14px;
+    width: 56px; height: 56px;
+    border-radius: 18px;
     background: linear-gradient(135deg, var(--gold-400), var(--gold-500));
     display: grid; place-items: center;
-    font-size: 22px;
+    font-size: 28px;
     overflow: hidden;
+    flex-shrink: 0;
     box-shadow:
       inset -2px -2px 4px rgba(0,0,0,0.15),
       inset 2px 2px 4px rgba(255,255,255,0.4),
@@ -1689,19 +1690,20 @@
     to { opacity: 1; transform: translateY(0) scale(1); }
   }
   .login-logo {
-    width: 84px; height: 84px;
-    border-radius: 26px;
+    width: 120px; height: 120px;
+    border-radius: 32px;
     background: linear-gradient(135deg, var(--gold-400), var(--gold-500));
     margin: 0 auto 14px;
     display: grid; place-items: center;
-    font-size: 44px;
+    font-size: 60px;
     overflow: hidden;
     box-shadow:
       inset -2px -2px 6px rgba(0,0,0,0.18),
       inset 2px 2px 6px rgba(255,255,255,0.5),
-      0 6px 0 var(--gold-600),
-      0 10px 24px rgba(0,0,0,0.3);
+      0 8px 0 var(--gold-600),
+      0 12px 28px rgba(0,0,0,0.3);
   }
+  .login-title { font-size: 19px !important; }
   .login-title {
     text-align: center;
     font-size: 22px;
@@ -2085,6 +2087,90 @@
     box-shadow: var(--shadow-sm);
   }
   .quick-btn:active { box-shadow: var(--shadow-inset); transform: scale(0.96); }
+
+  /* Product image upload */
+  .img-upload-area {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    background: var(--cream-100);
+    border-radius: 16px;
+    padding: 10px;
+    box-shadow: var(--shadow-inset);
+    margin-bottom: 8px;
+  }
+  .img-preview {
+    width: 72px; height: 72px;
+    border-radius: 14px;
+    background: linear-gradient(145deg, #fff, var(--cream-200));
+    display: grid; place-items: center;
+    font-size: 36px;
+    flex-shrink: 0;
+    overflow: hidden;
+    box-shadow: inset 2px 2px 4px rgba(154,130,90,0.15);
+    position: relative;
+  }
+  .img-preview img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+  }
+  .img-upload-buttons {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .upload-btn {
+    padding: 10px 12px;
+    background: linear-gradient(135deg, #7AB8E0, #4D8FCA);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 3px 0 #2D6FA3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+  .upload-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 #2D6FA3; }
+  .upload-btn.uploading {
+    background: var(--cream-300);
+    color: var(--ink-soft);
+    box-shadow: none;
+    pointer-events: none;
+  }
+  .remove-img-btn {
+    padding: 8px;
+    background: var(--cream-200);
+    color: var(--red-500);
+    border: none;
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .remove-img-btn:active { transform: scale(0.95); }
+
+  /* Image on product card */
+  .product-img img.prod-photo {
+    position: absolute;
+    inset: 0;
+    width: 100%; height: 100%;
+    object-fit: cover;
+    z-index: 1;
+  }
+
+  /* Image on stock item */
+  .item-img img.item-photo {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    border-radius: inherit;
+  }
 
   /* Category picker (in product modal) */
   .cat-btn {
@@ -2744,7 +2830,7 @@
 <div class="login-screen" id="loginScreen">
   <div class="login-card">
     <div class="login-logo"><img src="logo-no-bg.png" alt="Logo"></div>
-    <div class="login-title">สหกรณ์โรงเรียน</div>
+    <div class="login-title">สหกรณ์โรงเรียนบ้านหินลาด</div>
     <div class="login-sub">ระบบจัดการร้านนักเรียน · ลงชื่อเข้าใช้</div>
 
     <div class="field">
@@ -2770,7 +2856,7 @@
       <div class="brand">
         <div class="brand-logo"><img src="logo-no-bg.png" alt="Logo"></div>
         <div class="brand-text">
-          <div class="name" id="headerTitle">สหกรณ์โรงเรียน</div>
+          <div class="name" id="headerTitle">สหกรณ์โรงเรียนบ้านหินลาด</div>
           <div class="sub" id="headerSub">ร้านนักเรียน · ม.5/2</div>
         </div>
       </div>
@@ -3140,7 +3226,21 @@
     <h3 id="productTitle">เพิ่มสินค้าใหม่</h3>
 
     <div class="field">
-      <label>เลือกรูป</label>
+      <label>📸 รูปสินค้า (ไม่บังคับ — ถ้าใส่จะใช้แทน emoji)</label>
+      <div class="img-upload-area">
+        <div class="img-preview" id="imgPreview">🍱</div>
+        <div class="img-upload-buttons">
+          <label class="upload-btn" id="uploadBtnLabel">
+            <span id="uploadBtnText">📷 อัปโหลดรูป</span>
+            <input type="file" id="imgFile" accept="image/*" style="display:none;" onchange="uploadProductImage(event)" />
+          </label>
+          <button type="button" class="remove-img-btn" id="removeImgBtn" onclick="removeProductImage()" style="display:none;">✕ ลบรูป</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>หรือเลือก Emoji</label>
       <div class="emoji-grid" id="emojiGrid"></div>
     </div>
 
@@ -3512,10 +3612,10 @@ function getTerm(d) {
 
 // ============== VIEW ROUTER ==============
 const VIEW_META = {
-  pos:    { title: 'สหกรณ์โรงเรียน', sub: 'ร้านนักเรียน · ม.5/2', showCart: true },
-  stock:  { title: 'จัดการสต็อก',     sub: 'สหกรณ์โรงเรียน',         showCart: false },
-  report: { title: 'รายงานยอดขาย',   sub: 'สหกรณ์โรงเรียน',         showCart: false },
-  shares: { title: 'หุ้น & ปันผล',    sub: 'สหกรณ์โรงเรียน',         showCart: false },
+  pos:    { title: 'สหกรณ์โรงเรียนบ้านหินลาด', sub: 'ร้านนักเรียน · ม.5/2', showCart: true },
+  stock:  { title: 'จัดการสต็อก',     sub: 'สหกรณ์โรงเรียนบ้านหินลาด',         showCart: false },
+  report: { title: 'รายงานยอดขาย',   sub: 'สหกรณ์โรงเรียนบ้านหินลาด',         showCart: false },
+  shares: { title: 'หุ้น & ปันผล',    sub: 'สหกรณ์โรงเรียนบ้านหินลาด',         showCart: false },
   admin:  { title: '👑 หน้าครู',       sub: 'จัดการระบบสหกรณ์',        showCart: false },
 };
 
@@ -3614,7 +3714,7 @@ function renderProducts() {
     return `
     <div class="product ${cart.has(p.id) ? 'has-qty' : ''} ${out ? 'out-of-stock' : ''}" onclick="${out ? '' : `add(${p.id})`}">
       <span class="qty-badge">${cart.get(p.id) || ''}</span>
-      <div class="product-img">${p.emoji}</div>
+      <div class="product-img">${p.imageUrl ? `<img class="prod-photo" src="${p.imageUrl}" alt="">` : p.emoji}</div>
       <div class="product-name">${p.name}</div>
       <div class="product-stock">คงเหลือ ${remaining < 0 ? 0 : remaining} ${p.unit.replace('/','')}</div>
       <div class="product-foot">
@@ -3754,7 +3854,7 @@ function renderStock() {
         return `
           <div class="stock-item" onclick="openProductModal(${p.id})">
             ${s !== 'ok' ? `<div class="warn-corner">!</div>` : ''}
-            <div class="item-img">${p.emoji}</div>
+            <div class="item-img">${p.imageUrl ? `<img class="item-photo" src="${p.imageUrl}" alt="">` : p.emoji}</div>
             <div class="item-info">
               <div class="item-name">${p.name}</div>
               <div class="item-meta">
@@ -3792,7 +3892,55 @@ function renderEmojis() {
     `<button class="emoji-pick ${e === selectedEmoji ? 'sel' : ''}" onclick="selectEmoji('${e}')">${e}</button>`
   ).join('');
 }
-function selectEmoji(e) { selectedEmoji = e; renderEmojis(); }
+function selectEmoji(e) {
+  selectedEmoji = e;
+  renderEmojis();
+  // ถ้ายังไม่มีรูป → อัปเดต preview เป็น emoji ที่เลือก
+  if (!selectedImageUrl) {
+    document.getElementById('imgPreview').innerHTML = e;
+  }
+}
+
+let selectedImageUrl = null;
+
+async function uploadProductImage(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  if (!sb) { showToast('ต้องเชื่อม Supabase ก่อน', true); return; }
+  if (file.size > 5 * 1024 * 1024) { showToast('ไฟล์ใหญ่เกิน 5MB', true); return; }
+
+  const btnText = document.getElementById('uploadBtnText');
+  const btnLabel = document.getElementById('uploadBtnLabel');
+  btnText.textContent = '⏳ กำลังอัปโหลด...';
+  btnLabel.classList.add('uploading');
+
+  try {
+    const ext = file.name.split('.').pop().toLowerCase();
+    const path = `products/${Date.now()}-${Math.random().toString(36).slice(2,8)}.${ext}`;
+    const { error } = await sb.storage.from('product-images').upload(path, file, {
+      cacheControl: '3600', upsert: false
+    });
+    if (error) throw error;
+    const { data: urlData } = sb.storage.from('product-images').getPublicUrl(path);
+    selectedImageUrl = urlData.publicUrl;
+    document.getElementById('imgPreview').innerHTML = `<img src="${selectedImageUrl}" alt="">`;
+    document.getElementById('removeImgBtn').style.display = 'block';
+    showToast('✅ อัปโหลดรูปเรียบร้อย');
+  } catch (e) {
+    console.error('upload failed', e);
+    showToast('อัปโหลดไม่สำเร็จ: ' + (e.message || 'ลองใหม่'), true);
+  } finally {
+    btnText.textContent = '📷 อัปโหลดรูป';
+    btnLabel.classList.remove('uploading');
+    event.target.value = '';
+  }
+}
+
+function removeProductImage() {
+  selectedImageUrl = null;
+  document.getElementById('imgPreview').innerHTML = selectedEmoji;
+  document.getElementById('removeImgBtn').style.display = 'none';
+}
 
 let selectedProductCategory = 'other';
 function renderCatPicker() {
@@ -3816,6 +3964,7 @@ function openProductModal(id = null) {
     const p = products.find(x => x.id === id);
     selectedEmoji = p.emoji;
     selectedProductCategory = p.category || 'other';
+    selectedImageUrl = p.imageUrl || null;
     document.getElementById('productTitle').textContent = 'แก้ไขสินค้า';
     document.getElementById('pName').value = p.name;
     document.getElementById('pPrice').value = p.price;
@@ -3826,6 +3975,7 @@ function openProductModal(id = null) {
   } else {
     selectedEmoji = '🍱';
     selectedProductCategory = 'other';
+    selectedImageUrl = null;
     document.getElementById('productTitle').textContent = 'เพิ่มสินค้าใหม่';
     document.getElementById('pName').value = '';
     document.getElementById('pPrice').value = '';
@@ -3833,6 +3983,15 @@ function openProductModal(id = null) {
     document.getElementById('pStock').value = '';
     document.getElementById('curStock').textContent = '0';
     document.getElementById('pDeleteBtn').style.display = 'none';
+  }
+  // Update image preview
+  const preview = document.getElementById('imgPreview');
+  if (selectedImageUrl) {
+    preview.innerHTML = `<img src="${selectedImageUrl}" alt="">`;
+    document.getElementById('removeImgBtn').style.display = 'block';
+  } else {
+    preview.innerHTML = selectedEmoji;
+    document.getElementById('removeImgBtn').style.display = 'none';
   }
   renderEmojis();
   renderCatPicker();
@@ -4135,7 +4294,7 @@ function downloadReport(type) {
 <Worksheet ss:Name="รายงานยอดขาย">
  <Table ss:DefaultColumnWidth="80">
   <Column ss:Width="65"/><Column ss:Width="90"/><Column ss:Width="55"/><Column ss:Width="130"/><Column ss:Width="260"/><Column ss:Width="55"/><Column ss:Width="85"/><Column ss:Width="85"/><Column ss:Width="85"/>
-  <Row ss:Height="36"><Cell ss:StyleID="sTitle" ss:MergeAcross="${colCount-1}"><Data ss:Type="String">รายงานยอดขาย — สหกรณ์โรงเรียน</Data></Cell></Row>
+  <Row ss:Height="36"><Cell ss:StyleID="sTitle" ss:MergeAcross="${colCount-1}"><Data ss:Type="String">รายงานยอดขาย — สหกรณ์โรงเรียนบ้านหินลาด</Data></Cell></Row>
   <Row ss:Height="22"><Cell ss:StyleID="sSubtitle" ss:MergeAcross="${colCount-1}"><Data ss:Type="String">${esc(periodText)} · พิมพ์เมื่อ ${esc(thDateTime(new Date()))}</Data></Cell></Row>
   <Row><Cell><Data ss:Type="String"></Data></Cell></Row>
   <Row ss:Height="26">${headerCells}</Row>
@@ -4228,7 +4387,7 @@ body { padding-bottom: 80px; }
 }
 </style></head><body>
 <div class="header">
-  <div class="brand"><div class="logo">🏫</div><div><h1>รายงานยอดขาย</h1><div class="org">สหกรณ์โรงเรียน · ร้านนักเรียน</div></div></div>
+  <div class="brand"><div class="logo">🏫</div><div><h1>รายงานยอดขาย</h1><div class="org">สหกรณ์โรงเรียนบ้านหินลาด · ร้านนักเรียน</div></div></div>
   <div class="period">📅 ${periodText} · พิมพ์ ${thDateTime(new Date())}</div>
 </div>
 <div class="container">
@@ -4249,7 +4408,7 @@ body { padding-bottom: 80px; }
     </tfoot>
   </table>
   <div class="footer">
-    เอกสารนี้สร้างโดยระบบสหกรณ์โรงเรียน · พิมพ์เมื่อ ${thDateTime(new Date())}
+    เอกสารนี้สร้างโดยระบบสหกรณ์โรงเรียนบ้านหินลาด · พิมพ์เมื่อ ${thDateTime(new Date())}
   </div>
 </div>
 
@@ -4836,6 +4995,7 @@ async function loadFromCloud() {
       prods.forEach(p => products.push({
         id: p.id, name: p.name, emoji: p.emoji,
         price: p.price, cost: p.cost || 0, category: p.category || 'other',
+        imageUrl: p.image_url || null,
         stock: p.stock, lowAt: p.low_at, unit: p.unit || '/ชิ้น'
       }));
       nextProductId = Math.max(...products.map(p => p.id), 0) + 1;
@@ -4983,6 +5143,7 @@ async function sbSaveProduct(p, isNew) {
       const { data, error } = await sb.from('products').insert({
         name: p.name, emoji: p.emoji, price: p.price,
         cost: p.cost || 0, category: p.category || 'other',
+        image_url: p.imageUrl || null,
         stock: p.stock, low_at: p.lowAt, unit: p.unit
       }).select().single();
       if (error) throw error;
@@ -4991,6 +5152,7 @@ async function sbSaveProduct(p, isNew) {
       await sb.from('products').update({
         name: p.name, emoji: p.emoji, price: p.price,
         cost: p.cost || 0, category: p.category || 'other',
+        image_url: p.imageUrl || null,
         stock: p.stock, low_at: p.lowAt
       }).eq('id', p.id);
     }
@@ -5362,6 +5524,7 @@ saveProduct = function() {
       const p = products.find(x => x.id === editingProductId);
       const before = { name: p.name, price: p.price, cost: p.cost, stock: p.stock };
       p.name = name; p.price = price; p.cost = cost; p.category = category; p.emoji = selectedEmoji;
+      p.imageUrl = selectedImageUrl;
       p.stock += addQty;
       sbSaveProduct(p, false);
       if (addQty > 0) {
@@ -5379,7 +5542,7 @@ saveProduct = function() {
       }
       showToast(addQty > 0 ? `เพิ่มสต็อก ${name} +${addQty}` : 'แก้ไขเรียบร้อย');
     } else {
-      const newP = { id: nextProductId++, name, price, cost, category, emoji: selectedEmoji, stock: addQty, lowAt: 10, unit: '/ชิ้น' };
+      const newP = { id: nextProductId++, name, price, cost, category, emoji: selectedEmoji, imageUrl: selectedImageUrl, stock: addQty, lowAt: 10, unit: '/ชิ้น' };
       products.push(newP);
       sbSaveProduct(newP, true);
       logAudit('add_product', 'product', newP.id, name, {
@@ -6138,7 +6301,7 @@ async function enableNotifications() {
   document.getElementById('notiBanner').classList.remove('show');
   if (notiPermission === 'granted') {
     showToast('🔔 เปิดแจ้งเตือนแล้ว');
-    new Notification('สหกรณ์โรงเรียน', {
+    new Notification('สหกรณ์โรงเรียนบ้านหินลาด', {
       body: 'พร้อมรับแจ้งเตือนแล้ว',
       icon: 'icon.svg'
     });
@@ -6227,7 +6390,7 @@ function startRealtime() {
       if (payload.eventType === 'INSERT') {
         const p = payload.new;
         if (!products.find(x => x.id === p.id)) {
-          products.push({ id: p.id, name: p.name, emoji: p.emoji, price: p.price, cost: p.cost || 0, category: p.category || 'other', stock: p.stock, lowAt: p.low_at, unit: p.unit || '/ชิ้น' });
+          products.push({ id: p.id, name: p.name, emoji: p.emoji, price: p.price, cost: p.cost || 0, category: p.category || 'other', imageUrl: p.image_url || null, stock: p.stock, lowAt: p.low_at, unit: p.unit || '/ชิ้น' });
         }
       } else if (payload.eventType === 'UPDATE') {
         const p = payload.new;
@@ -6235,6 +6398,7 @@ function startRealtime() {
         if (local) {
           local.name = p.name; local.price = p.price; local.emoji = p.emoji;
           local.cost = p.cost || 0; local.category = p.category || 'other';
+          local.imageUrl = p.image_url || null;
           local.stock = p.stock; local.lowAt = p.low_at; local.unit = p.unit || '/ชิ้น';
         }
       } else if (payload.eventType === 'DELETE') {

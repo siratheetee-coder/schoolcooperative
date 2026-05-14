@@ -20,6 +20,7 @@ create table if not exists products (
 -- อัปเกรดตารางเดิม
 alter table products add column if not exists cost int default 0;
 alter table products add column if not exists category text default 'other';
+alter table products add column if not exists image_url text;
 
 -- 2. MEMBERS
 create table if not exists members (
@@ -196,6 +197,32 @@ begin
     end;
   end loop;
 end $$;
+
+-- ============================================================
+-- STORAGE BUCKET (สำหรับเก็บรูปสินค้า)
+-- ============================================================
+insert into storage.buckets (id, name, public)
+values ('product-images', 'product-images', true)
+on conflict (id) do update set public = true;
+
+-- Storage policies (อนุญาตให้ทุกคนอ่าน + อัปโหลด)
+do $$
+begin
+  drop policy if exists "public read product images" on storage.objects;
+  drop policy if exists "public upload product images" on storage.objects;
+  drop policy if exists "public update product images" on storage.objects;
+  drop policy if exists "public delete product images" on storage.objects;
+exception when others then null;
+end $$;
+
+create policy "public read product images" on storage.objects
+  for select using (bucket_id = 'product-images');
+create policy "public upload product images" on storage.objects
+  for insert with check (bucket_id = 'product-images');
+create policy "public update product images" on storage.objects
+  for update using (bucket_id = 'product-images');
+create policy "public delete product images" on storage.objects
+  for delete using (bucket_id = 'product-images');
 
 -- ============================================================
 -- SEED DATA

@@ -163,6 +163,8 @@ drop policy if exists "open" on share_txns;
 drop policy if exists "open" on pending_requests;
 drop policy if exists "open" on shift_assignments;
 drop policy if exists "open" on audit_logs;
+drop policy if exists "audit_insert" on audit_logs;
+drop policy if exists "audit_select" on audit_logs;
 
 create policy "open" on products           for all using (true) with check (true);
 create policy "open" on members            for all using (true) with check (true);

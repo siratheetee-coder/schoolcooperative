@@ -2951,7 +2951,7 @@
         <div class="brand-logo"><img src="logo-no-bg.png" alt="Logo"></div>
         <div class="brand-text">
           <div class="name" id="headerTitle">สหกรณ์โรงเรียนบ้านหินลาด</div>
-          <div class="sub" id="headerSub">พัฒนาโดย ครูสิรธีร์ ตีเมืองซ้าย V 1.1</div>
+          <div class="sub" id="headerSub">พัฒนาโดย ครูสิรธีร์ ตีเมืองซ้าย V 1.2</div>
         </div>
       </div>
       <button class="icon-btn bell-btn" id="bellBtn" onclick="openRequests()" aria-label="คำขออนุมัติ">
@@ -3808,7 +3808,7 @@ function getTerm(d) {
 }
 
 // ============== VIEW ROUTER ==============
-const APP_VERSION = 'V 1.1';
+const APP_VERSION = 'V 1.2';
 const DEV_BY = `พัฒนาโดย ครูสิรธีร์ ตีเมืองซ้าย ${APP_VERSION}`;
 const VIEW_META = {
   pos:    { title: 'สหกรณ์โรงเรียนบ้านหินลาด', sub: DEV_BY, showCart: true },
@@ -7150,7 +7150,31 @@ logout = function() {
 // ============== PWA: Service Worker + Install ==============
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js').catch(err => console.log('SW registration failed:', err));
+    navigator.serviceWorker.register('sw.js').then(reg => {
+      // Check for updates every load
+      reg.update().catch(() => {});
+
+      // เมื่อมี SW ใหม่กำลังติดตั้ง
+      reg.addEventListener('updatefound', () => {
+        const newWorker = reg.installing;
+        if (!newWorker) return;
+        newWorker.addEventListener('statechange', () => {
+          if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+            // มี SW ใหม่พร้อมใช้ → reload อัตโนมัติ
+            showToast('🎉 มีเวอร์ชั่นใหม่! กำลังรีเฟรช...');
+            newWorker.postMessage('SKIP_WAITING');
+          }
+        });
+      });
+    }).catch(err => console.log('SW registration failed:', err));
+
+    // เมื่อ SW ใหม่เข้ามาควบคุม → reload หน้า
+    let refreshing = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (refreshing) return;
+      refreshing = true;
+      setTimeout(() => window.location.reload(), 800);
+    });
   });
 }
 

@@ -2951,6 +2951,13 @@
       </div>
     </div>
     <div class="tabs" id="categoryTabs"></div>
+    <div style="padding:8px 20px 0;">
+      <div class="search-box">
+        <span class="icon">🔍</span>
+        <input type="text" id="posSearchInput" placeholder="ค้นหาสินค้า..." oninput="setPosSearch(this.value)" />
+        <button type="button" id="posSearchClear" onclick="clearPosSearch()" style="display:none;border:none;background:transparent;font-size:18px;color:var(--ink-soft);cursor:pointer;padding:0;">✕</button>
+      </div>
+    </div>
     <div class="section-head">
       <h2>เลือกสินค้า</h2>
       <span class="count" id="prodCount">0 รายการ</span>
@@ -3697,11 +3704,13 @@ const CATEGORIES = [
   { id: 'all',        ico: '🍱', name: 'ทั้งหมด' },
   { id: 'drink',      ico: '🥤', name: 'เครื่องดื่ม' },
   { id: 'snack',      ico: '🍪', name: 'ขนม' },
+  { id: 'icecream',   ico: '🍦', name: 'ไอศกรีม' },
   { id: 'stationery', ico: '✏️', name: 'เครื่องเขียน' },
   { id: 'book',       ico: '📒', name: 'สมุด' },
   { id: 'other',      ico: '📦', name: 'อื่นๆ' },
 ];
 let currentCategory = 'all';
+let posSearch = '';
 
 function stockStatus(p) {
   if (p.stock <= 0) return 'out';
@@ -3857,11 +3866,25 @@ function setCategory(c) {
   renderProducts();
 }
 
+function setPosSearch(v) {
+  posSearch = v.trim().toLowerCase();
+  document.getElementById('posSearchClear').style.display = posSearch ? 'block' : 'none';
+  renderProducts();
+}
+
+function clearPosSearch() {
+  document.getElementById('posSearchInput').value = '';
+  setPosSearch('');
+}
+
 function renderProducts() {
   const grid = document.getElementById('grid');
-  const filtered = currentCategory === 'all'
+  let filtered = currentCategory === 'all'
     ? products
     : products.filter(p => (p.category || 'other') === currentCategory);
+  if (posSearch) {
+    filtered = filtered.filter(p => p.name.toLowerCase().includes(posSearch));
+  }
   grid.innerHTML = filtered.map(p => {
     const out = p.stock <= 0;
     const remaining = p.stock - (cart.get(p.id) || 0);
@@ -3885,7 +3908,17 @@ function renderProducts() {
       </div>
     </div>
   `;}).join('');
-  document.getElementById('prodCount').textContent = `${products.length} รายการ`;
+  const showingAll = currentCategory === 'all' && !posSearch;
+  document.getElementById('prodCount').textContent = showingAll
+    ? `${products.length} รายการ`
+    : `${filtered.length} / ${products.length} รายการ`;
+  // Show empty state if filter yields nothing
+  if (filtered.length === 0) {
+    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px 20px;color:var(--ink-soft);">
+      <div style="font-size:48px;margin-bottom:8px;opacity:0.5;">🔍</div>
+      ${posSearch ? `ไม่พบสินค้า "${posSearch}"` : 'ไม่มีสินค้าในหมวดนี้'}
+    </div>`;
+  }
   updateCart();
 }
 

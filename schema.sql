@@ -10,7 +10,7 @@ create table if not exists products (
   emoji text default '🍱',
   price int not null default 0,
   cost int not null default 0,
-  category text default 'other' check (category in ('drink','snack','stationery','book','other')),
+  category text default 'other' check (category in ('drink','snack','icecream','stationery','book','other')),
   stock int not null default 0,
   low_at int not null default 10,
   unit text default '/ชิ้น',
@@ -21,6 +21,20 @@ create table if not exists products (
 alter table products add column if not exists cost int default 0;
 alter table products add column if not exists category text default 'other';
 alter table products add column if not exists image_url text;
+
+-- อัปเดต constraint category ให้รองรับ 'icecream'
+do $$
+begin
+  alter table products drop constraint if exists products_category_check;
+  alter table products add constraint products_category_check
+    check (category in ('drink','snack','icecream','stationery','book','other'));
+exception when others then null;
+end $$;
+
+-- ย้ายสินค้าที่มีคำว่า "ไอศกรีม"/"ไอติม" เข้า category 'icecream' อัตโนมัติ
+update products set category = 'icecream'
+where (name ilike '%ไอศกรีม%' or name ilike '%ไอติม%' or name ilike '%ice cream%' or name ilike '%icecream%')
+  and category != 'icecream';
 
 -- 2. MEMBERS
 create table if not exists members (

@@ -2951,7 +2951,7 @@
         <div class="brand-logo"><img src="logo-no-bg.png" alt="Logo"></div>
         <div class="brand-text">
           <div class="name" id="headerTitle">สหกรณ์โรงเรียนบ้านหินลาด</div>
-          <div class="sub" id="headerSub">พัฒนาโดย ครูสิรธีร์ ตีเมืองซ้าย V 1.0</div>
+          <div class="sub" id="headerSub">พัฒนาโดย ครูสิรธีร์ ตีเมืองซ้าย V 1.1</div>
         </div>
       </div>
       <button class="icon-btn bell-btn" id="bellBtn" onclick="openRequests()" aria-label="คำขออนุมัติ">
@@ -3808,12 +3808,14 @@ function getTerm(d) {
 }
 
 // ============== VIEW ROUTER ==============
+const APP_VERSION = 'V 1.1';
+const DEV_BY = `พัฒนาโดย ครูสิรธีร์ ตีเมืองซ้าย ${APP_VERSION}`;
 const VIEW_META = {
-  pos:    { title: 'สหกรณ์โรงเรียนบ้านหินลาด', sub: 'ร้านนักเรียน', showCart: true },
-  stock:  { title: 'จัดการสต็อก',     sub: 'สหกรณ์โรงเรียนบ้านหินลาด',         showCart: false },
-  report: { title: 'รายงานยอดขาย',   sub: 'สหกรณ์โรงเรียนบ้านหินลาด',         showCart: false },
-  shares: { title: 'หุ้น & ปันผล',    sub: 'สหกรณ์โรงเรียนบ้านหินลาด',         showCart: false },
-  admin:  { title: '👑 หน้าครู',       sub: 'จัดการระบบสหกรณ์',        showCart: false },
+  pos:    { title: 'สหกรณ์โรงเรียนบ้านหินลาด', sub: DEV_BY, showCart: true },
+  stock:  { title: 'จัดการสต็อก',               sub: DEV_BY, showCart: false },
+  report: { title: 'รายงานยอดขาย',             sub: DEV_BY, showCart: false },
+  shares: { title: 'หุ้น & ปันผล',              sub: DEV_BY, showCart: false },
+  admin:  { title: '👑 หน้าครู',                sub: DEV_BY, showCart: false },
 };
 
 function setView(name) {

@@ -2951,7 +2951,7 @@
         <div class="brand-logo"><img src="logo-no-bg.png" alt="Logo"></div>
         <div class="brand-text">
           <div class="name" id="headerTitle">สหกรณ์โรงเรียนบ้านหินลาด</div>
-          <div class="sub" id="headerSub">พัฒนาโดย ครูสิรธีร์ ตีเมืองซ้าย V 1.2</div>
+          <div class="sub" id="headerSub">พัฒนาโดย ครูสิรธีร์ ตีเมืองซ้าย V 1.3</div>
         </div>
       </div>
       <button class="icon-btn bell-btn" id="bellBtn" onclick="openRequests()" aria-label="คำขออนุมัติ">
@@ -3126,9 +3126,14 @@
         <div class="ts">Export Excel/PDF</div>
       </button>
       <button class="tool-btn" onclick="openBulkImport()">
-        <div class="ti" style="background:linear-gradient(135deg,#7AB8E0,#4D8FCA);color:white;box-shadow:0 4px 0 #2D6FA3;">📥</div>
-        <div class="tt">นำเข้าสมาชิกหลายคน</div>
-        <div class="ts">Paste จาก Excel หรือ CSV</div>
+        <div class="ti" style="background:linear-gradient(135deg,#7AB8E0,#4D8FCA);color:white;box-shadow:0 4px 0 #2D6FA3;">👥</div>
+        <div class="tt">นำเข้าสมาชิก</div>
+        <div class="ts">Paste จาก Excel/CSV</div>
+      </button>
+      <button class="tool-btn" onclick="openBulkProductImport()">
+        <div class="ti" style="background:linear-gradient(135deg,#FF8B7A,#E0594A);color:white;box-shadow:0 4px 0 #B23E32;">📦</div>
+        <div class="tt">นำเข้าสินค้า</div>
+        <div class="ts">Paste จาก Excel/CSV</div>
       </button>
       <button class="tool-btn" onclick="openAuditLog()">
         <div class="ti" style="background:linear-gradient(135deg,#9C7CB8,#7B4F9F);color:white;box-shadow:0 4px 0 #5A3577;">📜</div>
@@ -3648,6 +3653,46 @@ T0002,ครูสมหญิง สุขใจ,ครูที่ปรึก
   </div>
 </div>
 
+<!-- ============== BULK PRODUCT IMPORT MODAL ============== -->
+<div class="modal-bg" id="bulkProductModal" onclick="if(event.target===this)closeBulkProductImport()">
+  <div class="modal">
+    <div class="modal-close"></div>
+    <h3>📦 นำเข้าสินค้าหลายรายการ</h3>
+
+    <div class="bulk-help">
+      <b>วิธีใช้:</b> ใส่สินค้า 1 รายการ/บรรทัด ใช้ comma คั่นช่อง
+      <code>ชื่อ,ราคา,ต้นทุน,หมวดหมู่,Emoji,สต็อก,แจ้งที่,หน่วย</code>
+      <div style="margin-top:6px;font-size:11px;">
+        <b>จำเป็น:</b> ชื่อ + ราคา &nbsp;|&nbsp;
+        <b>เลือกได้:</b> ต้นทุน (฿0), หมวดหมู่ (<i>drink/snack/icecream/stationery/book/other</i>), Emoji, สต็อก, แจ้งเตือน (10), หน่วย (/ชิ้น)
+      </div>
+    </div>
+
+    <div class="bulk-actions">
+      <button class="bulk-btn-secondary" onclick="downloadProductTemplate()">📋 Template</button>
+      <label class="bulk-btn-secondary" style="cursor:pointer;">
+        📂 อัปโหลด CSV
+        <input type="file" id="bulkProductFile" accept=".csv,.txt,.tsv" style="display:none;" onchange="loadBulkProductFile(event)" />
+      </label>
+    </div>
+
+    <textarea class="bulk-textarea" id="bulkProductText" placeholder="วางข้อมูลที่นี่... ตัวอย่าง:
+ไอติมโคน,15,10,icecream,🍦,30,10,/อัน
+นมเย็น,15,10,drink,🥛,20,10,/แก้ว
+ป๊อปคอร์น,20,12,snack,🍿,15,5,/ถุง" oninput="parseBulkProductPreview()"></textarea>
+
+    <div id="bulkProductPreviewWrap" style="display:none;">
+      <div class="bulk-preview" id="bulkProductPreview"></div>
+      <div class="bulk-summary" id="bulkProductSummary"></div>
+    </div>
+
+    <div class="actions" style="margin-top:14px;">
+      <button class="btn btn-ghost" onclick="closeBulkProductImport()">ยกเลิก</button>
+      <button class="btn btn-primary" id="bulkProductConfirmBtn" onclick="confirmBulkProductImport()" disabled>นำเข้า</button>
+    </div>
+  </div>
+</div>
+
 <!-- ============== AUDIT LOG MODAL ============== -->
 <div class="modal-bg" id="auditModal" onclick="if(event.target===this)closeAuditLog()">
   <div class="modal">
@@ -3808,7 +3853,7 @@ function getTerm(d) {
 }
 
 // ============== VIEW ROUTER ==============
-const APP_VERSION = 'V 1.2';
+const APP_VERSION = 'V 1.3';
 const DEV_BY = `พัฒนาโดย ครูสิรธีร์ ตีเมืองซ้าย ${APP_VERSION}`;
 const VIEW_META = {
   pos:    { title: 'สหกรณ์โรงเรียนบ้านหินลาด', sub: DEV_BY, showCart: true },
@@ -6079,6 +6124,167 @@ async function saveShiftEdit() {
   renderShiftGrid();
   renderTodayShift();
   showToast('บันทึกตารางเวรเรียบร้อย');
+}
+
+// ============== BULK PRODUCT IMPORT ==============
+let bulkProductParsed = [];
+const VALID_CATEGORIES = ['drink','snack','icecream','stationery','book','other'];
+
+function openBulkProductImport() {
+  if (!isTeacher()) return;
+  document.getElementById('bulkProductText').value = '';
+  document.getElementById('bulkProductPreviewWrap').style.display = 'none';
+  document.getElementById('bulkProductConfirmBtn').disabled = true;
+  bulkProductParsed = [];
+  document.getElementById('bulkProductModal').classList.add('show');
+}
+function closeBulkProductImport() { document.getElementById('bulkProductModal').classList.remove('show'); }
+
+function downloadProductTemplate() {
+  const csv = '﻿' + 'ชื่อ,ราคา,ต้นทุน,หมวดหมู่,Emoji,สต็อก,แจ้งเตือนที่,หน่วย\r\n' +
+    'ไอติมโคน,15,10,icecream,🍦,30,10,/อัน\r\n' +
+    'นมเย็น,15,10,drink,🥛,20,10,/แก้ว\r\n' +
+    'ป๊อปคอร์น,20,12,snack,🍿,15,5,/ถุง\r\n';
+  saveBlob(csv, 'template-products.csv', 'text/csv;charset=utf-8;');
+  showToast('ดาวน์โหลด Template เรียบร้อย');
+}
+
+function loadBulkProductFile(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    document.getElementById('bulkProductText').value = ev.target.result;
+    parseBulkProductPreview();
+  };
+  reader.readAsText(file, 'UTF-8');
+}
+
+function parseBulkProductPreview() {
+  const text = document.getElementById('bulkProductText').value.trim();
+  if (!text) {
+    document.getElementById('bulkProductPreviewWrap').style.display = 'none';
+    document.getElementById('bulkProductConfirmBtn').disabled = true;
+    bulkProductParsed = [];
+    return;
+  }
+
+  const lines = text.split(/\r?\n/).map(l => l.trim()).filter(l => l);
+  const tabCount = lines[0].split('\t').length;
+  const commaCount = lines[0].split(',').length;
+  const delim = tabCount > commaCount ? '\t' : ',';
+
+  // Detect header
+  let startIdx = 0;
+  const firstCols = lines[0].split(delim).map(c => c.trim().toLowerCase());
+  if (firstCols.some(c => c === 'ชื่อ' || c === 'name' || c === 'product')) {
+    startIdx = 1;
+  }
+
+  const existingNames = new Set(products.map(p => p.name.toLowerCase()));
+  const seenNames = new Set();
+
+  bulkProductParsed = lines.slice(startIdx).map((line, idx) => {
+    const cols = line.split(delim).map(c => c.trim().replace(/^"|"$/g, ''));
+    const name = cols[0] || '';
+    const price = parseInt(cols[1]) || 0;
+    const cost = parseInt(cols[2]) || 0;
+    const catRaw = (cols[3] || '').toLowerCase();
+    const category = VALID_CATEGORIES.includes(catRaw) ? catRaw : 'other';
+    const emoji = (cols[4] || '🍱').slice(0, 4);
+    const stock = parseInt(cols[5]) || 0;
+    const lowAt = parseInt(cols[6]) || 10;
+    const unit = cols[7] || '/ชิ้น';
+
+    const errors = [];
+    if (!name) errors.push('ขาดชื่อ');
+    if (price <= 0) errors.push('ขาดราคา');
+    if (cost > price) errors.push('ต้นทุน > ราคา?');
+    let status = 'ok';
+    if (errors.length) status = 'error';
+    else if (existingNames.has(name.toLowerCase()) || seenNames.has(name.toLowerCase())) status = 'dup';
+    seenNames.add(name.toLowerCase());
+
+    return { rowNum: idx + 1, name, price, cost, category, emoji, stock, lowAt, unit, status, errors };
+  });
+
+  renderBulkProductPreview();
+}
+
+function renderBulkProductPreview() {
+  const wrap = document.getElementById('bulkProductPreviewWrap');
+  const preview = document.getElementById('bulkProductPreview');
+  wrap.style.display = 'block';
+
+  const CAT_LABEL = {
+    drink: '🥤', snack: '🍪', icecream: '🍦',
+    stationery: '✏️', book: '📒', other: '📦'
+  };
+
+  preview.innerHTML = `
+    <table>
+      <thead>
+        <tr><th>#</th><th>Emoji</th><th>ชื่อ</th><th>ราคา</th><th>ต้นทุน</th><th>หมวด</th><th>สต็อก</th><th>สถานะ</th></tr>
+      </thead>
+      <tbody>
+        ${bulkProductParsed.map(r => `
+          <tr class="${r.status === 'error' ? 'error' : r.status === 'dup' ? 'dup' : ''}">
+            <td>${r.rowNum}</td>
+            <td style="font-size:18px;">${r.emoji}</td>
+            <td>${r.name || '<i>-</i>'}</td>
+            <td style="text-align:right;color:var(--gold-600);font-weight:700;">฿${r.price}</td>
+            <td style="text-align:right;color:var(--ink-soft);">฿${r.cost}</td>
+            <td>${CAT_LABEL[r.category] || '📦'}</td>
+            <td style="text-align:right;">${r.stock}</td>
+            <td>${r.status === 'error' ? '❌ ' + r.errors.join(', ') : r.status === 'dup' ? '⚠️ ชื่อซ้ำ' : '✅'}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `;
+
+  const ok = bulkProductParsed.filter(r => r.status === 'ok').length;
+  const dup = bulkProductParsed.filter(r => r.status === 'dup').length;
+  const err = bulkProductParsed.filter(r => r.status === 'error').length;
+
+  document.getElementById('bulkProductSummary').innerHTML = `
+    <span class="bulk-pill ok">✓ พร้อมเพิ่ม ${ok} รายการ</span>
+    ${dup > 0 ? `<span class="bulk-pill dup">⚠️ ซ้ำ ${dup} (จะข้าม)</span>` : ''}
+    ${err > 0 ? `<span class="bulk-pill err">✕ ผิดพลาด ${err} (จะข้าม)</span>` : ''}
+  `;
+
+  document.getElementById('bulkProductConfirmBtn').disabled = ok === 0;
+  document.getElementById('bulkProductConfirmBtn').textContent = `นำเข้า ${ok} รายการ`;
+}
+
+async function confirmBulkProductImport() {
+  const toImport = bulkProductParsed.filter(r => r.status === 'ok');
+  if (toImport.length === 0) { showToast('ไม่มีข้อมูลที่ถูกต้อง', true); return; }
+  if (!confirm(`ยืนยันเพิ่มสินค้าใหม่ ${toImport.length} รายการ?`)) return;
+
+  let success = 0;
+  for (const r of toImport) {
+    const newP = {
+      id: nextProductId++,
+      name: r.name, price: r.price, cost: r.cost,
+      category: r.category, emoji: r.emoji, imageUrl: null,
+      stock: r.stock, lowAt: r.lowAt, unit: r.unit
+    };
+    products.push(newP);
+    await sbSaveProduct(newP, true);
+    success++;
+  }
+
+  logAudit('add_product', 'bulk_import', null, `Bulk import ${success} รายการ`, {
+    count: success,
+    products: toImport.slice(0, 10).map(r => r.name).join(', ') + (toImport.length > 10 ? '...' : '')
+  });
+
+  showToast(`✅ เพิ่มสินค้า ${success} รายการเรียบร้อย`);
+  closeBulkProductImport();
+  renderStock();
+  renderProducts();
+  renderAdmin();
 }
 
 // ============== BACKUP ==============

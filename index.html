@@ -2920,7 +2920,7 @@
         <div class="brand-logo"><img src="logo-no-bg.png" alt="Logo"></div>
         <div class="brand-text">
           <div class="name" id="headerTitle">สหกรณ์โรงเรียนบ้านหินลาด</div>
-          <div class="sub" id="headerSub">ร้านนักเรียน · ม.5/2</div>
+          <div class="sub" id="headerSub">พัฒนาโดย ครูสิรธีร์ ตีเมืองซ้าย V 1.0</div>
         </div>
       </div>
       <button class="icon-btn bell-btn" id="bellBtn" onclick="openRequests()" aria-label="คำขออนุมัติ">
@@ -2931,7 +2931,7 @@
     <div class="seller-card" onclick="logout()" title="แตะเพื่อออกจากระบบ">
       <div class="avatar" id="userAvatar">น</div>
       <div class="seller-info">
-        <div class="label">ผู้ขายเวรนี้</div>
+        <div class="label">ผู้ขายในเวรนี้</div>
         <div class="name" id="userName">น้องนภา (รหัส 05421)</div>
       </div>
       <div class="seller-stat">
@@ -3112,8 +3112,8 @@
   <div class="view" id="view-shares">
     <div class="hero-shares">
       <div class="hero-top">
-        <div class="hero-lbl">💎 ทุนเรือนหุ้นรวม</div>
-        <div class="hero-rate">หุ้นละ ฿<span id="heroPrice">10</span></div>
+        <div class="hero-lbl">💎 จำนวนเงินในหุ้นทั้งหมด</div>
+        <div class="hero-rate">หุ้นละ ฿<span id="heroPrice">20</span></div>
       </div>
       <div class="hero-amount"><span class="b">฿</span><span id="heroAmount">0</span></div>
       <div class="hero-stats">
@@ -3153,7 +3153,7 @@
       <div class="preview-card">
         <h3>📊 สรุปการคำนวณ <span class="pill" id="divYearPill">ปี 2569</span></h3>
         <div class="calc-row"><span class="l">ทุนเรือนหุ้นรวม</span><span class="v">฿<span id="calcCapital">0</span></span></div>
-        <div class="calc-row"><span class="l">อัตราปันผล</span><span class="v"><span id="calcRate">6</span>%</span></div>
+        <div class="calc-row"><span class="l">อัตราปันผล</span><span class="v"><span id="calcRate">10</span>%</span></div>
         <div class="calc-row"><span class="l">จำนวนสมาชิก</span><span class="v"><span id="calcMembers">0</span> คน</span></div>
         <div class="calc-row total"><span class="l">💰 ปันผลที่ต้องจ่ายรวม</span><span class="v">฿<span id="calcDividend">0</span></span></div>
       </div>
@@ -3363,7 +3363,7 @@
     </div>
 
     <div class="field">
-      <label>จำนวนหุ้น (หุ้นละ ฿10)</label>
+      <label>จำนวนหุ้น (หุ้นละ ฿20)</label>
       <input type="number" id="buyQty" placeholder="0" inputmode="numeric" oninput="updateBuyPreview()" />
       <div class="quick-add" style="margin-top:8px;">
         <button class="quick-btn" onclick="addShareQty(1)">+1</button>
@@ -3964,7 +3964,7 @@ function renderStock() {
               <div class="item-meta">
                 <span class="pr">฿${p.price}</span>
                 <span class="dot"></span>
-                <span>แจ้งที่ ${p.lowAt} ${p.unit.replace('/','')}</span>
+                <span>เริ่มที่ ${p.lowAt} ${p.unit.replace('/','')}</span>
               </div>
             </div>
             <div class="stock-pill ${s}">
@@ -5841,7 +5841,7 @@ function renderTodayShift() {
   const assigns = shiftsFor(dow, slot);
   el.style.display = 'flex';
   if (assigns.length === 0) {
-    txt.innerHTML = `${sm.ico} ${sm.name} · <span style="color:var(--ink-soft);">ยังไม่มีคนเวร</span>`;
+    txt.innerHTML = `${sm.ico} ${sm.name} · <span style="color:var(--ink-soft);">ยังไม่มีคนเป็นเวร</span>`;
   } else {
     const names = assigns.map(a => a.memberName.replace('น้อง','').split(' ')[0]).join(', ');
     txt.innerHTML = `${sm.ico} ${sm.name} · <b>${names}</b>`;

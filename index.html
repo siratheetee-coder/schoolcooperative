@@ -3500,6 +3500,7 @@
       </ul>
     </div>
 
+    <div style="font-size:11px;color:var(--ink-soft);font-weight:700;margin-bottom:6px;letter-spacing:0.5px;">📦 Export — ดาวน์โหลดข้อมูล</div>
     <div class="backup-options">
       <button class="backup-btn backup-json" onclick="exportBackupJSON()">
         <span class="ico">📦</span>
@@ -3513,8 +3514,55 @@
       </button>
     </div>
 
+    <div style="border-top:1px dashed var(--cream-300);margin:18px 0 14px;"></div>
+
+    <div style="font-size:11px;color:var(--ink-soft);font-weight:700;margin-bottom:6px;letter-spacing:0.5px;">📂 Import — กู้คืนข้อมูลจาก backup</div>
+    <button class="backup-btn" style="width:100%;background:linear-gradient(135deg,#9C7CB8,#7B4F9F);color:white;box-shadow:0 5px 0 #5A3577,0 8px 14px rgba(123,79,159,0.3);" onclick="openImport()">
+      <span class="ico">📂</span>
+      <span>Import Backup จากไฟล์ JSON</span>
+      <span class="sub" style="color:#FFE0FF;">⚠️ จะแทนที่ข้อมูลปัจจุบัน</span>
+    </button>
+
     <div class="actions" style="margin-top:14px;">
       <button class="btn btn-ghost" onclick="closeBackup()">ปิด</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============== RESTORE/IMPORT BACKUP MODAL ============== -->
+<div class="modal-bg" id="importModal" onclick="if(event.target===this)closeImport()">
+  <div class="modal">
+    <div class="modal-close"></div>
+    <h3>📂 Import Backup</h3>
+    <div style="background:#FFE9D8;border-left:4px solid var(--red-500);border-radius:12px;padding:12px;margin-bottom:14px;font-size:12px;line-height:1.5;">
+      <b style="color:var(--red-600);">⚠️ คำเตือน:</b> การ Import จะ<b>ลบข้อมูลเก่าและแทนที่ด้วยข้อมูลจากไฟล์</b><br>
+      <span style="color:var(--ink-soft);">แนะนำ Export backup ปัจจุบันก่อน เผื่อยกเลิก</span>
+    </div>
+
+    <label class="upload-btn" style="margin-bottom:12px;">
+      📂 เลือกไฟล์ JSON
+      <input type="file" id="importFile" accept=".json" style="display:none;" onchange="loadImportFile(event)" />
+    </label>
+
+    <div id="importPreview" style="display:none;">
+      <div class="backup-info" style="border-left-color:var(--gold-500);">
+        <b>📄 ไฟล์:</b> <span id="impFileName">-</span><br>
+        <b>🏫 จาก:</b> <span id="impSchool">-</span><br>
+        <b>👤 Export โดย:</b> <span id="impBy">-</span><br>
+        <b>📅 วันที่ Export:</b> <span id="impDate">-</span>
+      </div>
+
+      <div class="backup-stats" id="impStats" style="margin-bottom:14px;"></div>
+
+      <div class="field">
+        <label>พิมพ์คำว่า <b style="color:var(--red-500);">RESTORE</b> เพื่อยืนยัน</label>
+        <input type="text" id="impConfirmText" placeholder="พิมพ์ RESTORE" oninput="checkImportConfirm()" />
+      </div>
+    </div>
+
+    <div class="actions" style="margin-top:14px;">
+      <button class="btn btn-ghost" onclick="closeImport()">ยกเลิก</button>
+      <button class="btn btn-danger" id="impConfirmBtn" onclick="executeImport()" disabled style="flex:1;">🔄 ยืนยัน Restore</button>
     </div>
   </div>
 </div>
@@ -3564,12 +3612,14 @@ T0002,ครูสมหญิง สุขใจ,ครูที่ปรึก
   <div class="modal">
     <div class="modal-close"></div>
     <h3>📜 ประวัติการใช้งาน (Audit Log)</h3>
-    <div style="text-align:center;font-size:12px;color:var(--ink-soft);margin-bottom:12px;">บันทึกทุกการกระทำสำคัญในระบบ — แก้/ลบไม่ได้</div>
+    <div style="text-align:center;font-size:12px;color:var(--ink-soft);margin-bottom:12px;">บันทึกการกระทำสำคัญในระบบ</div>
     <div class="audit-filter" id="auditFilter"></div>
     <div class="audit-list" id="auditList"></div>
-    <div class="actions" style="margin-top:14px;">
-      <button class="btn btn-ghost" onclick="closeAuditLog()">ปิด</button>
-      <button class="btn btn-primary" onclick="exportAuditCsv()">📥 Export CSV</button>
+    <div class="actions" style="margin-top:14px;flex-wrap:wrap;gap:6px;">
+      <button class="btn btn-ghost" style="flex:0 0 auto;padding:12px 14px;" onclick="closeAuditLog()">ปิด</button>
+      <button class="btn btn-ghost" style="flex:1;padding:12px 10px;font-size:12px;background:#FFF1EE;color:var(--red-600);" onclick="clearOldAuditLogs()">🧹 ล้าง > 90 วัน</button>
+      <button class="btn btn-danger" style="flex:1;padding:12px 10px;font-size:12px;" onclick="clearAllAuditLogs()">🗑️ ล้างทั้งหมด</button>
+      <button class="btn btn-primary" style="flex:1;padding:12px 10px;font-size:12px;" onclick="exportAuditCsv()">📥 Export</button>
     </div>
   </div>
 </div>
@@ -6050,6 +6100,178 @@ function exportBackupCSV() {
   showToast('✅ ดาวน์โหลด CSV Backup เรียบร้อย');
 }
 
+// ============== IMPORT BACKUP ==============
+let importData = null;
+
+function openImport() {
+  if (!isTeacher()) return;
+  importData = null;
+  document.getElementById('importPreview').style.display = 'none';
+  document.getElementById('impConfirmText').value = '';
+  document.getElementById('impConfirmBtn').disabled = true;
+  document.getElementById('importFile').value = '';
+  closeBackup();
+  document.getElementById('importModal').classList.add('show');
+}
+function closeImport() {
+  document.getElementById('importModal').classList.remove('show');
+  importData = null;
+}
+
+function loadImportFile(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    try {
+      const json = JSON.parse(ev.target.result);
+      if (!json.version || !json.data) {
+        showToast('ไฟล์ไม่ใช่ backup ที่ถูกต้อง', true);
+        return;
+      }
+      importData = json;
+      showImportPreview(file.name);
+    } catch (e) {
+      showToast('อ่านไฟล์ไม่ได้: ' + e.message, true);
+    }
+  };
+  reader.readAsText(file, 'UTF-8');
+}
+
+function showImportPreview(filename) {
+  document.getElementById('impFileName').textContent = filename;
+  document.getElementById('impSchool').textContent = importData.school || '-';
+  document.getElementById('impBy').textContent = importData.exported_by || '-';
+  document.getElementById('impDate').textContent = importData.exported_at
+    ? thDateTime(new Date(importData.exported_at))
+    : '-';
+
+  const d = importData.data || {};
+  const items = [
+    { n: (d.products || []).length, l: 'สินค้า' },
+    { n: (d.members || []).length, l: 'สมาชิก' },
+    { n: (d.sales || []).length, l: 'บิลขาย' },
+    { n: (d.share_txns || []).length, l: 'หุ้น/ปันผล' },
+    { n: (d.shifts || []).length, l: 'เวร' },
+    { n: (d.audit_logs || []).length, l: 'Audit' },
+  ];
+  document.getElementById('impStats').innerHTML = items.map(s => `
+    <div class="backup-stat"><div class="n">${s.n.toLocaleString()}</div><div class="l">${s.l}</div></div>
+  `).join('');
+
+  document.getElementById('importPreview').style.display = 'block';
+  document.getElementById('impConfirmText').focus();
+}
+
+function checkImportConfirm() {
+  const text = document.getElementById('impConfirmText').value.trim();
+  const btn = document.getElementById('impConfirmBtn');
+  btn.disabled = !(text === 'RESTORE' && importData);
+}
+
+async function executeImport() {
+  if (!isTeacher() || !importData) return;
+  if (!sb) { showToast('ต้องเชื่อม Supabase', true); return; }
+  if (document.getElementById('impConfirmText').value.trim() !== 'RESTORE') return;
+
+  const btn = document.getElementById('impConfirmBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ กำลัง Restore...';
+
+  try {
+    const d = importData.data;
+
+    // 1. Delete in order (children first to avoid FK violations)
+    showToast('⏳ ลบข้อมูลเก่า...');
+    await sb.from('audit_logs').delete().neq('id', 0);
+    await sb.from('pending_requests').delete().neq('id', 0);
+    await sb.from('shift_assignments').delete().neq('id', 0);
+    await sb.from('share_txns').delete().neq('id', 0);
+    await sb.from('sale_items').delete().neq('id', 0);
+    await sb.from('sales').delete().neq('id', 0);
+    await sb.from('products').delete().neq('id', 0);
+    await sb.from('members').delete().neq('id', 0);
+
+    // 2. Insert in dependency order (parent first)
+    showToast('⏳ Restore สมาชิก & สินค้า...');
+    if (d.members?.length) {
+      await sb.from('members').insert(d.members.map(m => ({
+        id: m.id, code: m.code, name: m.name, class: m.class,
+        avatar: m.avatar, color: m.color, role: m.role || 'student',
+        pin: m.role === 'teacher' ? '9999' : '1234'
+      })));
+    }
+    if (d.products?.length) {
+      await sb.from('products').insert(d.products.map(p => ({
+        id: p.id, name: p.name, emoji: p.emoji,
+        price: p.price, cost: p.cost || 0,
+        category: p.category || 'other',
+        image_url: p.image_url || null,
+        stock: p.stock, low_at: p.low_at, unit: p.unit
+      })));
+    }
+
+    showToast('⏳ Restore บิลขาย...');
+    if (d.sales?.length) {
+      for (const s of d.sales) {
+        const { items, ...header } = s;
+        await sb.from('sales').insert({
+          id: s.id, date: s.date,
+          seller_name: s.seller, buyer_id: s.buyer_id, buyer_name: s.buyer_name,
+          total: s.total, is_voided: s.is_voided,
+          void_reason: s.void_reason, voided_by_name: s.voided_by_name,
+          voided_at: s.voided_at
+        });
+        if (items?.length) {
+          await sb.from('sale_items').insert(items.map(i => ({
+            sale_id: s.id, product_id: i.id,
+            name: i.name, emoji: i.emoji,
+            price: i.price, cost: i.cost || 0, qty: i.qty
+          })));
+        }
+      }
+    }
+
+    showToast('⏳ Restore หุ้น & เวร...');
+    if (d.share_txns?.length) {
+      await sb.from('share_txns').insert(d.share_txns);
+    }
+    if (d.shifts?.length) {
+      await sb.from('shift_assignments').insert(d.shifts);
+    }
+    if (d.pending_requests?.length) {
+      await sb.from('pending_requests').insert(d.pending_requests);
+    }
+    if (d.audit_logs?.length) {
+      await sb.from('audit_logs').insert(d.audit_logs);
+    }
+
+    // 3. Reset sequences
+    showToast('⏳ Reset counters...');
+    const tables = ['members', 'products', 'sales', 'sale_items', 'share_txns', 'shift_assignments', 'pending_requests', 'audit_logs'];
+    for (const t of tables) {
+      try {
+        await sb.rpc('reset_sequence_to_max', { table_name: t }).catch(() => null);
+      } catch (e) { /* ignore — RPC may not exist */ }
+    }
+
+    // 4. Reload from cloud
+    showToast('⏳ โหลดข้อมูลใหม่...');
+    await loadFromCloud();
+
+    showToast('✅ Restore สำเร็จ! โปรด refresh หน้าเว็บ');
+    closeImport();
+
+    // Force reload after 2 seconds so all views update
+    setTimeout(() => location.reload(), 2000);
+  } catch (e) {
+    console.error('Import failed', e);
+    showToast('Restore ล้มเหลว: ' + (e.message || 'unknown'), true);
+    btn.disabled = false;
+    btn.textContent = '🔄 ยืนยัน Restore';
+  }
+}
+
 // ============== BULK IMPORT ==============
 let bulkParsed = [];
 
@@ -6287,6 +6509,52 @@ function renderAuditList() {
         </div>
       `;
     }).join('');
+}
+
+async function clearOldAuditLogs() {
+  if (!isTeacher()) return;
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - 90);
+  const oldCount = auditLogs.filter(a => a.createdAt < cutoff).length;
+  if (oldCount === 0) { showToast('ไม่มี log เก่ากว่า 90 วัน'); return; }
+  if (!confirm(`ลบ audit log ${oldCount} รายการที่เก่ากว่า 90 วัน?\n(เก็บไว้แค่ 90 วันล่าสุด)`)) return;
+
+  try {
+    if (sb) {
+      const { error } = await sb.from('audit_logs').delete().lt('created_at', cutoff.toISOString());
+      if (error) throw error;
+    }
+    // remove from in-memory
+    for (let i = auditLogs.length - 1; i >= 0; i--) {
+      if (auditLogs[i].createdAt < cutoff) auditLogs.splice(i, 1);
+    }
+    renderAuditList();
+    showToast(`✅ ลบ ${oldCount} log เก่าเรียบร้อย`);
+  } catch (e) {
+    console.error(e);
+    showToast('ลบไม่สำเร็จ: ' + e.message, true);
+  }
+}
+
+async function clearAllAuditLogs() {
+  if (!isTeacher()) return;
+  if (auditLogs.length === 0) { showToast('ไม่มี log ให้ลบ'); return; }
+  const total = auditLogs.length;
+  if (!confirm(`⚠️ ลบ audit log ทั้งหมด ${total} รายการ?\n\nการกระทำนี้ย้อนกลับไม่ได้!\nแนะนำ Export ก่อน`)) return;
+  if (!confirm(`ยืนยันอีกครั้ง — ลบ ${total} รายการทิ้ง?`)) return;
+
+  try {
+    if (sb) {
+      const { error } = await sb.from('audit_logs').delete().neq('id', 0);
+      if (error) throw error;
+    }
+    auditLogs.length = 0;
+    renderAuditList();
+    showToast(`🗑️ ลบทั้งหมดเรียบร้อย`);
+  } catch (e) {
+    console.error(e);
+    showToast('ลบไม่สำเร็จ: ' + e.message, true);
+  }
 }
 
 function exportAuditCsv() {

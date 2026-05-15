@@ -166,6 +166,7 @@ drop policy if exists "open" on shift_assignments;
 drop policy if exists "open" on audit_logs;
 drop policy if exists "audit_insert" on audit_logs;
 drop policy if exists "audit_select" on audit_logs;
+drop policy if exists "audit_delete" on audit_logs;
 
 create policy "open" on products           for all using (true) with check (true);
 create policy "open" on members            for all using (true) with check (true);
@@ -174,10 +175,11 @@ create policy "open" on sale_items         for all using (true) with check (true
 create policy "open" on share_txns         for all using (true) with check (true);
 create policy "open" on pending_requests   for all using (true) with check (true);
 create policy "open" on shift_assignments  for all using (true) with check (true);
--- audit_logs: write open, but ห้ามแก้/ลบ (เพื่อรักษาความน่าเชื่อถือ)
+-- audit_logs: ครูสามารถลบได้ (เพื่อล้าง log เก่าๆ)
 create policy "audit_insert" on audit_logs for insert with check (true);
 create policy "audit_select" on audit_logs for select using (true);
--- ไม่มี update/delete policy → ทุกคนแก้/ลบไม่ได้
+create policy "audit_delete" on audit_logs for delete using (true);
+-- ไม่มี update policy → ทุกคนแก้ไม่ได้ (preserve integrity)
 
 -- ============================================================
 -- REALTIME (เปิดให้ตารางส่ง event ผ่าน WebSocket)

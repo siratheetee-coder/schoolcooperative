@@ -34,11 +34,36 @@ alter table quiz_attempts enable row level security;
 drop policy if exists "quiz_open" on quiz_attempts;
 create policy "quiz_open" on quiz_attempts for all using (true) with check (true);
 
+-- ============================================================
+-- App Settings — เก็บค่าตั้งค่าระบบที่ครูควบคุม
+-- เช่น เปิด/ปิด post-test, วันเปิดประเมินผล
+-- ============================================================
+create table if not exists app_settings (
+  key text primary key,
+  value jsonb,
+  updated_at timestamptz default now(),
+  updated_by_id bigint references members(id) on delete set null,
+  updated_by_name text
+);
+
+alter table app_settings enable row level security;
+drop policy if exists "settings_open" on app_settings;
+create policy "settings_open" on app_settings for all using (true) with check (true);
+
+-- ค่าเริ่มต้น: ปิด post-test
+insert into app_settings (key, value) values
+  ('post_test_enabled', 'false'::jsonb)
+on conflict (key) do nothing;
+
 -- Realtime
 do $$
 begin
   begin
     execute 'alter publication supabase_realtime add table quiz_attempts';
+  exception when others then null;
+  end;
+  begin
+    execute 'alter publication supabase_realtime add table app_settings';
   exception when others then null;
   end;
 end $$;

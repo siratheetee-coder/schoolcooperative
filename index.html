@@ -3548,6 +3548,11 @@
         <div class="tt">การแจ้งเตือน</div>
         <div class="ts" id="pushStatusLabel">ตั้งค่า Push</div>
       </button>
+      <button class="tool-btn" onclick="openQuizSettings()">
+        <div class="ti" style="background:linear-gradient(135deg,#7ABFA8,#388F6F);color:white;box-shadow:0 4px 0 #1F5C45;">📚</div>
+        <div class="tt">ตั้งค่า Quiz</div>
+        <div class="ts" id="quizSettingsLabel">เปิด/ปิด Post-test</div>
+      </button>
       <button class="tool-btn" onclick="openBackup()" style="grid-column:1/-1;">
         <div class="ti" style="background:linear-gradient(135deg,#5FB597,#2D7D6F);color:white;box-shadow:0 4px 0 #174740;">💾</div>
         <div class="tt">สำรองข้อมูล (Backup)</div>
@@ -4264,7 +4269,7 @@ function getTerm(d) {
 }
 
 // ============== VIEW ROUTER ==============
-const APP_VERSION = 'V 2.2';
+const APP_VERSION = 'V 2.3';
 // === School config with safe fallbacks ===
 const SC = window.SCHOOL_CONFIG || {};
 const SCHOOL = {
@@ -5503,6 +5508,7 @@ const AUDIT_META = {
   shift_change:    { ico: '📅', label: 'แก้ตารางเวร',       cat: '' },
   login:           { ico: '🔓', label: 'เข้าสู่ระบบ',       cat: '' },
   quiz_attempt:    { ico: '📚', label: 'ทำแบบฝึกหัด',       cat: '' },
+  quiz_settings:   { ico: '⚙', label: 'ตั้งค่า Quiz',       cat: '' },
 };
 
 // Shift assignments
@@ -6156,6 +6162,38 @@ async function openPushSettings() {
     showToast('ส่งการแจ้งเตือนทดสอบแล้ว');
   }
 }
+
+async function openQuizSettings() {
+  if (!isTeacher()) { showToast('เฉพาะครูเท่านั้น', true); return; }
+  if (!sb) { showToast('ต้องเชื่อม Cloud', true); return; }
+  await loadAppSettings();
+  const status = postTestEnabled ? '✅ เปิดอยู่' : '🔒 ปิดอยู่ (นักเรียนทำได้แต่ Pre-test)';
+  const action = postTestEnabled ? 'ปิด' : 'เปิด';
+  const msg = `📚 ตั้งค่า Post-test — สถานะ: ${status}\n\n` +
+    `เมื่อ "เปิด" นักเรียนที่เคยทำ Pre-test ครบแล้ว จะได้ทำ Post-test\n` +
+    `แนะนำ: เปิดในวันปิดปีการศึกษา\n\n` +
+    `กด OK เพื่อ${action}`;
+  if (confirm(msg)) {
+    const ok = await setPostTestEnabled(!postTestEnabled);
+    if (ok) {
+      showToast(postTestEnabled ? '🎓 เปิด Post-test แล้ว' : '🔒 ปิด Post-test แล้ว');
+      refreshQuizSettingsLabel();
+      logAudit('quiz_settings', 'settings', 'post_test_enabled', postTestEnabled ? 'เปิด' : 'ปิด', {
+        enabled: postTestEnabled
+      });
+    } else {
+      showToast('บันทึกไม่สำเร็จ', true);
+    }
+  }
+}
+
+async function refreshQuizSettingsLabel() {
+  const el = document.getElementById('quizSettingsLabel');
+  if (!el || !sb) return;
+  await loadAppSettings();
+  el.textContent = postTestEnabled ? '✅ Post-test เปิดอยู่' : '🔒 Post-test ปิด';
+}
+setTimeout(refreshQuizSettingsLabel, 2000);
 
 // อัปเดตป้าย "สถานะ Push" บนปุ่ม admin
 async function refreshPushStatusLabel() {
@@ -8408,6 +8446,30 @@ const LEVEL_NAMES = { 'p4-6': 'ระดับประถม (ป.4-6)', 'm1-3'
 let quizState = { level: null, topic: null, phase: 'pre', questions: [], idx: 0, answers: [], startTime: 0, timerInterval: null };
 let quizLeaderboardLevel = 'p4-6';
 let quizUserCompletions = {}; // key = "level:topic:phase" → true if user has done
+let postTestEnabled = false; // ครูเป็นคนเปิด — โหลดจาก app_settings
+
+async function loadAppSettings() {
+  if (!sb) return;
+  try {
+    const { data } = await sb.from('app_settings').select('key, value').eq('key', 'post_test_enabled').single();
+    if (data) postTestEnabled = data.value === true || data.value === 'true';
+  } catch (e) { /* default false */ }
+}
+
+async function setPostTestEnabled(enabled) {
+  if (!sb || !currentUser) return false;
+  try {
+    await sb.from('app_settings').upsert({
+      key: 'post_test_enabled',
+      value: enabled,
+      updated_at: new Date().toISOString(),
+      updated_by_id: currentUser.id,
+      updated_by_name: currentUser.name
+    }, { onConflict: 'key' });
+    postTestEnabled = enabled;
+    return true;
+  } catch (e) { console.error(e); return false; }
+}
 
 async function loadQuizCompletions() {
   if (!sb || !currentUser) { quizUserCompletions = {}; return; }
@@ -8423,8 +8485,9 @@ async function loadQuizCompletions() {
 }
 
 function getNextPhase(level, topicId) {
-  // ถ้ายังไม่เคยทำ pre → pre; ถ้าทำ pre แล้วแต่ยังไม่ post → post; ทำครบทั้งคู่แล้ว → post (ทำซ้ำได้)
   const didPre = quizUserCompletions[`${level}:${topicId}:pre`];
+  // ถ้าครูยังไม่เปิด post-test → บังคับให้ทำ pre เสมอ (ทำซ้ำได้ไม่จำกัด)
+  if (!postTestEnabled) return 'pre';
   if (!didPre) return 'pre';
   return 'post';
 }
@@ -8448,7 +8511,7 @@ async function showTopicSelect(level) {
   document.getElementById('quizResult').style.display = 'none';
   document.getElementById('quizTopicTitle').textContent = LEVEL_NAMES[level];
 
-  await loadQuizCompletions();
+  await Promise.all([loadQuizCompletions(), loadAppSettings()]);
 
   const bank = QUIZ_BANK[level];
   const topics = QUIZ_TOPICS[level];
@@ -8458,9 +8521,17 @@ async function showTopicSelect(level) {
     const playN = Math.min(10, count);
     const didPre = quizUserCompletions[`${level}:${t.id}:pre`];
     const didPost = quizUserCompletions[`${level}:${t.id}:post`];
-    let badge = '<span class="qt-badge new">Pre-test</span>';
-    if (didPre && !didPost) badge = '<span class="qt-badge post">→ Post-test</span>';
-    else if (didPre && didPost) badge = '<span class="qt-badge done">✓ ทำครบแล้ว</span>';
+    let badge;
+    if (!postTestEnabled) {
+      // ครูยังไม่เปิด — ทำ pre ได้ตลอด
+      badge = didPre
+        ? '<span class="qt-badge new">Pre-test · ฝึกซ้ำได้</span>'
+        : '<span class="qt-badge new">Pre-test</span>';
+    } else {
+      if (!didPre) badge = '<span class="qt-badge new">Pre-test</span>';
+      else if (!didPost) badge = '<span class="qt-badge post">→ Post-test</span>';
+      else badge = '<span class="qt-badge done">✓ ทำครบแล้ว</span>';
+    }
     return `
       <button class="quiz-topic-card ${t.id === 'mix' ? 'mix' : ''}" onclick="startQuiz('${level}','${t.id}')">
         <div class="qt-ico">${t.ico}</div>
@@ -8470,6 +8541,12 @@ async function showTopicSelect(level) {
       </button>
     `;
   }).join('');
+
+  // แสดงสถานะที่หัวหน้า
+  const titleEl = document.getElementById('quizTopicTitle');
+  if (titleEl && !postTestEnabled) {
+    titleEl.innerHTML = LEVEL_NAMES[level] + ' <span class="qt-badge done" style="font-size:9px;vertical-align:middle;">🔒 Post-test ยังไม่เปิด</span>';
+  }
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -8742,12 +8819,24 @@ function quitQuiz() {
   showCloudStatus();
   if (sb) {
     await loadFromCloud();
+    await loadAppSettings();
     showToast('🟢 เชื่อม Supabase สำเร็จ');
     // start realtime if user already logged in
     if (currentUser) {
       startRealtime();
       maybeShowNotiBanner();
     }
+    // Sync app_settings เมื่อครูเปลี่ยน — ทุกคนเห็นเปลี่ยนทันที
+    sb.channel('app_settings_sync')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'app_settings' }, async () => {
+        await loadAppSettings();
+        refreshQuizSettingsLabel();
+        // refresh topic select ถ้ากำลังเปิดอยู่
+        if (document.getElementById('quizTopicSelect')?.style.display !== 'none' && quizState.level) {
+          showTopicSelect(quizState.level);
+        }
+      })
+      .subscribe();
   }
 })();
 

@@ -2536,6 +2536,38 @@
   .ql-desc { font-size: 11px; color: var(--ink-soft); line-height: 1.5; margin-bottom: 8px; }
   .ql-meta { font-size: 10px; color: var(--gold-600); font-weight: 700; }
 
+  /* Topic Select */
+  .quiz-topic-head {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 16px;
+  }
+  .quiz-topic-title {
+    font-size: 16px; font-weight: 800; color: var(--green-700);
+  }
+  .quiz-topic-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+  }
+  @media (min-width: 600px) {
+    .quiz-topic-grid { grid-template-columns: repeat(3, 1fr); }
+  }
+  .quiz-topic-card {
+    background: white; border: none; border-radius: 16px;
+    padding: 16px 12px; text-align: center;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.07);
+    cursor: pointer; transition: transform 0.15s, box-shadow 0.2s;
+    font-family: inherit; position: relative;
+    display: flex; flex-direction: column; align-items: center;
+    gap: 6px; min-height: 120px;
+  }
+  .quiz-topic-card:active { transform: translateY(2px); box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+  .quiz-topic-card.mix {
+    background: linear-gradient(135deg, #FFF8EE, #FFEDC9);
+    border: 2px dashed var(--gold-500);
+  }
+  .qt-ico { font-size: 30px; }
+  .qt-name { font-size: 13px; font-weight: 700; color: var(--ink); line-height: 1.3; }
+  .qt-count { font-size: 10px; color: var(--gold-600); font-weight: 700; margin-top: auto; }
+
   .quiz-tabs { display: flex; gap: 8px; margin-bottom: 10px; }
   .qz-tab {
     flex: 1; padding: 8px 12px; border: none; border-radius: 12px;
@@ -3360,19 +3392,19 @@
 
       <div class="quiz-section-head">เลือกระดับชั้น</div>
       <div class="quiz-level-grid">
-        <button class="quiz-level-card primary" onclick="startQuiz('p4-6')">
+        <button class="quiz-level-card primary" onclick="showTopicSelect('p4-6')">
           <div class="ql-ico">🌱</div>
           <div class="ql-name">ระดับประถม</div>
           <div class="ql-grade">ป.4 - ป.6</div>
           <div class="ql-desc">หลักการสหกรณ์พื้นฐาน · การคำนวณกำไรง่าย ๆ · การจัดสินค้า</div>
-          <div class="ql-meta">10 ข้อ · เวลา ~5 นาที</div>
+          <div class="ql-meta">เลือกหัวข้อได้</div>
         </button>
-        <button class="quiz-level-card secondary" onclick="startQuiz('m1-3')">
+        <button class="quiz-level-card secondary" onclick="showTopicSelect('m1-3')">
           <div class="ql-ico">🚀</div>
           <div class="ql-name">ระดับมัธยมต้น</div>
           <div class="ql-grade">ม.1 - ม.3</div>
           <div class="ql-desc">หลักสหกรณ์สากล · Margin · ปันผล vs เฉลี่ยคืน · จริยธรรม</div>
-          <div class="ql-meta">10 ข้อ · เวลา ~7 นาที</div>
+          <div class="ql-meta">เลือกหัวข้อได้</div>
         </button>
       </div>
 
@@ -3385,6 +3417,16 @@
 
       <div class="quiz-section-head" id="quizMyHistoryHead">📈 ประวัติของฉัน</div>
       <div class="quiz-history" id="quizMyHistory"></div>
+    </div>
+
+    <!-- Quiz: Topic Select Screen -->
+    <div id="quizTopicSelect" class="quiz-screen" style="display:none;">
+      <div class="quiz-topic-head">
+        <button class="qp-back" onclick="backToLevelSelect()">← ระดับชั้น</button>
+        <div class="quiz-topic-title" id="quizTopicTitle">ระดับประถม (ป.4-6)</div>
+      </div>
+      <div class="quiz-section-head">เลือกหัวข้อที่ต้องการทำ</div>
+      <div class="quiz-topic-grid" id="quizTopicGrid"></div>
     </div>
 
     <!-- Quiz: Playing Screen -->
@@ -4195,7 +4237,7 @@ function getTerm(d) {
 }
 
 // ============== VIEW ROUTER ==============
-const APP_VERSION = 'V 1.9';
+const APP_VERSION = 'V 2.0';
 // === School config with safe fallbacks ===
 const SC = window.SCHOOL_CONFIG || {};
 const SCHOOL = {
@@ -8269,17 +8311,66 @@ const QUIZ_BANK = {
   ]
 };
 
-let quizState = { level: null, questions: [], idx: 0, answers: [], startTime: 0, timerInterval: null };
+// Topics map category names → grouped topic
+const QUIZ_TOPICS = {
+  'p4-6': [
+    { id: 'math',       ico: '📐', name: 'คณิตและการคำนวณ',     cats: ['การคำนวณ'] },
+    { id: 'principles', ico: '🤝', name: 'หลักการสหกรณ์',        cats: ['หลักการสหกรณ์'] },
+    { id: 'products',   ico: '📦', name: 'การจัดการสินค้า',      cats: ['การจัดการสต็อก','การจัดประเภท'] },
+    { id: 'service',    ico: '⭐', name: 'จริยธรรม & บริการ',     cats: ['การบริหาร','จริยธรรม'] },
+    { id: 'mix',        ico: '🎲', name: 'รวมทุกหมวด',           cats: null },
+  ],
+  'm1-3': [
+    { id: 'finance',    ico: '💰', name: 'การเงิน & คำนวณ',      cats: ['การเงิน','การคำนวณ'] },
+    { id: 'global',     ico: '🌐', name: 'หลักสหกรณ์สากล',       cats: ['หลักการสหกรณ์สากล','หลักการสหกรณ์'] },
+    { id: 'biz',        ico: '📊', name: 'การบริหารธุรกิจ',      cats: ['การบริหาร','การจัดการสต็อก','การบัญชี','การตลาด','การวิเคราะห์'] },
+    { id: 'ethics',     ico: '⚖', name: 'จริยธรรมธุรกิจ',       cats: ['จริยธรรมธุรกิจ'] },
+    { id: 'mix',        ico: '🎲', name: 'รวมทุกหมวด',           cats: null },
+  ],
+};
+const LEVEL_NAMES = { 'p4-6': 'ระดับประถม (ป.4-6)', 'm1-3': 'ระดับมัธยมต้น (ม.1-3)' };
+
+let quizState = { level: null, topic: null, questions: [], idx: 0, answers: [], startTime: 0, timerInterval: null };
 let quizLeaderboardLevel = 'p4-6';
 
 function shuffleArray(arr) { return arr.slice().sort(() => Math.random() - 0.5); }
 
 async function renderQuizSelectScreen() {
   document.getElementById('quizSelect').style.display = '';
+  document.getElementById('quizTopicSelect').style.display = 'none';
   document.getElementById('quizPlay').style.display = 'none';
   document.getElementById('quizResult').style.display = 'none';
   await renderQuizLeaderboard();
   await renderQuizMyHistory();
+}
+
+function showTopicSelect(level) {
+  quizState.level = level;
+  document.getElementById('quizSelect').style.display = 'none';
+  document.getElementById('quizTopicSelect').style.display = '';
+  document.getElementById('quizPlay').style.display = 'none';
+  document.getElementById('quizResult').style.display = 'none';
+  document.getElementById('quizTopicTitle').textContent = LEVEL_NAMES[level];
+
+  const bank = QUIZ_BANK[level];
+  const topics = QUIZ_TOPICS[level];
+  const grid = document.getElementById('quizTopicGrid');
+  grid.innerHTML = topics.map(t => {
+    const count = t.cats === null ? bank.length : bank.filter(q => t.cats.includes(q.cat)).length;
+    const playN = Math.min(10, count);
+    return `
+      <button class="quiz-topic-card ${t.id === 'mix' ? 'mix' : ''}" onclick="startQuiz('${level}','${t.id}')">
+        <div class="qt-ico">${t.ico}</div>
+        <div class="qt-name">${t.name}</div>
+        <div class="qt-count">${count} ข้อ · ทำ ${playN} ข้อ</div>
+      </button>
+    `;
+  }).join('');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function backToLevelSelect() {
+  renderQuizSelectScreen();
 }
 
 async function renderQuizLeaderboard() {
@@ -8353,16 +8444,22 @@ async function renderQuizMyHistory() {
   } catch (e) { console.error(e); }
 }
 
-function startQuiz(level) {
+function startQuiz(level, topicId) {
   const bank = QUIZ_BANK[level];
-  if (!bank) return;
+  const topic = (QUIZ_TOPICS[level] || []).find(t => t.id === topicId);
+  if (!bank || !topic) return;
+  const pool = topic.cats === null ? bank : bank.filter(q => topic.cats.includes(q.cat));
+  if (pool.length === 0) { showToast('ยังไม่มีคำถามในหัวข้อนี้', true); return; }
+
   quizState.level = level;
-  quizState.questions = shuffleArray(bank).slice(0, 10);
+  quizState.topic = topicId;
+  quizState.questions = shuffleArray(pool).slice(0, Math.min(10, pool.length));
   quizState.idx = 0;
   quizState.answers = [];
   quizState.startTime = Date.now();
 
   document.getElementById('quizSelect').style.display = 'none';
+  document.getElementById('quizTopicSelect').style.display = 'none';
   document.getElementById('quizResult').style.display = 'none';
   document.getElementById('quizPlay').style.display = '';
   startQuizTimer();
@@ -8493,12 +8590,14 @@ async function saveQuizAttempt(score, total, duration) {
 }
 
 function retryQuiz() {
-  startQuiz(quizState.level);
+  startQuiz(quizState.level, quizState.topic);
 }
 
 function quitQuiz() {
   if (quizState.timerInterval) clearInterval(quizState.timerInterval);
-  renderQuizSelectScreen();
+  // กลับไปหน้าเลือกหัวข้อ ถ้ามาจากนั้น มิเช่นนั้นกลับหน้าหลัก
+  if (quizState.level) showTopicSelect(quizState.level);
+  else renderQuizSelectScreen();
 }
 
 // Initial cloud load (if configured)

@@ -8,6 +8,8 @@ create table if not exists quiz_attempts (
   member_id bigint references members(id) on delete cascade,
   member_name text,
   level text not null check (level in ('p4-6','m1-3')),
+  topic text default 'mix',
+  phase text default 'pre' check (phase in ('pre','post')),
   score int not null,
   total int not null default 10,
   correct_ids int[] default '{}',
@@ -15,6 +17,15 @@ create table if not exists quiz_attempts (
   duration_sec int default 0,
   created_at timestamptz default now()
 );
+-- Upgrade existing table
+alter table quiz_attempts add column if not exists topic text default 'mix';
+alter table quiz_attempts add column if not exists phase text default 'pre';
+do $$
+begin
+  alter table quiz_attempts drop constraint if exists quiz_attempts_phase_check;
+  alter table quiz_attempts add constraint quiz_attempts_phase_check check (phase in ('pre','post'));
+exception when others then null;
+end $$;
 create index if not exists quiz_member_idx on quiz_attempts (member_id);
 create index if not exists quiz_level_idx on quiz_attempts (level, score desc);
 create index if not exists quiz_date_idx on quiz_attempts (created_at desc);

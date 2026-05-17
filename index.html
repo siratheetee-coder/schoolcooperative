@@ -473,9 +473,9 @@
       0 -8px 24px rgba(154, 130, 90, 0.25),
       0 8px 0 var(--cream-300);
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    padding: 8px;
-    gap: 6px;
+    grid-template-columns: repeat(5, 1fr);
+    padding: 8px 6px;
+    gap: 2px;
     pointer-events: auto;
     border: 1px solid rgba(255,255,255,0.7);
   }
@@ -496,14 +496,15 @@
     position: relative;
   }
   .nav-item .ico {
-    font-size: 22px;
+    font-size: 20px;
     line-height: 1;
     transition: transform 0.2s;
   }
   .nav-item .lbl {
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 600;
     margin-top: 2px;
+    white-space: nowrap;
   }
   .nav-item.active {
     background: linear-gradient(135deg, var(--green-400), var(--green-500));
@@ -810,11 +811,13 @@
     box-shadow: inset -1px -1px 2px rgba(0,0,0,0.2), inset 1px 1px 2px rgba(255,255,255,0.4);
   }
 
-  /* Bottom nav 5-col for teacher */
+  /* Bottom nav 6-col for teacher (5 student tabs + Admin) */
   .bottom-nav-inner.with-admin {
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(6, 1fr);
   }
-  .nav-item.admin-nav .ico { font-size: 22px; }
+  .bottom-nav-inner.with-admin .nav-item .ico { font-size: 18px; }
+  .bottom-nav-inner.with-admin .nav-item .lbl { font-size: 9px; }
+  .nav-item.admin-nav .ico { font-size: 20px; }
   .nav-item.admin-nav.active {
     background: linear-gradient(135deg, var(--gold-400), var(--gold-500));
     color: var(--green-700);
@@ -2567,6 +2570,28 @@
   .qt-ico { font-size: 30px; }
   .qt-name { font-size: 13px; font-weight: 700; color: var(--ink); line-height: 1.3; }
   .qt-count { font-size: 10px; color: var(--gold-600); font-weight: 700; margin-top: auto; }
+  .qt-badge {
+    display: inline-block; font-size: 9px; font-weight: 700;
+    padding: 3px 8px; border-radius: 8px; margin-top: 2px;
+  }
+  .qt-badge.new { background: #DCEBE4; color: var(--green-700); }
+  .qt-badge.post { background: #FFE9C8; color: #A66A0A; }
+  .qt-badge.done { background: #D5D5D5; color: #555; }
+
+  .qr-phase {
+    font-size: 12px; font-weight: 700;
+    background: rgba(255,255,255,0.3);
+    padding: 4px 12px; border-radius: 10px;
+    display: inline-block; margin-bottom: 6px;
+  }
+  .qr-compare {
+    margin-top: 10px;
+    background: rgba(255,255,255,0.35);
+    padding: 8px 14px; border-radius: 10px;
+    font-size: 12px;
+  }
+  .qr-compare .up { color: #0F5C2C; }
+  .qr-compare .down { color: #8B1A1A; }
 
   .quiz-tabs { display: flex; gap: 8px; margin-bottom: 10px; }
   .qz-tab {
@@ -3451,10 +3476,12 @@
     <div id="quizResult" class="quiz-screen" style="display:none;">
       <div class="quiz-result-hero">
         <div class="qr-badge" id="qrBadge">🌟</div>
+        <div class="qr-phase" id="qrPhase">Pre-test</div>
         <div class="qr-score"><span id="qrScore">0</span>/<span id="qrTotal">10</span></div>
         <div class="qr-pct" id="qrPct">0%</div>
         <div class="qr-msg" id="qrMsg">ทำได้ดี!</div>
         <div class="qr-meta" id="qrMeta">ใช้เวลา 0:00</div>
+        <div class="qr-compare" id="qrCompare" style="display:none;"></div>
       </div>
 
       <div class="quiz-section-head">📝 ทบทวนคำตอบ</div>
@@ -4237,7 +4264,7 @@ function getTerm(d) {
 }
 
 // ============== VIEW ROUTER ==============
-const APP_VERSION = 'V 2.1';
+const APP_VERSION = 'V 2.2';
 // === School config with safe fallbacks ===
 const SC = window.SCHOOL_CONFIG || {};
 const SCHOOL = {
@@ -8311,6 +8338,54 @@ const QUIZ_BANK = {
   ]
 };
 
+// === Post-test bank (parallel to QUIZ_BANK, same concepts, different wording) ===
+const QUIZ_BANK_POST = {
+  'p4-6': [
+    { id: 301, cat: 'หลักการสหกรณ์', q: 'สหกรณ์โรงเรียนมีเป้าหมายหลักคืออะไร?', choices: ['เพื่อให้ครูมีรายได้เสริมจากการขาย','เพื่อฝึกนักเรียนให้ทำธุรกิจร่วมกัน','เพื่อแข่งกับร้านค้าใกล้โรงเรียน','เพื่อขายสินค้าราคาแพงให้ครู'], answer: 1, explain: 'สหกรณ์โรงเรียนตั้งขึ้นเพื่อฝึกให้นักเรียนเรียนรู้การทำธุรกิจร่วมกันและช่วยเหลือกัน' },
+    { id: 302, cat: 'การคำนวณ', q: 'ขนมต้นทุนชิ้นละ 8 บาท ขาย 12 บาท กำไรกี่บาทต่อชิ้น?', choices: ['2 บาท','3 บาท','4 บาท','8 บาท'], answer: 2, explain: 'กำไร = 12 − 8 = 4 บาท' },
+    { id: 303, cat: 'หลักการสหกรณ์', q: 'ใครคือผู้เป็นเจ้าของกิจการสหกรณ์โรงเรียน?', choices: ['ผอ. และครูที่ปรึกษาเท่านั้น','ครูเวรประจำสหกรณ์เท่านั้น','สมาชิกทุกคนมีส่วนเป็นเจ้าของ','ผู้ที่ซื้อหุ้นมากกว่า 100 หุ้น'], answer: 2, explain: 'สมาชิกทุกคนเป็นเจ้าของร่วมกันตามหลักสหกรณ์' },
+    { id: 304, cat: 'การคำนวณ', q: 'ขายน้ำดื่ม 40 ขวด ขวดละ 7 บาท ได้เงินทั้งหมดเท่าไร?', choices: ['240 บาท','280 บาท','320 บาท','400 บาท'], answer: 1, explain: '40 × 7 = 280 บาท' },
+    { id: 305, cat: 'การจัดการสต็อก', q: 'สมุดเหลือ 3 เล่ม จุดเตือนคือ 10 เล่ม ควรทำอย่างไร?', choices: ['ไม่ต้องสั่งของเพิ่ม รอก่อน','ปล่อยให้ขายหมดก่อนสั่ง','รีบสั่งซื้อสมุดเพิ่มเข้าคลัง','ขึ้นราคาเพื่อชะลอการขาย'], answer: 2, explain: 'เมื่อสต็อกต่ำกว่าจุดเตือนต้องสั่งซื้อเพิ่ม' },
+    { id: 306, cat: 'หลักการสหกรณ์', q: 'การตัดสินใจสำคัญในสหกรณ์ใช้วิธีใด?', choices: ['ครูที่ปรึกษาตัดสินใจเอง','ผู้ที่อายุมากที่สุดเป็นผู้ตัดสิน','ลงคะแนนแบบ 1 คน 1 เสียง','คนที่มีหุ้นมากที่สุดมีอำนาจ'], answer: 2, explain: 'สหกรณ์ใช้หลักประชาธิปไตย สมาชิกแต่ละคนมี 1 เสียงเท่ากัน' },
+    { id: 307, cat: 'การคำนวณ', q: 'ดินสอต้นทุน 5 บาท ขาย 8 บาท ขายได้ 30 แท่ง กำไรรวมเท่าไร?', choices: ['60 บาท','90 บาท','150 บาท','240 บาท'], answer: 1, explain: 'กำไรต่อแท่ง = 3 × 30 = 90 บาท' },
+    { id: 308, cat: 'การจัดประเภท', q: 'สินค้าใดต่อไปนี้จัดอยู่ในหมวด "เครื่องเขียน"?', choices: ['น้ำผลไม้กล่อง','ขนมปังครีม','ปากกาเขียน','ลูกอมแท่ง'], answer: 2, explain: 'ปากกาเป็นเครื่องเขียน เช่นเดียวกับดินสอ ยางลบ' },
+    { id: 309, cat: 'การบริหาร', q: 'คุณสมบัติใดสำคัญที่สุดของผู้ขายสหกรณ์?', choices: ['ขายของแพงเพื่อกำไรสูงสุด','ขายเร็วไม่สนใจคุณภาพ','ซื่อสัตย์และให้บริการที่ดี','เลือกขายให้เฉพาะคนรู้จัก'], answer: 2, explain: 'ความซื่อสัตย์และการให้บริการที่ดีเป็นพื้นฐานของผู้ขายที่ดี' },
+    { id: 310, cat: 'การคำนวณ', q: 'ขายของได้ 800 บาท ต้นทุน 500 บาท กำไรเท่าไร?', choices: ['200 บาท','300 บาท','500 บาท','800 บาท'], answer: 1, explain: '800 − 500 = 300 บาท' },
+    { id: 311, cat: 'จริยธรรม', q: 'พบกระเป๋าตังค์ลูกค้าหล่นไว้ ควรทำอย่างไร?', choices: ['เก็บไว้แล้วเอาเงินไปใช้','เก็บไว้รอคืนเจ้าของ','แบ่งเงินกับเพื่อนในเวร','แอบใส่กระเป๋าตัวเอง'], answer: 1, explain: 'ของที่ไม่ใช่ของเราต้องเก็บไว้รอคืนเจ้าของเสมอ' },
+    { id: 312, cat: 'การจัดการสต็อก', q: 'การบันทึกข้อมูลการขายมีประโยชน์อย่างไร?', choices: ['ทำให้เสียเวลาไม่เกิดประโยชน์','ใช้คำนวณกำไรและตรวจสอบได้','เป็นเพียงการทำตามครูสั่ง','ไม่มีประโยชน์ใด ๆ ทั้งสิ้น'], answer: 1, explain: 'การบันทึกช่วยให้รู้ยอดขาย กำไรขาดทุน และตรวจสอบย้อนหลังได้' },
+    { id: 313, cat: 'หลักการสหกรณ์', q: '"เฉลี่ยคืน" ในสหกรณ์โรงเรียนคืออะไร?', choices: ['เงินทุนที่ยืมจากธนาคารพาณิชย์','เงินที่จ่ายตามยอดซื้อของสมาชิก','เงินภาษีที่ส่งให้กรมสรรพากร','เงินรางวัลให้สมาชิกขยันที่สุด'], answer: 1, explain: 'เฉลี่ยคืน (Patronage Refund) จ่ายตามยอดซื้อของสมาชิกในรอบปี' },
+    { id: 314, cat: 'การคำนวณ', q: 'ขนมต้นทุน 8 บาท ขาย 12 บาท คิดเป็นกำไรกี่ % ของต้นทุน?', choices: ['25%','33%','50%','75%'], answer: 2, explain: 'กำไร 4 / ต้นทุน 8 × 100 = 50%' },
+    { id: 315, cat: 'การจัดประเภท', q: 'สินค้าใดจัดอยู่ในหมวด "ของกินเล่น/ขนม"?', choices: ['ดินสอ HB ของห้าง','ขนมปังไส้ครีม','น้ำดื่มขวดเล็ก','สมุดเส้นเขียว'], answer: 1, explain: 'ขนมปังจัดเป็นของกินเล่น/ขนม' },
+    { id: 316, cat: 'การบริหาร', q: 'เจอลูกค้าที่ขี้บ่นและจุกจิก ควรทำอย่างไร?', choices: ['ตอบโต้กลับให้สาสมใจ','รับฟังอย่างใจเย็นและช่วยเหลือ','เพิกเฉยไม่สนใจ','ขอให้ลูกค้าไปที่อื่น'], answer: 1, explain: 'ผู้ขายที่ดีต้องใจเย็นและพยายามช่วยเหลือลูกค้าทุกคน' },
+    { id: 317, cat: 'หลักการสหกรณ์', q: 'เงินทุนเริ่มต้นของสหกรณ์โรงเรียนมาจากไหน?', choices: ['เงินที่กู้ยืมจากธนาคารใหญ่','เงินภาษีที่รัฐบาลให้มา','ค่าหุ้นที่สมาชิกร่วมกันออก','เงินที่ครูประจำชั้นบริจาค'], answer: 2, explain: 'สมาชิกร่วมกันลงหุ้นเป็นทุนเริ่มต้นในการดำเนินงาน' },
+    { id: 318, cat: 'การคำนวณ', q: 'ลูกค้าซื้อของ 165 บาท จ่าย 200 บาท ต้องทอนเท่าไร?', choices: ['25 บาท','35 บาท','45 บาท','55 บาท'], answer: 1, explain: '200 − 165 = 35 บาท' },
+    { id: 319, cat: 'การจัดการสต็อก', q: 'คำว่า "สต็อก" ในร้านสหกรณ์หมายถึงอะไร?', choices: ['ยอดขายรวมในแต่ละวัน','จำนวนสินค้าที่มีอยู่ในคลัง','รายชื่อของสมาชิกทั้งหมด','เงินทอนที่เหลือในกล่อง'], answer: 1, explain: 'สต็อก = จำนวนสินค้าคงเหลือที่มีอยู่ในร้านพร้อมขาย' },
+    { id: 320, cat: 'จริยธรรม', q: 'พฤติกรรมใดต่อไปนี้ "ไม่ควรทำ" ในสหกรณ์?', choices: ['บันทึกการขายทุกครั้งให้ครบ','รับฟังคำแนะนำจากครูที่ปรึกษา','แอบหยิบสินค้าไม่จ่ายเงิน','ขอเปลี่ยนเวรกับเพื่อนล่วงหน้า'], answer: 2, explain: 'การหยิบของไม่จ่ายเงินถือเป็นการขโมย ผิดทั้งจริยธรรมและกฎหมาย' },
+  ],
+  'm1-3': [
+    { id: 401, cat: 'หลักการสหกรณ์สากล', q: 'ICA ที่กำหนดหลักการสหกรณ์ ย่อมาจากอะไร?', choices: ['International Cooperative Alliance','Internal Cooperation Association','Industrial Cooperative Authority','International Commerce Agency'], answer: 0, explain: 'ICA = International Cooperative Alliance องค์การพันธมิตรสหกรณ์สากล' },
+    { id: 402, cat: 'การเงิน', q: 'กำไรขั้นต้น (Gross Profit) คำนวณอย่างไร?', choices: ['ราคาขาย − ต้นทุนสินค้า','ราคาขาย + ค่าใช้จ่ายในการดำเนินงาน','ต้นทุน × อัตรากำไร × 100','รายได้ทั้งหมดรวมค่าจัดส่งสินค้า'], answer: 0, explain: 'Gross Profit = ราคาขาย − ต้นทุนของสินค้าที่ขาย' },
+    { id: 403, cat: 'การเงิน', q: 'สินค้าราคา 40 บาท ต้นทุน 24 บาท อัตรากำไรขั้นต้นเป็นกี่ %?', choices: ['16%','24%','40%','60%'], answer: 2, explain: 'Margin = (40 − 24) × 100 / 40 = 1600/40 = 40%' },
+    { id: 404, cat: 'หลักการสหกรณ์', q: 'เงิน "เฉลี่ยคืน" (Patronage Refund) คำนวณจากอะไร?', choices: ['จำนวนหุ้นที่สมาชิกถือครอง','ยอดซื้อสะสมของสมาชิกในปี','อายุการเป็นสมาชิกของแต่ละคน','ตำแหน่งหรือบทบาทในสหกรณ์'], answer: 1, explain: 'เฉลี่ยคืนจ่ายตามยอดซื้อสะสม ส่วนปันผลจ่ายตามหุ้นที่ถือ' },
+    { id: 405, cat: 'การเงิน', q: 'จุดที่กิจการ "ไม่กำไรไม่ขาดทุน" เรียกในทางบัญชีว่าอะไร?', choices: ['จุดสูงสุดของยอดขาย (Peak Point)','จุดคุ้มทุน (Break-even Point)','จุดสมดุลของตลาด (Equilibrium)','จุดต่ำสุดของผลกำไร (Bottom Line)'], answer: 1, explain: 'Break-even Point คือจุดที่รายได้ = ต้นทุนรวม' },
+    { id: 406, cat: 'การคำนวณ', q: 'ขายของได้ 15,000 บาท ต้นทุน 9,000 บาท Margin เท่าไร?', choices: ['30%','40%','50%','60%'], answer: 1, explain: '(15000 − 9000) × 100 / 15000 = 6000/15000 × 100 = 40%' },
+    { id: 407, cat: 'หลักการสหกรณ์สากล', q: 'หลักการสหกรณ์สากลข้อที่ 5 เกี่ยวข้องกับเรื่องใด?', choices: ['การเปิดรับสมาชิกใหม่อย่างเสรี','การให้การศึกษาและฝึกอบรม','การจ่ายปันผลให้สมาชิก','การร่วมมือกับสหกรณ์อื่น ๆ'], answer: 1, explain: 'หลักข้อ 5: Education, Training, and Information' },
+    { id: 408, cat: 'การบริหาร', q: 'KPI (Key Performance Indicator) ใช้ทำอะไร?', choices: ['ตรวจวัดความสำเร็จขององค์กร','คำนวณภาษีที่ต้องจ่ายแต่ละปี','ลงทะเบียนสมาชิกใหม่เข้าระบบ','ออกใบเสร็จรับเงินให้ลูกค้า'], answer: 0, explain: 'KPI ใช้วัดความสำเร็จและประสิทธิภาพขององค์กร' },
+    { id: 409, cat: 'การเงิน', q: 'ROI ที่สูง หมายความว่าอย่างไร?', choices: ['การลงทุนได้ผลตอบแทนคุ้มค่ามาก','การลงทุนใช้เงินจำนวนมหาศาล','การลงทุนเสี่ยงสูงกว่าปกติ','การลงทุนใช้เวลานานกว่าจะคืนทุน'], answer: 0, explain: 'ROI สูง = ได้ผลตอบแทนสูงเทียบกับเงินที่ลงไป = คุ้มค่า' },
+    { id: 410, cat: 'จริยธรรมธุรกิจ', q: '"Price Gouging" หรือการขูดรีดราคาเป็นพฤติกรรมอย่างไร?', choices: ['การให้ส่วนลดพิเศษกับลูกค้า','การขึ้นราคาเกินจริงในยามขาดแคลน','การส่งเสริมการขายในเทศกาล','การจ่ายเงินคืนผู้บริโภคที่ไม่พอใจ'], answer: 1, explain: 'Price Gouging = ขึ้นราคาเกินจริงในยามวิกฤติ เป็นพฤติกรรมผิดจริยธรรม' },
+    { id: 411, cat: 'การจัดการสต็อก', q: 'ระบบจัดการสต็อกที่ "สั่งสินค้าเมื่อจำเป็น" เรียกว่าระบบใด?', choices: ['Full Stock Inventory System','Just-in-Time (JIT) System','Maximum Inventory Method','Buffer Stock Strategy Plan'], answer: 1, explain: 'JIT = ระบบจัดการสต็อกที่สั่งของพอดีกับความต้องการ ลดต้นทุนเก็บ' },
+    { id: 412, cat: 'การคำนวณ', q: 'สหกรณ์กำไร 10,000 บาท จ่ายปันผล 50% หุ้น 500 หุ้น ปันผลต่อหุ้นเท่าไร?', choices: ['5 บาท','10 บาท','15 บาท','20 บาท'], answer: 1, explain: 'ปันผล = 10000 × 50% = 5,000 / 500 หุ้น = 10 บาท/หุ้น' },
+    { id: 413, cat: 'การบัญชี', q: 'ในงบดุล "Asset" (สินทรัพย์) หมายถึงอะไร?', choices: ['สิ่งของและทรัพย์สินที่กิจการเป็นเจ้าของ','หนี้สินที่ต้องชำระคืนภายในปี','รายได้ที่จะได้รับในอนาคต','ค่าใช้จ่ายที่ใช้ในการดำเนินงาน'], answer: 0, explain: 'Asset = สินทรัพย์ที่กิจการเป็นเจ้าของ เช่น เงินสด สินค้า อุปกรณ์' },
+    { id: 414, cat: 'หลักการสหกรณ์', q: 'สหกรณ์โดยทั่วไปจัดเป็นองค์กรประเภทใด?', choices: ['องค์กรรัฐวิสาหกิจที่รัฐควบคุม','องค์กรอิสระที่บริหารโดยสมาชิก','บริษัทมหาชนจำกัดในตลาดหุ้น','สมาคมการกุศลไม่แสวงหากำไร'], answer: 1, explain: 'สหกรณ์เป็นองค์กรอิสระ บริหารโดยสมาชิก เป็นไปตามหลัก ICA ข้อ 4' },
+    { id: 415, cat: 'การตลาด', q: '"Repeat Customer" ในการตลาดหมายถึงอะไร?', choices: ['ลูกค้าที่ซื้อสินค้ากลับมาซื้อซ้ำ','ลูกค้าที่ซื้อแต่ของลดราคา','ลูกค้าที่ชอบต่อรองราคามาก','ลูกค้าที่ซื้อครั้งเดียวแล้วเลิก'], answer: 0, explain: 'Repeat Customer = ลูกค้าที่กลับมาซื้อซ้ำเพราะภักดีต่อร้าน' },
+    { id: 416, cat: 'การเงิน', q: '"สภาพคล่อง" (Liquidity) ในกิจการหมายถึงอะไร?', choices: ['ความสามารถในการจ่ายหนี้ระยะสั้น','จำนวนสมาชิกที่เพิ่มขึ้นต่อปี','ปริมาณสินค้าที่หมุนเวียนได้เร็ว','ระดับความนิยมของผู้บริโภค'], answer: 0, explain: 'Liquidity = ความสามารถในการเปลี่ยนสินทรัพย์เป็นเงินสดเพื่อจ่ายหนี้' },
+    { id: 417, cat: 'การคำนวณ', q: 'สินค้าราคาขาย 200 บาท กำไร 25% ของราคาขาย ต้นทุนเท่าไร?', choices: ['100 บาท','125 บาท','150 บาท','175 บาท'], answer: 2, explain: 'กำไร 25% × 200 = 50 บาท → ต้นทุน = 200 − 50 = 150 บาท' },
+    { id: 418, cat: 'จริยธรรมธุรกิจ', q: 'การ "Re-labeling" หรือเปลี่ยนฉลากสินค้าหมดอายุเป็นเรื่องอย่างไร?', choices: ['เป็นการตลาดที่สร้างสรรค์ทั่วไป','เป็นการกระทำที่ผิดกฎหมายอย่างร้ายแรง','เป็นการประหยัดต้นทุนของกิจการ','เป็นกลยุทธ์ทางธุรกิจที่ใช้กันปกติ'], answer: 1, explain: 'การเปลี่ยนฉลากหลอกลวงผู้บริโภค ผิด พ.ร.บ. คุ้มครองผู้บริโภคและอาหารยา' },
+    { id: 419, cat: 'หลักการสหกรณ์สากล', q: 'หลักการสหกรณ์สากลข้อที่ 7 เน้นเรื่องใด?', choices: ['การจ่ายปันผลที่เป็นธรรม','การพัฒนาที่ยั่งยืนของชุมชน','การควบคุมต้นทุนของกิจการ','การขยายธุรกิจไปต่างประเทศ'], answer: 1, explain: 'หลักข้อ 7: Concern for Community คำนึงถึงการพัฒนายั่งยืนของชุมชน' },
+    { id: 420, cat: 'การวิเคราะห์', q: 'ถ้ารายได้ลดลง 30% แต่ต้นทุนคงที่ ผลต่อกำไรเป็นอย่างไร?', choices: ['กำไรลดลงในอัตราเท่าเดิม 30%','กำไรลดลงในอัตราที่มากกว่า 30%','กำไรลดลงในอัตราที่น้อยกว่า 30%','กำไรไม่กระทบเพราะต้นทุนคงที่'], answer: 1, explain: 'เมื่อต้นทุนคงที่ การลดรายได้จะกระทบกำไรในอัตราที่สูงกว่า เพราะต้นทุนยังเท่าเดิม' },
+  ]
+};
+
 // Topics map category names → grouped topic
 const QUIZ_TOPICS = {
   'p4-6': [
@@ -8330,8 +8405,29 @@ const QUIZ_TOPICS = {
 };
 const LEVEL_NAMES = { 'p4-6': 'ระดับประถม (ป.4-6)', 'm1-3': 'ระดับมัธยมต้น (ม.1-3)' };
 
-let quizState = { level: null, topic: null, questions: [], idx: 0, answers: [], startTime: 0, timerInterval: null };
+let quizState = { level: null, topic: null, phase: 'pre', questions: [], idx: 0, answers: [], startTime: 0, timerInterval: null };
 let quizLeaderboardLevel = 'p4-6';
+let quizUserCompletions = {}; // key = "level:topic:phase" → true if user has done
+
+async function loadQuizCompletions() {
+  if (!sb || !currentUser) { quizUserCompletions = {}; return; }
+  try {
+    const { data } = await sb.from('quiz_attempts')
+      .select('level, topic, phase')
+      .eq('member_id', currentUser.id);
+    quizUserCompletions = {};
+    (data || []).forEach(r => {
+      quizUserCompletions[`${r.level}:${r.topic || 'mix'}:${r.phase || 'pre'}`] = true;
+    });
+  } catch (e) { console.error(e); }
+}
+
+function getNextPhase(level, topicId) {
+  // ถ้ายังไม่เคยทำ pre → pre; ถ้าทำ pre แล้วแต่ยังไม่ post → post; ทำครบทั้งคู่แล้ว → post (ทำซ้ำได้)
+  const didPre = quizUserCompletions[`${level}:${topicId}:pre`];
+  if (!didPre) return 'pre';
+  return 'post';
+}
 
 function shuffleArray(arr) { return arr.slice().sort(() => Math.random() - 0.5); }
 
@@ -8344,7 +8440,7 @@ async function renderQuizSelectScreen() {
   await renderQuizMyHistory();
 }
 
-function showTopicSelect(level) {
+async function showTopicSelect(level) {
   quizState.level = level;
   document.getElementById('quizSelect').style.display = 'none';
   document.getElementById('quizTopicSelect').style.display = '';
@@ -8352,16 +8448,24 @@ function showTopicSelect(level) {
   document.getElementById('quizResult').style.display = 'none';
   document.getElementById('quizTopicTitle').textContent = LEVEL_NAMES[level];
 
+  await loadQuizCompletions();
+
   const bank = QUIZ_BANK[level];
   const topics = QUIZ_TOPICS[level];
   const grid = document.getElementById('quizTopicGrid');
   grid.innerHTML = topics.map(t => {
     const count = t.cats === null ? bank.length : bank.filter(q => t.cats.includes(q.cat)).length;
     const playN = Math.min(10, count);
+    const didPre = quizUserCompletions[`${level}:${t.id}:pre`];
+    const didPost = quizUserCompletions[`${level}:${t.id}:post`];
+    let badge = '<span class="qt-badge new">Pre-test</span>';
+    if (didPre && !didPost) badge = '<span class="qt-badge post">→ Post-test</span>';
+    else if (didPre && didPost) badge = '<span class="qt-badge done">✓ ทำครบแล้ว</span>';
     return `
       <button class="quiz-topic-card ${t.id === 'mix' ? 'mix' : ''}" onclick="startQuiz('${level}','${t.id}')">
         <div class="qt-ico">${t.ico}</div>
         <div class="qt-name">${t.name}</div>
+        ${badge}
         <div class="qt-count">${count} ข้อ · ทำ ${playN} ข้อ</div>
       </button>
     `;
@@ -8421,7 +8525,7 @@ async function renderQuizMyHistory() {
   if (!sb) { el.innerHTML = `<div class="quiz-empty">ต้องเชื่อม Cloud เพื่อดูประวัติ</div>`; return; }
   try {
     const { data } = await sb.from('quiz_attempts')
-      .select('level, score, total, duration_sec, created_at')
+      .select('level, topic, phase, score, total, duration_sec, created_at')
       .eq('member_id', currentUser.id)
       .order('created_at', { ascending: false })
       .limit(5);
@@ -8433,9 +8537,10 @@ async function renderQuizMyHistory() {
       const d = new Date(r.created_at);
       const dd = `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()+543}`;
       const lvlName = r.level === 'p4-6' ? 'ป.4-6' : 'ม.1-3';
+      const phaseTag = r.phase === 'post' ? '<span class="qt-badge post" style="margin-left:6px;">Post</span>' : '<span class="qt-badge new" style="margin-left:6px;">Pre</span>';
       return `<div class="qhist-row">
         <div style="flex:1;">
-          <div style="font-weight:700;font-size:13px;">${lvlName} · ${dd}</div>
+          <div style="font-weight:700;font-size:13px;">${lvlName}${phaseTag} · ${dd}</div>
           <div class="qlb-meta">ใช้เวลา ${Math.floor((r.duration_sec||0)/60)}:${String((r.duration_sec||0)%60).padStart(2,'0')}</div>
         </div>
         <div class="qlb-score">${r.score}/${r.total}</div>
@@ -8445,14 +8550,16 @@ async function renderQuizMyHistory() {
 }
 
 function startQuiz(level, topicId) {
-  const bank = QUIZ_BANK[level];
+  const phase = getNextPhase(level, topicId);
+  const sourceBank = phase === 'post' ? QUIZ_BANK_POST[level] : QUIZ_BANK[level];
   const topic = (QUIZ_TOPICS[level] || []).find(t => t.id === topicId);
-  if (!bank || !topic) return;
-  const pool = topic.cats === null ? bank : bank.filter(q => topic.cats.includes(q.cat));
+  if (!sourceBank || !topic) return;
+  const pool = topic.cats === null ? sourceBank : sourceBank.filter(q => topic.cats.includes(q.cat));
   if (pool.length === 0) { showToast('ยังไม่มีคำถามในหัวข้อนี้', true); return; }
 
   quizState.level = level;
   quizState.topic = topicId;
+  quizState.phase = phase;
   quizState.questions = shuffleArray(pool).slice(0, Math.min(10, pool.length));
   quizState.idx = 0;
   quizState.answers = [];
@@ -8541,11 +8648,38 @@ function finishQuiz() {
   else { badge = '📚'; msg = 'ลองใหม่อีกครั้งนะ'; }
 
   document.getElementById('qrBadge').textContent = badge;
+  document.getElementById('qrPhase').textContent = quizState.phase === 'pre' ? '📝 Pre-test' : '🎓 Post-test';
   document.getElementById('qrScore').textContent = score;
   document.getElementById('qrTotal').textContent = total;
   document.getElementById('qrPct').textContent = `${pct}%`;
   document.getElementById('qrMsg').textContent = msg;
   document.getElementById('qrMeta').textContent = `ใช้เวลา ${Math.floor(duration/60)}:${String(duration%60).padStart(2,'0')}`;
+
+  // เปรียบเทียบ post กับ pre
+  const cmpEl = document.getElementById('qrCompare');
+  cmpEl.style.display = 'none';
+  if (quizState.phase === 'post' && sb && currentUser) {
+    (async () => {
+      try {
+        const { data } = await sb.from('quiz_attempts')
+          .select('score, total')
+          .eq('member_id', currentUser.id)
+          .eq('level', quizState.level)
+          .eq('topic', quizState.topic)
+          .eq('phase', 'pre')
+          .order('created_at', { ascending: false })
+          .limit(1);
+        if (data && data.length) {
+          const prePct = Math.round(data[0].score / data[0].total * 100);
+          const diff = pct - prePct;
+          const arrow = diff > 0 ? '↑' : diff < 0 ? '↓' : '→';
+          const cls = diff > 0 ? 'up' : diff < 0 ? 'down' : '';
+          cmpEl.innerHTML = `เทียบ Pre-test: <strong>${prePct}%</strong> ${arrow} <strong class="${cls}">${pct}%</strong> (${diff >= 0 ? '+' : ''}${diff}%)`;
+          cmpEl.style.display = '';
+        }
+      } catch (e) { console.error(e); }
+    })();
+  }
 
   // Review
   document.getElementById('qrReview').innerHTML = quizState.questions.map((q, i) => {
@@ -8581,11 +8715,14 @@ async function saveQuizAttempt(score, total, duration) {
       member_id: currentUser.id,
       member_name: currentUser.name,
       level: quizState.level,
+      topic: quizState.topic,
+      phase: quizState.phase,
       score, total,
       correct_ids: correctIds,
       wrong_ids: wrongIds,
       duration_sec: duration
     });
+    quizUserCompletions[`${quizState.level}:${quizState.topic}:${quizState.phase}`] = true;
   } catch (e) { console.error('saveQuizAttempt failed', e); }
 }
 

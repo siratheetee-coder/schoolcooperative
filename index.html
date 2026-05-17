@@ -23,6 +23,7 @@
 
 <!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="school-config.js"></script>
 <script src="supabase-config.js"></script>
 <style>
   /* ============== PALETTE ============== */
@@ -2974,7 +2975,7 @@
 <div class="login-screen" id="loginScreen">
   <div class="login-card">
     <div class="login-logo"><img src="logo-no-bg.png" alt="Logo"></div>
-    <div class="login-title">สหกรณ์โรงเรียนบ้านหินลาด</div>
+    <div class="login-title" id="loginTitle">สหกรณ์โรงเรียนบ้านหินลาด</div>
     <div class="login-sub">ระบบจัดการร้านนักเรียน · ลงชื่อเข้าใช้</div>
 
     <div class="field">
@@ -3924,10 +3925,37 @@ function getTerm(d) {
 }
 
 // ============== VIEW ROUTER ==============
-const APP_VERSION = 'V 1.7';
-const DEV_BY = `พัฒนาโดย ครูสิรธีร์ ตีเมืองซ้าย ${APP_VERSION}`;
+const APP_VERSION = 'V 1.8';
+// === School config with safe fallbacks ===
+const SC = window.SCHOOL_CONFIG || {};
+const SCHOOL = {
+  name:           SC.schoolName       || 'โรงเรียนบ้านหินลาด',
+  appTitle:       SC.appTitle         || 'สหกรณ์โรงเรียนบ้านหินลาด',
+  nameEn:         SC.schoolNameEn     || 'Ban Hinlad School',
+  subtitleEn:     SC.subtitleEn       || 'Digital School Cooperative System',
+  districtOffice: SC.districtOffice   || 'สำนักงานเขตพื้นที่การศึกษาประถมศึกษามหาสารคาม เขต 1',
+  ministry:       SC.ministry         || 'สังกัดสำนักงานคณะกรรมการการศึกษาขั้นพื้นฐาน กระทรวงศึกษาธิการ',
+  principalTitle: SC.principalTitle   || 'ผู้อำนวยการโรงเรียน',
+  advisorTitle:   SC.advisorTitle     || 'ผู้จัดทำรายงาน / ครูที่ปรึกษาสหกรณ์',
+  developer:      SC.developer        || 'ครูสิรธีร์ ตีเมืองซ้าย',
+  logoPath:       SC.logoPath         || './logo-no-bg.png',
+  description:    SC.description      || 'ระบบจัดการร้านสหกรณ์โรงเรียน',
+  studentPin:     SC.defaultStudentPin|| '1234',
+  teacherPin:     SC.defaultTeacherPin|| '9999',
+  bigSale:        SC.bigSaleThreshold || 100,
+};
+const DEV_BY = `พัฒนาโดย ${SCHOOL.developer} ${APP_VERSION}`;
+
+// อัปเดต <title> + meta + DOM ตาม config
+document.title = SCHOOL.appTitle;
+document.querySelector('meta[name="description"]')?.setAttribute('content', SCHOOL.description);
+document.querySelector('meta[name="apple-mobile-web-app-title"]')?.setAttribute('content', SCHOOL.name);
+document.addEventListener('DOMContentLoaded', () => {
+  const lt = document.getElementById('loginTitle'); if (lt) lt.textContent = SCHOOL.appTitle;
+  const ht = document.getElementById('headerTitle'); if (ht) ht.textContent = SCHOOL.appTitle;
+});
 const VIEW_META = {
-  pos:    { title: 'สหกรณ์โรงเรียนบ้านหินลาด', sub: DEV_BY, showCart: true },
+  pos:    { title: SCHOOL.appTitle, sub: DEV_BY, showCart: true },
   stock:  { title: 'จัดการสต็อก',               sub: DEV_BY, showCart: false },
   report: { title: 'รายงานยอดขาย',             sub: DEV_BY, showCart: false },
   shares: { title: 'หุ้น & ปันผล',              sub: DEV_BY, showCart: false },
@@ -4836,7 +4864,7 @@ function downloadReport(type) {
 <Worksheet ss:Name="รายงานยอดขาย">
  <Table ss:DefaultColumnWidth="80">
   <Column ss:Width="65"/><Column ss:Width="90"/><Column ss:Width="55"/><Column ss:Width="130"/><Column ss:Width="260"/><Column ss:Width="55"/><Column ss:Width="85"/><Column ss:Width="85"/><Column ss:Width="85"/>
-  <Row ss:Height="36"><Cell ss:StyleID="sTitle" ss:MergeAcross="${colCount-1}"><Data ss:Type="String">รายงานยอดขาย — สหกรณ์โรงเรียนบ้านหินลาด</Data></Cell></Row>
+  <Row ss:Height="36"><Cell ss:StyleID="sTitle" ss:MergeAcross="${colCount-1}"><Data ss:Type="String">รายงานยอดขาย — ${SCHOOL.appTitle}</Data></Cell></Row>
   <Row ss:Height="22"><Cell ss:StyleID="sSubtitle" ss:MergeAcross="${colCount-1}"><Data ss:Type="String">${esc(periodText)} · พิมพ์เมื่อ ${esc(thDateTime(new Date()))}</Data></Cell></Row>
   <Row><Cell><Data ss:Type="String"></Data></Cell></Row>
   <Row ss:Height="26">${headerCells}</Row>
@@ -5019,10 +5047,10 @@ body { padding-bottom: 80px; }
 <div class="letterhead">
   <img class="letterhead-logo" src="${logoURL}" alt="โลโก้โรงเรียน" onerror="this.style.display='none'">
   <div class="letterhead-text">
-    <h2 class="school-name">โรงเรียนบ้านหินลาด</h2>
-    <div class="school-sub">สำนักงานเขตพื้นที่การศึกษาประถมศึกษามหาสารคาม เขต 1</div>
-    <div class="school-sub">สังกัดสำนักงานคณะกรรมการการศึกษาขั้นพื้นฐาน กระทรวงศึกษาธิการ</div>
-    <div class="school-en">Ban Hinlad School · Digital School Cooperative System</div>
+    <h2 class="school-name">${SCHOOL.name}</h2>
+    <div class="school-sub">${SCHOOL.districtOffice}</div>
+    <div class="school-sub">${SCHOOL.ministry}</div>
+    <div class="school-en">${SCHOOL.nameEn} · ${SCHOOL.subtitleEn}</div>
   </div>
   <div class="letterhead-spacer"></div>
 </div>
@@ -5058,19 +5086,19 @@ body { padding-bottom: 80px; }
     <div class="sig-col">
       <div class="sig-line"></div>
       <div class="sig-name">(...........................................)</div>
-      <div class="sig-role">ผู้จัดทำรายงาน / ครูที่ปรึกษาสหกรณ์</div>
+      <div class="sig-role">${SCHOOL.advisorTitle}</div>
       <div class="sig-date">วันที่ ......./......./.......</div>
     </div>
     <div class="sig-col">
       <div class="sig-line"></div>
       <div class="sig-name">(...........................................)</div>
-      <div class="sig-role">ผู้อำนวยการโรงเรียนบ้านหินลาด</div>
+      <div class="sig-role">${SCHOOL.principalTitle}</div>
       <div class="sig-date">วันที่ ......./......./.......</div>
     </div>
   </div>
 
   <div class="footer">
-    <div>เอกสารนี้สร้างโดยระบบสหกรณ์โรงเรียนบ้านหินลาด · พิมพ์เมื่อ ${thDateTime(new Date())}</div>
+    <div>เอกสารนี้สร้างโดยระบบ${SCHOOL.appTitle} · พิมพ์เมื่อ ${thDateTime(new Date())}</div>
     <div style="margin-top:3px;opacity:0.75;">พัฒนาโดย ครูสิรธีร์ ตีเมืองซ้าย · ${APP_VERSION}</div>
   </div>
 </div>
@@ -5544,7 +5572,7 @@ function doLogin() {
   if (!code) { showToast('กรุณาใส่รหัสนักเรียน', true); return; }
   const m = members.find(x => x.code === code);
   if (!m) { showToast('ไม่พบรหัสนักเรียน', true); return; }
-  const expectedPin = m.role === 'teacher' ? '9999' : '1234';
+  const expectedPin = m.role === 'teacher' ? SCHOOL.teacherPin : SCHOOL.studentPin;
   if (pin !== expectedPin) { showToast('PIN ไม่ถูกต้อง', true); return; }
   setUser(m);
   showToast(`ยินดีต้อนรับ ${m.name}!`);
@@ -6020,8 +6048,8 @@ confirmPay = function() {
       note: `ขาย ${items.length} รายการ ฿${total}`
     });
 
-    // Push: บิลใหญ่ (เกิน 100฿) → ครู
-    if (total >= 100) {
+    // Push: บิลใหญ่ → ครู
+    if (total >= SCHOOL.bigSale) {
       sendPush({
         audience: 'teachers',
         title: `💰 บิลใหญ่ ฿${total.toLocaleString()}`,
@@ -6892,7 +6920,7 @@ function renderBackupStats() {
 function buildBackupObject() {
   return {
     version: 1,
-    school: 'สหกรณ์โรงเรียนบ้านหินลาด',
+    school: SCHOOL.appTitle,
     exported_at: new Date().toISOString(),
     exported_by: currentUser ? `${currentUser.name} (${currentUser.code})` : 'unknown',
     stats: {
@@ -7686,9 +7714,9 @@ async function enableNotifications() {
   document.getElementById('notiBanner').classList.remove('show');
   if (notiPermission === 'granted') {
     showToast('🔔 เปิดแจ้งเตือนแล้ว');
-    new Notification('สหกรณ์โรงเรียนบ้านหินลาด', {
+    new Notification(SCHOOL.appTitle, {
       body: 'พร้อมรับแจ้งเตือนแล้ว',
-      icon: 'icon.svg'
+      icon: SCHOOL.logoPath
     });
   } else {
     localStorage.setItem('notiDismissed', '1');

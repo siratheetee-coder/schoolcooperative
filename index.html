@@ -4363,7 +4363,7 @@ function getTerm(d) {
 }
 
 // ============== VIEW ROUTER ==============
-const APP_VERSION = 'V 2.6';
+const APP_VERSION = 'V 2.7';
 // === School config with safe fallbacks ===
 const SC = window.SCHOOL_CONFIG || {};
 const SCHOOL = {
@@ -8952,31 +8952,56 @@ function quitQuiz() {
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('sw.js').then(reg => {
-      // Check for updates every load
+      // Check for updates เพียงเงียบ ๆ
       reg.update().catch(() => {});
 
-      // เมื่อมี SW ใหม่กำลังติดตั้ง
+      // เมื่อมี SW ใหม่กำลังติดตั้ง — แสดง banner ให้ user กดอัปเดตเอง
       reg.addEventListener('updatefound', () => {
         const newWorker = reg.installing;
         if (!newWorker) return;
         newWorker.addEventListener('statechange', () => {
           if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-            // มี SW ใหม่พร้อมใช้ → reload อัตโนมัติ
-            showToast('🎉 มีเวอร์ชั่นใหม่! กำลังรีเฟรช...');
-            newWorker.postMessage('SKIP_WAITING');
+            showUpdateBanner(newWorker);
           }
         });
       });
     }).catch(err => console.log('SW registration failed:', err));
 
-    // เมื่อ SW ใหม่เข้ามาควบคุม → reload หน้า
+    // กดอัปเดต → SKIP_WAITING + reload ครั้งเดียว
     let refreshing = false;
     navigator.serviceWorker.addEventListener('controllerchange', () => {
       if (refreshing) return;
       refreshing = true;
-      setTimeout(() => window.location.reload(), 800);
+      window.location.reload();
     });
   });
+}
+
+function showUpdateBanner(worker) {
+  // หลีกเลี่ยง banner ซ้อน
+  if (document.getElementById('updateBanner')) return;
+  const b = document.createElement('div');
+  b.id = 'updateBanner';
+  b.style.cssText = `
+    position: fixed; left: 50%; transform: translateX(-50%);
+    bottom: calc(var(--nav-height, 72px) + 90px + env(safe-area-inset-bottom, 0px));
+    background: linear-gradient(135deg, #46A697, #2D7D6F);
+    color: white; padding: 12px 16px; border-radius: 18px;
+    box-shadow: 0 10px 28px rgba(45,125,111,0.4);
+    z-index: 9999; max-width: 92%; display: flex; align-items: center; gap: 10px;
+    font-family: 'Prompt', sans-serif; font-size: 13px; font-weight: 600;
+    animation: slideup 0.35s cubic-bezier(0.2,0.9,0.3,1);
+  `;
+  b.innerHTML = `
+    <span>🎉 มีเวอร์ชั่นใหม่</span>
+    <button id="updateBtn" style="background:#FFC857;color:#174740;border:none;padding:7px 14px;border-radius:12px;font-weight:800;font-family:inherit;cursor:pointer;font-size:12px;box-shadow:0 2px 0 #B07F0A;">อัปเดต</button>
+    <button id="updateDismiss" style="background:transparent;color:white;border:1px solid rgba(255,255,255,0.4);padding:7px 10px;border-radius:12px;font-family:inherit;cursor:pointer;font-size:11px;">ภายหลัง</button>
+  `;
+  document.body.appendChild(b);
+  document.getElementById('updateBtn').onclick = () => {
+    worker.postMessage('SKIP_WAITING'); // → triggers controllerchange → reload
+  };
+  document.getElementById('updateDismiss').onclick = () => b.remove();
 }
 
 let deferredPrompt = null;

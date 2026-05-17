@@ -1,5 +1,5 @@
 // ============== Service Worker — สหกรณ์โรงเรียน ==============
-const CACHE_VERSION = 'v2';  // เปลี่ยนเลขนี้เพื่อ force ลบ cache เก่า
+const CACHE_VERSION = 'v3';  // เปลี่ยนเลขนี้เพื่อ force ลบ cache เก่า
 const CACHE = `coop-${CACHE_VERSION}`;
 const CORE_ASSETS = [
   './',

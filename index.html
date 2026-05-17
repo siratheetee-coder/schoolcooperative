@@ -2443,6 +2443,56 @@
   }
   .bar-col .lbl { font-size: 9px; color: var(--ink-soft); font-weight: 600; text-align: center; line-height: 1.1; }
 
+  /* === Donut Chart (by category) === */
+  .donut-wrap {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .donut-svg {
+    width: 160px; height: 160px;
+    flex-shrink: 0;
+    filter: drop-shadow(0 4px 8px rgba(45,125,111,0.15));
+  }
+  .donut-svg .donut-ring { fill: none; stroke-width: 22; transition: stroke-dasharray 0.6s cubic-bezier(0.2,0.9,0.3,1); }
+  .donut-center {
+    text-anchor: middle;
+    dominant-baseline: middle;
+  }
+  .donut-center .dc-val { font-size: 14px; font-weight: 800; fill: var(--ink); }
+  .donut-center .dc-lbl { font-size: 7px; fill: var(--ink-soft); font-weight: 600; }
+  .donut-legend {
+    display: flex; flex-direction: column; gap: 8px;
+    flex: 1; min-width: 140px;
+  }
+  .dl-item {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 12px;
+  }
+  .dl-dot {
+    width: 12px; height: 12px; border-radius: 4px;
+    flex-shrink: 0;
+    box-shadow: inset 1px 1px 2px rgba(255,255,255,0.4), 0 1px 2px rgba(0,0,0,0.1);
+  }
+  .dl-name { flex: 1; font-weight: 600; color: var(--ink); }
+  .dl-pct { font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; }
+  .dl-amt { font-size: 10px; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+
+  /* === Profit Chart === */
+  .profit-chart { position: relative; height: 150px; padding: 0 2px; }
+  .profit-chart svg { width: 100%; height: 100%; overflow: visible; }
+  .pc-area { fill: url(#profitGradient); opacity: 0.25; }
+  .pc-line { fill: none; stroke: var(--gold-500); stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 2px 3px rgba(255,182,39,0.4)); }
+  .pc-dot { fill: var(--gold-500); stroke: #fff; stroke-width: 2; }
+  .pc-dot.top { fill: var(--green-500); r: 5; }
+  .pc-label { font-size: 9px; fill: var(--ink-soft); font-weight: 600; text-anchor: middle; }
+  .pc-val {
+    font-size: 9px; fill: var(--green-700); font-weight: 700; text-anchor: middle;
+  }
+  .pc-zero { stroke: rgba(154,130,90,0.2); stroke-dasharray: 3,3; stroke-width: 1; }
+
   .top-list { display: flex; flex-direction: column; gap: 10px; }
   .top-item { display: flex; align-items: center; gap: 10px; }
   .rank { width: 26px; height: 26px; border-radius: 9px; display: grid; place-items: center; font-weight: 700; font-size: 12px; flex-shrink: 0; color: white; }
@@ -3062,6 +3112,22 @@
         <span class="hint" id="chartHint">7 วันล่าสุด</span>
       </div>
       <div class="chart" id="chart"></div>
+    </div>
+
+    <div class="rcard">
+      <div class="rcard-head">
+        <h3>💰 กราฟกำไรสุทธิ</h3>
+        <span class="hint" id="profitChartHint">เทียบช่วงเดียวกัน</span>
+      </div>
+      <div class="profit-chart" id="profitChart"></div>
+    </div>
+
+    <div class="rcard">
+      <div class="rcard-head">
+        <h3>🍩 สัดส่วนยอดขายตามหมวด</h3>
+        <span class="hint">Revenue by Category</span>
+      </div>
+      <div class="donut-wrap" id="donutWrap"></div>
     </div>
 
     <div class="rcard">
@@ -3853,7 +3919,7 @@ function getTerm(d) {
 }
 
 // ============== VIEW ROUTER ==============
-const APP_VERSION = 'V 1.3';
+const APP_VERSION = 'V 1.4';
 const DEV_BY = `พัฒนาโดย ครูสิรธีร์ ตีเมืองซ้าย ${APP_VERSION}`;
 const VIEW_META = {
   pos:    { title: 'สหกรณ์โรงเรียนบ้านหินลาด', sub: DEV_BY, showCart: true },
@@ -4420,6 +4486,8 @@ function renderReport() {
   bdEl.textContent = `${bd >= 0 ? '↑' : '↓'} ${Math.abs(bd)}% จากก่อนหน้า`;
 
   renderChart(cur);
+  renderProfitChart(cur);
+  renderDonutChart(cur);
 
   // Top products
   const totals = {};
@@ -4511,6 +4579,172 @@ function renderChart(cur) {
       <div class="lbl">${showLabel(i) ? b.lbl : ''}</div>
     </div>
   `).join('');
+}
+
+// ============== PROFIT CHART (line over time) ==============
+function renderProfitChart(cur) {
+  // Build same buckets as sales chart but for profit (revenue - cost)
+  let buckets;
+  if (currentPeriod === 'day') {
+    buckets = Array.from({length: 10}, (_, i) => ({ lbl: `${i+8}น.`, val: 0 }));
+    cur.forEach(s => {
+      const h = s.date.getHours();
+      if (h >= 8 && h <= 17) {
+        const profit = s.total - s.items.reduce((a,i) => a + (i.cost||0) * i.qty, 0);
+        buckets[h-8].val += profit;
+      }
+    });
+  } else if (currentPeriod === 'month') {
+    const t = TODAY;
+    const dim = new Date(t.getFullYear(), t.getMonth()+1, 0).getDate();
+    buckets = [];
+    for (let d = 1; d <= dim; d++) buckets.push({ lbl: String(d), val: 0 });
+    cur.forEach(s => {
+      const profit = s.total - s.items.reduce((a,i) => a + (i.cost||0) * i.qty, 0);
+      buckets[s.date.getDate()-1].val += profit;
+    });
+  } else if (currentPeriod === 'term') {
+    const term = getTerm(TODAY);
+    const months = term.num === 1 ? [4,5,6,7,8] : [10,11,0,1,2];
+    buckets = months.map(m => ({ lbl: TH_MONTHS[m], val: 0, m }));
+    cur.forEach(s => {
+      const profit = s.total - s.items.reduce((a,i) => a + (i.cost||0) * i.qty, 0);
+      const b = buckets.find(x => x.m === s.date.getMonth());
+      if (b) b.val += profit;
+    });
+  } else {
+    buckets = TH_MONTHS.map(m => ({ lbl: m, val: 0 }));
+    cur.forEach(s => {
+      const profit = s.total - s.items.reduce((a,i) => a + (i.cost||0) * i.qty, 0);
+      buckets[s.date.getMonth()].val += profit;
+    });
+  }
+
+  const max = Math.max(...buckets.map(b => Math.abs(b.val)), 1);
+  const topIdx = buckets.reduce((idx, b, i, arr) => b.val > arr[idx].val ? i : idx, 0);
+  const W = 600, H = 140, padL = 8, padR = 8, padT = 20, padB = 24;
+  const innerW = W - padL - padR;
+  const innerH = H - padT - padB;
+  const n = buckets.length;
+  const step = n > 1 ? innerW / (n - 1) : 0;
+  const xAt = i => padL + i * step;
+  const yAt = v => padT + innerH - (v / max) * innerH * 0.9;
+
+  const showLabel = n > 15 ? (i) => i % Math.ceil(n/8) === 0 : () => true;
+
+  // Build line path
+  const pathPts = buckets.map((b, i) => `${i === 0 ? 'M' : 'L'}${xAt(i)},${yAt(Math.max(0,b.val))}`).join(' ');
+  // Area path (close to baseline)
+  const baselineY = yAt(0);
+  const areaPath = pathPts + ` L${xAt(n-1)},${baselineY} L${xAt(0)},${baselineY} Z`;
+
+  // Dots
+  const dots = buckets.map((b, i) => {
+    const isTop = i === topIdx && b.val > 0;
+    return `<circle class="pc-dot ${isTop ? 'top' : ''}" cx="${xAt(i)}" cy="${yAt(Math.max(0,b.val))}" r="${isTop ? 5 : 3}"></circle>`;
+  }).join('');
+
+  // Top value label
+  const topLbl = buckets[topIdx].val > 0
+    ? `<text class="pc-val" x="${xAt(topIdx)}" y="${yAt(buckets[topIdx].val) - 8}">฿${buckets[topIdx].val.toLocaleString()}</text>`
+    : '';
+
+  // X labels
+  const xLabels = buckets.map((b, i) => showLabel(i)
+    ? `<text class="pc-label" x="${xAt(i)}" y="${H - 6}">${b.lbl}</text>`
+    : ''
+  ).join('');
+
+  document.getElementById('profitChart').innerHTML = `
+    <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
+      <defs>
+        <linearGradient id="profitGradient" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#FFB627" stop-opacity="0.6"/>
+          <stop offset="100%" stop-color="#FFB627" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+      <line class="pc-zero" x1="${padL}" y1="${baselineY}" x2="${W-padR}" y2="${baselineY}"></line>
+      <path class="pc-area" d="${areaPath}"></path>
+      <path class="pc-line" d="${pathPts}"></path>
+      ${dots}
+      ${topLbl}
+      ${xLabels}
+    </svg>`;
+}
+
+// ============== DONUT CHART (revenue by category) ==============
+const CAT_COLORS = {
+  drink:      ['#7AB8E0', '#4D8FCA'],
+  snack:      ['#FFB07A', '#E8804D'],
+  icecream:   ['#F5A8C8', '#D87AA0'],
+  stationery: ['#A8D5A8', '#6DB66D'],
+  book:       ['#C8A8E0', '#9577C8'],
+  other:      ['#D4C4A8', '#A89478']
+};
+const CAT_NAMES = {
+  drink: '🥤 เครื่องดื่ม', snack: '🍪 ขนม', icecream: '🍦 ไอศกรีม',
+  stationery: '✏️ เครื่องเขียน', book: '📒 สมุด', other: '📦 อื่นๆ'
+};
+
+function renderDonutChart(cur) {
+  // Aggregate revenue per category (lookup category via product id)
+  const productCatMap = {};
+  products.forEach(p => { productCatMap[p.id] = p.category || 'other'; });
+
+  const catRev = {};
+  cur.forEach(s => s.items.forEach(i => {
+    const cat = productCatMap[i.id] || 'other';
+    catRev[cat] = (catRev[cat] || 0) + i.qty * i.price;
+  }));
+
+  const entries = Object.entries(catRev).sort((a,b) => b[1] - a[1]);
+  const total = entries.reduce((s, [,v]) => s + v, 0);
+
+  const wrap = document.getElementById('donutWrap');
+  if (total === 0) {
+    wrap.innerHTML = `<div style="text-align:center;color:var(--ink-soft);padding:30px 14px;font-size:13px;width:100%;">ยังไม่มีข้อมูลในช่วงนี้</div>`;
+    return;
+  }
+
+  // Donut: circle stroke-dasharray segments
+  const R = 60, CX = 80, CY = 80;
+  const C = 2 * Math.PI * R;
+  let offset = 0;
+  const segments = entries.map(([cat, val]) => {
+    const pct = val / total;
+    const len = pct * C;
+    const [c1, c2] = CAT_COLORS[cat] || CAT_COLORS.other;
+    const seg = `<circle class="donut-ring" cx="${CX}" cy="${CY}" r="${R}"
+      stroke="${c2}"
+      stroke-dasharray="${len} ${C - len}"
+      stroke-dashoffset="${-offset}"
+      transform="rotate(-90 ${CX} ${CY})"></circle>`;
+    offset += len;
+    return seg;
+  }).join('');
+
+  const legend = entries.map(([cat, val]) => {
+    const pct = Math.round(val / total * 100);
+    const [c1, c2] = CAT_COLORS[cat] || CAT_COLORS.other;
+    return `
+      <div class="dl-item">
+        <div class="dl-dot" style="background:linear-gradient(135deg,${c1},${c2});"></div>
+        <div class="dl-name">${CAT_NAMES[cat] || cat}</div>
+        <div>
+          <div class="dl-pct">${pct}%</div>
+          <div class="dl-amt">฿${val.toLocaleString()}</div>
+        </div>
+      </div>`;
+  }).join('');
+
+  wrap.innerHTML = `
+    <svg class="donut-svg" viewBox="0 0 160 160">
+      ${segments}
+      <text class="donut-center dc-val" x="80" y="76">฿${total.toLocaleString()}</text>
+      <text class="donut-center dc-lbl" x="80" y="92">รวม ${entries.length} หมวด</text>
+    </svg>
+    <div class="donut-legend">${legend}</div>
+  `;
 }
 
 function setPeriod(p) {

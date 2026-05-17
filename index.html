@@ -2494,6 +2494,196 @@
   }
   .pc-zero { stroke: rgba(154,130,90,0.2); stroke-dasharray: 3,3; stroke-width: 1; }
 
+  /* ===== Quiz System ===== */
+  #view-quiz { padding: 16px 16px 100px; }
+  .quiz-screen { animation: fadeIn 0.3s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  .quiz-hero {
+    background: linear-gradient(135deg, #46A697, #2D7D6F);
+    color: white; border-radius: 24px; padding: 22px 20px;
+    text-align: center; margin-bottom: 18px;
+    box-shadow: 0 6px 20px rgba(45,125,111,0.25);
+  }
+  .quiz-hero-ico { font-size: 42px; margin-bottom: 6px; }
+  .quiz-hero-title { font-size: 22px; font-weight: 800; }
+  .quiz-hero-sub { font-size: 12px; opacity: 0.9; margin-top: 4px; }
+
+  .quiz-section-head {
+    font-size: 14px; font-weight: 700; color: var(--green-700);
+    margin: 18px 4px 10px;
+  }
+
+  .quiz-level-grid {
+    display: grid; grid-template-columns: 1fr; gap: 12px;
+  }
+  @media (min-width: 600px) {
+    .quiz-level-grid { grid-template-columns: 1fr 1fr; }
+  }
+  .quiz-level-card {
+    background: white; border: none; border-radius: 18px;
+    padding: 20px; text-align: left;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;
+    font-family: inherit; position: relative; overflow: hidden;
+  }
+  .quiz-level-card.primary { border-top: 4px solid #46A697; }
+  .quiz-level-card.secondary { border-top: 4px solid #FFB627; }
+  .quiz-level-card:active { transform: translateY(2px); box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
+  .ql-ico { font-size: 36px; margin-bottom: 6px; }
+  .ql-name { font-size: 17px; font-weight: 800; color: var(--ink); }
+  .ql-grade { font-size: 13px; color: var(--green-700); font-weight: 700; margin-bottom: 6px; }
+  .ql-desc { font-size: 11px; color: var(--ink-soft); line-height: 1.5; margin-bottom: 8px; }
+  .ql-meta { font-size: 10px; color: var(--gold-600); font-weight: 700; }
+
+  .quiz-tabs { display: flex; gap: 8px; margin-bottom: 10px; }
+  .qz-tab {
+    flex: 1; padding: 8px 12px; border: none; border-radius: 12px;
+    background: var(--cream-200); color: var(--ink-soft);
+    font-weight: 700; font-size: 12px; cursor: pointer; font-family: inherit;
+  }
+  .qz-tab.active {
+    background: linear-gradient(135deg, var(--green-400), var(--green-500));
+    color: white; box-shadow: 0 2px 0 var(--green-700);
+  }
+  .quiz-leaderboard, .quiz-history {
+    background: white; border-radius: 14px; padding: 4px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  }
+  .qlb-row, .qhist-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px; border-bottom: 1px solid var(--cream-200);
+  }
+  .qlb-row:last-child, .qhist-row:last-child { border-bottom: none; }
+  .qlb-rank {
+    width: 28px; height: 28px; border-radius: 9px;
+    display: grid; place-items: center;
+    font-weight: 800; font-size: 13px; flex-shrink: 0; color: white;
+    background: var(--cream-200); color: var(--ink-soft);
+  }
+  .qlb-rank.rk-1 { background: linear-gradient(135deg, var(--gold-400), var(--gold-500)); color: var(--green-700); }
+  .qlb-rank.rk-2 { background: linear-gradient(135deg, #D8D8DC, #B8B8C0); color: #333; }
+  .qlb-rank.rk-3 { background: linear-gradient(135deg, #E6A878, #C8854F); color: white; }
+  .qlb-name { flex: 1; font-weight: 600; font-size: 13px; }
+  .qlb-score { font-weight: 800; color: var(--green-700); font-size: 14px; }
+  .qlb-meta { font-size: 10px; color: var(--ink-soft); }
+  .quiz-empty { padding: 24px; text-align: center; font-size: 12px; color: var(--ink-soft); }
+
+  /* Quiz Play */
+  .quiz-play-head {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 18px;
+  }
+  .qp-back {
+    border: none; background: var(--cream-200); color: var(--ink);
+    padding: 8px 12px; border-radius: 12px; cursor: pointer;
+    font-weight: 700; font-size: 13px; font-family: inherit; flex-shrink: 0;
+  }
+  .qp-progress { flex: 1; }
+  .qp-progress-bar {
+    height: 8px; background: var(--cream-200); border-radius: 8px; overflow: hidden;
+  }
+  .qp-progress-fill {
+    height: 100%; background: linear-gradient(90deg, var(--green-400), var(--green-500));
+    width: 0%; transition: width 0.4s cubic-bezier(0.2,0.9,0.3,1);
+  }
+  .qp-progress-text { font-size: 11px; font-weight: 700; color: var(--ink-soft); margin-top: 3px; text-align: center; }
+  .qp-timer { font-size: 14px; font-weight: 800; color: var(--gold-600); flex-shrink: 0; }
+
+  .quiz-card {
+    background: white; border-radius: 22px; padding: 22px 18px;
+    box-shadow: 0 8px 22px rgba(0,0,0,0.1);
+  }
+  .qc-category {
+    display: inline-block; background: var(--cream-200);
+    color: var(--green-700); font-size: 11px; font-weight: 700;
+    padding: 4px 10px; border-radius: 8px; margin-bottom: 12px;
+  }
+  .qc-question {
+    font-size: 17px; font-weight: 700; line-height: 1.5;
+    color: var(--ink); margin-bottom: 18px;
+  }
+  .qc-choices { display: flex; flex-direction: column; gap: 10px; }
+  .qc-choice {
+    width: 100%; padding: 14px 16px; text-align: left;
+    background: var(--cream-100); border: 2px solid transparent;
+    border-radius: 14px; cursor: pointer;
+    font-family: inherit; font-size: 14px; color: var(--ink);
+    transition: all 0.2s; display: flex; align-items: center; gap: 12px;
+  }
+  .qc-choice:hover { border-color: var(--green-400); background: white; }
+  .qc-choice:active { transform: translateY(1px); }
+  .qc-choice .qc-letter {
+    width: 28px; height: 28px; border-radius: 8px;
+    background: white; color: var(--ink-soft);
+    display: grid; place-items: center; font-weight: 800; font-size: 13px;
+    flex-shrink: 0;
+  }
+  .qc-choice.correct { background: #D6F0E0; border-color: var(--green-500); }
+  .qc-choice.correct .qc-letter { background: var(--green-500); color: white; }
+  .qc-choice.wrong { background: #FBDADA; border-color: var(--red-500); }
+  .qc-choice.wrong .qc-letter { background: var(--red-500); color: white; }
+  .qc-choice:disabled { cursor: default; opacity: 0.85; }
+
+  .qc-explain {
+    margin-top: 14px; padding: 12px 14px;
+    background: linear-gradient(135deg, #FFF6E0, #FFF8EE);
+    border-left: 4px solid var(--gold-500);
+    border-radius: 10px; font-size: 13px; color: var(--ink); line-height: 1.6;
+  }
+  .qc-explain strong { color: var(--green-700); }
+  .qc-next {
+    width: 100%; margin-top: 14px; padding: 14px;
+    background: linear-gradient(135deg, var(--green-400), var(--green-500));
+    color: white; border: none; border-radius: 14px;
+    font-family: inherit; font-size: 15px; font-weight: 800;
+    cursor: pointer; box-shadow: 0 4px 0 var(--green-700);
+  }
+  .qc-next:active { transform: translateY(2px); box-shadow: 0 2px 0 var(--green-700); }
+
+  /* Quiz Result */
+  .quiz-result-hero {
+    background: linear-gradient(135deg, #FFC857, #FFB627);
+    color: var(--green-700); border-radius: 24px; padding: 28px 20px;
+    text-align: center; margin-bottom: 18px;
+    box-shadow: 0 6px 20px rgba(255,182,39,0.3);
+  }
+  .qr-badge { font-size: 60px; margin-bottom: 4px; }
+  .qr-score { font-size: 38px; font-weight: 800; line-height: 1; }
+  .qr-score span { display: inline-block; }
+  .qr-pct { font-size: 18px; font-weight: 700; margin-top: 4px; opacity: 0.85; }
+  .qr-msg { font-size: 15px; font-weight: 700; margin-top: 8px; }
+  .qr-meta { font-size: 11px; opacity: 0.75; margin-top: 4px; }
+
+  .quiz-review { display: flex; flex-direction: column; gap: 10px; }
+  .qr-item {
+    background: white; border-radius: 12px; padding: 12px 14px;
+    border-left: 4px solid var(--green-500);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+  }
+  .qr-item.wrong { border-left-color: var(--red-500); }
+  .qr-item-q { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+  .qr-item-a { font-size: 12px; color: var(--green-700); }
+  .qr-item-a.wrong { color: var(--red-600); text-decoration: line-through; }
+  .qr-item-a.correct-mark { color: var(--green-700); font-weight: 700; }
+
+  .quiz-result-actions {
+    display: flex; gap: 10px; margin-top: 18px;
+  }
+  .qr-btn-primary, .qr-btn-secondary {
+    flex: 1; padding: 14px; border: none; border-radius: 14px;
+    font-family: inherit; font-size: 14px; font-weight: 800; cursor: pointer;
+  }
+  .qr-btn-primary {
+    background: linear-gradient(135deg, var(--green-400), var(--green-500));
+    color: white; box-shadow: 0 4px 0 var(--green-700);
+  }
+  .qr-btn-secondary {
+    background: var(--cream-200); color: var(--ink);
+    box-shadow: 0 4px 0 #D4C4A8;
+  }
+  .qr-btn-primary:active, .qr-btn-secondary:active { transform: translateY(2px); }
+
   .top-list { display: flex; flex-direction: column; gap: 10px; }
   .top-item { display: flex; align-items: center; gap: 10px; }
   .rank { width: 26px; height: 26px; border-radius: 9px; display: grid; place-items: center; font-weight: 700; font-size: 12px; flex-shrink: 0; color: white; }
@@ -3158,6 +3348,83 @@
     </div>
   </div>
 
+  <!-- ============== VIEW: QUIZ ============== -->
+  <div class="view" id="view-quiz">
+    <!-- Quiz: Level Select Screen -->
+    <div id="quizSelect" class="quiz-screen">
+      <div class="quiz-hero">
+        <div class="quiz-hero-ico">📚</div>
+        <div class="quiz-hero-title">สหกรณ์ Quiz</div>
+        <div class="quiz-hero-sub">แบบฝึกหัดทดสอบความรู้เรื่องสหกรณ์โรงเรียน</div>
+      </div>
+
+      <div class="quiz-section-head">เลือกระดับชั้น</div>
+      <div class="quiz-level-grid">
+        <button class="quiz-level-card primary" onclick="startQuiz('p4-6')">
+          <div class="ql-ico">🌱</div>
+          <div class="ql-name">ระดับประถม</div>
+          <div class="ql-grade">ป.4 - ป.6</div>
+          <div class="ql-desc">หลักการสหกรณ์พื้นฐาน · การคำนวณกำไรง่าย ๆ · การจัดสินค้า</div>
+          <div class="ql-meta">10 ข้อ · เวลา ~5 นาที</div>
+        </button>
+        <button class="quiz-level-card secondary" onclick="startQuiz('m1-3')">
+          <div class="ql-ico">🚀</div>
+          <div class="ql-name">ระดับมัธยมต้น</div>
+          <div class="ql-grade">ม.1 - ม.3</div>
+          <div class="ql-desc">หลักสหกรณ์สากล · Margin · ปันผล vs เฉลี่ยคืน · จริยธรรม</div>
+          <div class="ql-meta">10 ข้อ · เวลา ~7 นาที</div>
+        </button>
+      </div>
+
+      <div class="quiz-section-head">🏆 อันดับผู้ทำคะแนนสูงสุด</div>
+      <div class="quiz-tabs">
+        <button class="qz-tab active" data-lvl="p4-6" onclick="setQuizLeaderboard('p4-6')">ป.4-6</button>
+        <button class="qz-tab" data-lvl="m1-3" onclick="setQuizLeaderboard('m1-3')">ม.1-3</button>
+      </div>
+      <div class="quiz-leaderboard" id="quizLeaderboard"></div>
+
+      <div class="quiz-section-head" id="quizMyHistoryHead">📈 ประวัติของฉัน</div>
+      <div class="quiz-history" id="quizMyHistory"></div>
+    </div>
+
+    <!-- Quiz: Playing Screen -->
+    <div id="quizPlay" class="quiz-screen" style="display:none;">
+      <div class="quiz-play-head">
+        <button class="qp-back" onclick="quitQuiz()">← ออก</button>
+        <div class="qp-progress">
+          <div class="qp-progress-bar"><div class="qp-progress-fill" id="qpProgressFill"></div></div>
+          <div class="qp-progress-text"><span id="qpProgressText">1/10</span></div>
+        </div>
+        <div class="qp-timer">⏱ <span id="qpTimer">0:00</span></div>
+      </div>
+
+      <div class="quiz-card">
+        <div class="qc-category" id="qcCategory">หลักการสหกรณ์</div>
+        <div class="qc-question" id="qcQuestion">กำลังโหลดคำถาม...</div>
+        <div class="qc-choices" id="qcChoices"></div>
+      </div>
+    </div>
+
+    <!-- Quiz: Result Screen -->
+    <div id="quizResult" class="quiz-screen" style="display:none;">
+      <div class="quiz-result-hero">
+        <div class="qr-badge" id="qrBadge">🌟</div>
+        <div class="qr-score"><span id="qrScore">0</span>/<span id="qrTotal">10</span></div>
+        <div class="qr-pct" id="qrPct">0%</div>
+        <div class="qr-msg" id="qrMsg">ทำได้ดี!</div>
+        <div class="qr-meta" id="qrMeta">ใช้เวลา 0:00</div>
+      </div>
+
+      <div class="quiz-section-head">📝 ทบทวนคำตอบ</div>
+      <div class="quiz-review" id="qrReview"></div>
+
+      <div class="quiz-result-actions">
+        <button class="qr-btn-secondary" onclick="quitQuiz()">← กลับหน้าหลัก</button>
+        <button class="qr-btn-primary" onclick="retryQuiz()">🔄 ทำใหม่</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ============== VIEW: ADMIN (teacher only) ============== -->
   <div class="view" id="view-admin">
     <div class="admin-stats">
@@ -3363,6 +3630,9 @@
     </button>
     <button class="nav-item" data-view="shares" onclick="setView('shares')">
       <span class="ico">💎</span><span class="lbl">หุ้น</span>
+    </button>
+    <button class="nav-item" data-view="quiz" onclick="setView('quiz')">
+      <span class="ico">📚</span><span class="lbl">Quiz</span>
     </button>
     <button class="nav-item admin-nav" data-view="admin" onclick="setView('admin')" style="display:none;" id="navAdmin">
       <span class="ico">👑</span><span class="lbl">Admin</span>
@@ -3925,7 +4195,7 @@ function getTerm(d) {
 }
 
 // ============== VIEW ROUTER ==============
-const APP_VERSION = 'V 1.8';
+const APP_VERSION = 'V 1.9';
 // === School config with safe fallbacks ===
 const SC = window.SCHOOL_CONFIG || {};
 const SCHOOL = {
@@ -3959,6 +4229,7 @@ const VIEW_META = {
   stock:  { title: 'จัดการสต็อก',               sub: DEV_BY, showCart: false },
   report: { title: 'รายงานยอดขาย',             sub: DEV_BY, showCart: false },
   shares: { title: 'หุ้น & ปันผล',              sub: DEV_BY, showCart: false },
+  quiz:   { title: '📚 สหกรณ์ Quiz',            sub: DEV_BY, showCart: false },
   admin:  { title: '👑 หน้าครู',                sub: DEV_BY, showCart: false },
 };
 
@@ -3978,6 +4249,7 @@ function setView(name) {
   if (name === 'pos') { renderProducts(); renderTodayShift(); }
   if (name === 'report') renderReport();
   if (name === 'shares') { renderShareHero(); renderMembers(); applyRoleVisibility(); }
+  if (name === 'quiz')   { renderQuizSelectScreen(); }
   if (name === 'admin') { renderAdmin(); renderShiftGrid(); }
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
@@ -5161,6 +5433,7 @@ const AUDIT_META = {
   submit_request:  { ico: '📤', label: 'ส่งคำขออนุมัติ',    cat: '' },
   shift_change:    { ico: '📅', label: 'แก้ตารางเวร',       cat: '' },
   login:           { ico: '🔓', label: 'เข้าสู่ระบบ',       cat: '' },
+  quiz_attempt:    { ico: '📚', label: 'ทำแบบฝึกหัด',       cat: '' },
 };
 
 // Shift assignments
@@ -7947,6 +8220,286 @@ logout = function() {
   _origLogout();
   if (oldUser !== currentUser) stopRealtime();
 };
+
+// ============== QUIZ SYSTEM ==============
+const QUIZ_BANK = {
+  'p4-6': [
+    { id: 101, cat: 'หลักการสหกรณ์', q: 'สหกรณ์โรงเรียนตั้งขึ้นเพื่ออะไร?', choices: ['หาเงินเข้าครูประจำชั้น','ให้นักเรียนเรียนรู้การค้าและช่วยเหลือกัน','แข่งกับร้านค้านอกโรงเรียน','ขายของให้คนภายนอก'], answer: 1, explain: 'สหกรณ์โรงเรียนเป็นกิจกรรมที่ฝึกให้นักเรียนเรียนรู้การทำงานร่วมกันและการช่วยเหลือกัน' },
+    { id: 102, cat: 'การคำนวณ', q: 'นมจืดต้นทุนกล่องละ 7 บาท ขาย 10 บาท กำไรกี่บาทต่อกล่อง?', choices: ['2 บาท','3 บาท','5 บาท','7 บาท'], answer: 1, explain: 'กำไร = ราคาขาย − ต้นทุน = 10 − 7 = 3 บาท' },
+    { id: 103, cat: 'หลักการสหกรณ์', q: 'ใครเป็นเจ้าของสหกรณ์โรงเรียน?', choices: ['ผู้อำนวยการคนเดียว','ครูที่ปรึกษาคนเดียว','สมาชิกทุกคนร่วมกัน','คนที่จ่ายเงินมากที่สุด'], answer: 2, explain: 'หลักการสหกรณ์ข้อสำคัญคือ "การเป็นเจ้าของร่วมกัน" สมาชิกทุกคนเป็นเจ้าของเท่าเทียมกัน' },
+    { id: 104, cat: 'การคำนวณ', q: 'ขายลูกอม 50 เม็ด เม็ดละ 2 บาท ได้เงินทั้งหมดเท่าไร?', choices: ['50 บาท','75 บาท','100 บาท','150 บาท'], answer: 2, explain: '50 × 2 = 100 บาท' },
+    { id: 105, cat: 'การจัดการสต็อก', q: 'ถ้าน้ำดื่มเหลือ 5 ขวด และจุดเตือนคือ 15 ขวด ควรทำอย่างไร?', choices: ['ไม่ต้องทำอะไร','รอให้หมดก่อน','สั่งซื้อเพิ่ม','ขึ้นราคา'], answer: 2, explain: 'เมื่อสินค้าใกล้หมด (ต่ำกว่าจุดเตือน) ต้องสั่งซื้อเพิ่มเพื่อไม่ให้ขาดขาย' },
+    { id: 106, cat: 'หลักการสหกรณ์', q: 'การประชุมสหกรณ์ใช้หลักการอะไรในการตัดสินใจ?', choices: ['ครูสั่งคนเดียว','ใครเสียงดังกว่าชนะ','ลงมติเสียงข้างมากแบบประชาธิปไตย','ใครรวยกว่าตัดสิน'], answer: 2, explain: 'สหกรณ์ใช้หลักประชาธิปไตย ลงมติเสียงข้างมาก สมาชิกแต่ละคนมี 1 เสียงเท่ากัน' },
+    { id: 107, cat: 'การคำนวณ', q: 'ขนมต้นทุน 6 บาท ขาย 10 บาท ขายได้ 20 ชิ้น กำไรรวมเท่าไร?', choices: ['40 บาท','60 บาท','80 บาท','120 บาท'], answer: 2, explain: 'กำไรต่อชิ้น = 10 − 6 = 4 บาท × 20 ชิ้น = 80 บาท' },
+    { id: 108, cat: 'การจัดประเภท', q: 'สินค้าใดจัดอยู่ในหมวด "เครื่องเขียน"?', choices: ['นมจืด','ขนมปัง','ดินสอ HB','ลูกอม'], answer: 2, explain: 'เครื่องเขียนคือสิ่งที่ใช้ในการเรียน เช่น ดินสอ ยางลบ ปากกา' },
+    { id: 109, cat: 'การบริหาร', q: 'สิ่งใดสำคัญที่สุดเมื่อให้บริการลูกค้า?', choices: ['ขายของแพง ๆ','สุภาพและซื่อสัตย์','ขายเร็วที่สุด','ขายให้คนเยอะ'], answer: 1, explain: 'การให้บริการที่สุภาพและซื่อสัตย์เป็นพื้นฐานสำคัญของการค้าที่ดี' },
+    { id: 110, cat: 'การคำนวณ', q: 'ขายของได้ 500 บาท ต้นทุน 300 บาท กำไรเท่าไร?', choices: ['100 บาท','200 บาท','300 บาท','500 บาท'], answer: 1, explain: 'กำไร = รายได้ − ต้นทุน = 500 − 300 = 200 บาท' },
+    { id: 111, cat: 'จริยธรรม', q: 'พบเงินทอนเกินมา 10 บาท ควรทำอย่างไร?', choices: ['เก็บไว้เป็นทิป','บอกลูกค้าและคืนเงิน','แอบไม่บอกใคร','แบ่งกับเพื่อน'], answer: 1, explain: 'ความซื่อสัตย์คือคุณสมบัติสำคัญ ต้องคืนเงินที่เกินกลับให้ลูกค้า' },
+    { id: 112, cat: 'การจัดการสต็อก', q: 'ทำไมต้องบันทึกการขายทุกครั้ง?', choices: ['เพราะครูบังคับ','เพื่อความโปร่งใสและตรวจสอบได้','เพื่อให้เสียเวลา','ไม่จำเป็นต้องบันทึก'], answer: 1, explain: 'การบันทึกทำให้รู้ยอดขายจริง กำไรขาดทุน และตรวจสอบได้ทุกเมื่อ' },
+    { id: 113, cat: 'หลักการสหกรณ์', q: 'ปันผลคืออะไร?', choices: ['เงินที่ยืมมา','เงินที่จ่ายให้สมาชิกตามจำนวนหุ้นที่ถือ','เงินภาษี','เงินรางวัล'], answer: 1, explain: 'ปันผล (Dividend) คือเงินกำไรที่แบ่งให้สมาชิกตามจำนวนหุ้นที่ถือครอง' },
+    { id: 114, cat: 'การคำนวณ', q: 'สมุดต้นทุน 10 บาท ขาย 15 บาท คิดเป็นกำไรกี่ % ของต้นทุน?', choices: ['25%','30%','50%','100%'], answer: 2, explain: 'กำไร 5 บาท / ต้นทุน 10 บาท × 100 = 50%' },
+    { id: 115, cat: 'การจัดประเภท', q: 'ของใดจัดอยู่ในหมวด "เครื่องดื่ม"?', choices: ['ดินสอ','นมจืด','สมุด','ขนมปัง'], answer: 1, explain: 'เครื่องดื่มคือของที่ดื่มได้ เช่น น้ำเปล่า นม น้ำผลไม้' },
+    { id: 116, cat: 'การบริหาร', q: 'ถ้าลูกค้าต่อว่าเรา ควรทำอย่างไร?', choices: ['ตอบโต้ด้วยอารมณ์','รับฟัง ขอโทษ และแก้ไข','เพิกเฉย','ไล่ลูกค้าออก'], answer: 1, explain: 'การให้บริการที่ดีคือรับฟังปัญหา ขอโทษเมื่อผิด และแก้ไขให้ดีขึ้น' },
+    { id: 117, cat: 'หลักการสหกรณ์', q: 'ทำไมสหกรณ์ถึงเก็บค่าหุ้น?', choices: ['เพื่อแกล้งสมาชิก','เพื่อเป็นทุนหมุนเวียนในการดำเนินธุรกิจ','เพื่อให้ครูเอาไปใช้','เพื่อจ่ายภาษี'], answer: 1, explain: 'ค่าหุ้นเป็นทุนเริ่มต้นที่สมาชิกร่วมกันออก เพื่อนำไปซื้อสินค้ามาขายและบริหารกิจการ' },
+    { id: 118, cat: 'การคำนวณ', q: 'ลูกค้าซื้อของ 87 บาท จ่าย 100 บาท ต้องทอนเท่าไร?', choices: ['7 บาท','13 บาท','17 บาท','23 บาท'], answer: 1, explain: '100 − 87 = 13 บาท' },
+    { id: 119, cat: 'การจัดการสต็อก', q: 'การ "เติมสต็อก" หมายถึงอะไร?', choices: ['ขายสินค้าออก','เพิ่มจำนวนสินค้าในร้าน','ลดราคา','ทิ้งสินค้า'], answer: 1, explain: 'เติมสต็อกคือการเพิ่มจำนวนสินค้าในคลังเพื่อให้พอขาย' },
+    { id: 120, cat: 'จริยธรรม', q: 'ข้อใดเป็นพฤติกรรมที่ดีของสมาชิกสหกรณ์?', choices: ['ขโมยของในร้าน','ทำงานเฉพาะวันที่อยากทำ','รับผิดชอบหน้าที่ของตน','ใช้ของส่วนรวมตามใจ'], answer: 2, explain: 'สมาชิกที่ดีต้องมีความรับผิดชอบในหน้าที่ของตนเอง' },
+  ],
+  'm1-3': [
+    { id: 201, cat: 'หลักการสหกรณ์สากล', q: 'หลักการสหกรณ์สากล (Cooperative Principles) มีกี่ข้อ?', choices: ['5 ข้อ','6 ข้อ','7 ข้อ','10 ข้อ'], answer: 2, explain: 'ICA (International Cooperative Alliance) กำหนดหลักการสหกรณ์ 7 ข้อ ได้แก่ การเป็นสมาชิกโดยสมัครใจ, การควบคุมโดยสมาชิกตามหลักประชาธิปไตย, การมีส่วนร่วมทางเศรษฐกิจ, การปกครองตนเอง, การให้การศึกษา, การร่วมมือระหว่างสหกรณ์ และความเอื้ออาทรต่อชุมชน' },
+    { id: 202, cat: 'การเงิน', q: 'อัตรากำไรขั้นต้น (Gross Margin) คำนวณอย่างไร?', choices: ['(กำไร × 100) / ต้นทุน','(กำไร × 100) / ราคาขาย','ต้นทุน × ราคาขาย','ราคาขาย − ต้นทุน'], answer: 1, explain: 'Gross Margin = (ราคาขาย − ต้นทุน) × 100 / ราคาขาย ใช้วัดประสิทธิภาพการตั้งราคา' },
+    { id: 203, cat: 'การเงิน', q: 'สินค้าราคา 25 บาท ต้นทุน 15 บาท อัตรากำไรขั้นต้นเป็นกี่ %?', choices: ['10%','25%','40%','67%'], answer: 2, explain: 'Margin = (25 − 15) × 100 / 25 = 1000/25 = 40%' },
+    { id: 204, cat: 'หลักการสหกรณ์', q: 'ความแตกต่างระหว่าง "ปันผล" และ "เฉลี่ยคืน" คืออะไร?', choices: ['เหมือนกัน','ปันผลตามหุ้น เฉลี่ยคืนตามยอดซื้อ','ปันผลตามยอดซื้อ เฉลี่ยคืนตามหุ้น','ปันผลให้ครู เฉลี่ยคืนให้นักเรียน'], answer: 1, explain: 'ปันผล (Dividend) จ่ายตามจำนวนหุ้นที่ถือ; เฉลี่ยคืน (Patronage Refund) จ่ายตามยอดซื้อของสมาชิก' },
+    { id: 205, cat: 'การเงิน', q: 'จุดคุ้มทุน (Break-even point) หมายถึงอะไร?', choices: ['จุดที่ขายดีที่สุด','จุดที่รายได้เท่ากับต้นทุนรวม','จุดที่กำไรสูงสุด','จุดที่ต้องปิดกิจการ'], answer: 1, explain: 'Break-even = จุดที่ไม่กำไรไม่ขาดทุน รายได้ = ต้นทุน หลังจุดนี้ไปจึงเริ่มมีกำไร' },
+    { id: 206, cat: 'การคำนวณ', q: 'ขายของได้ 12,000 บาท ต้นทุน 8,400 บาท Margin กี่ %?', choices: ['20%','25%','30%','42%'], answer: 2, explain: '(12000 − 8400) × 100 / 12000 = 3600/12000 × 100 = 30%' },
+    { id: 207, cat: 'หลักการสหกรณ์สากล', q: 'หลักการ "การให้การศึกษา การฝึกอบรม และสารสนเทศ" คืออะไร?', choices: ['สหกรณ์ต้องเปิดโรงเรียน','สหกรณ์ต้องให้ความรู้แก่สมาชิก พนักงาน และประชาชน','สหกรณ์ต้องสอนภาษาอังกฤษ','สหกรณ์ต้องสอบ'], answer: 1, explain: 'หลักข้อที่ 5 คือสหกรณ์ต้องให้การศึกษาและฝึกอบรมแก่สมาชิก พนักงาน เพื่อให้สหกรณ์พัฒนาอย่างยั่งยืน' },
+    { id: 208, cat: 'การบริหาร', q: 'KPI (Key Performance Indicator) คืออะไร?', choices: ['ชื่อสินค้า','ตัวชี้วัดความสำเร็จ','ภาษี','ใบเสร็จ'], answer: 1, explain: 'KPI คือตัวชี้วัดที่ใช้วัดความสำเร็จขององค์กร เช่น ยอดขาย, กำไร, จำนวนลูกค้า' },
+    { id: 209, cat: 'การเงิน', q: 'ROI (Return on Investment) วัดอะไร?', choices: ['อัตราผลตอบแทนจากการลงทุน','จำนวนสินค้า','จำนวนพนักงาน','ราคาสินค้า'], answer: 0, explain: 'ROI = (กำไร / เงินลงทุน) × 100% ใช้วัดความคุ้มค่าของการลงทุน' },
+    { id: 210, cat: 'จริยธรรมธุรกิจ', q: 'การตั้งราคาสินค้าสูงเกินจริงในยามขาดแคลนเรียกว่าอะไร?', choices: ['การตลาด','การฉวยโอกาส (Profiteering)','ส่วนลด','ปันผล'], answer: 1, explain: 'การฉวยโอกาสในยามที่คนเดือดร้อนเป็นพฤติกรรมที่ขาดจริยธรรม' },
+    { id: 211, cat: 'การจัดการสต็อก', q: 'ระบบ "Just-in-Time" หมายถึงอะไร?', choices: ['สั่งสินค้าไว้เยอะ ๆ ตลอด','สั่งสินค้าเมื่อจำเป็น ลดสต็อกค้าง','ไม่ต้องสั่งของ','ขายของหมดอายุ'], answer: 1, explain: 'Just-in-Time = สั่งของให้พอดีกับความต้องการ ลดต้นทุนการเก็บสต็อก' },
+    { id: 212, cat: 'การคำนวณ', q: 'สหกรณ์มีกำไรสุทธิ 6,000 บาท จ่ายปันผล 60% หุ้นทั้งหมด 600 หุ้น ปันผลต่อหุ้นเท่าไร?', choices: ['3 บาท','6 บาท','10 บาท','60 บาท'], answer: 1, explain: 'เงินปันผล = 6000 × 60% = 3,600 บาท / 600 หุ้น = 6 บาท/หุ้น' },
+    { id: 213, cat: 'การบัญชี', q: 'งบดุล (Balance Sheet) แสดงอะไร?', choices: ['รายได้รายเดือน','สินทรัพย์ หนี้สิน ส่วนของเจ้าของ ณ ช่วงเวลาหนึ่ง','รายชื่อสมาชิก','ราคาสินค้า'], answer: 1, explain: 'งบดุลแสดงสถานะการเงิน ณ จุดเวลาหนึ่ง: สินทรัพย์ = หนี้สิน + ส่วนของเจ้าของ' },
+    { id: 214, cat: 'หลักการสหกรณ์', q: '"การปกครองตนเองและความเป็นอิสระ" หมายถึงอะไร?', choices: ['ไม่ฟังใครเลย','สหกรณ์บริหารจัดการตนเอง ไม่ถูกครอบงำจากภายนอก','ไม่ต้องเสียภาษี','ไม่รับสมาชิก'], answer: 1, explain: 'หลักข้อที่ 4: สหกรณ์เป็นองค์กรอิสระ บริหารโดยสมาชิก ไม่ถูกควบคุมจากภายนอก' },
+    { id: 215, cat: 'การตลาด', q: '"Customer Loyalty" หมายถึงอะไร?', choices: ['ลูกค้าซื้อแค่ครั้งเดียว','ลูกค้าซื้อซ้ำเพราะภักดีกับร้าน','ลูกค้าโกง','ลูกค้าแพง'], answer: 1, explain: 'ความภักดีของลูกค้า = ลูกค้ากลับมาซื้อซ้ำ เพราะพอใจสินค้าและบริการ' },
+    { id: 216, cat: 'การเงิน', q: 'กระแสเงินสด (Cash Flow) คืออะไร?', choices: ['กำไรสุทธิ','การไหลเข้า-ออกของเงินสด','จำนวนสมาชิก','จำนวนสินค้า'], answer: 1, explain: 'Cash Flow = การเคลื่อนไหวของเงินสดในกิจการ ทั้งรับและจ่าย สำคัญต่อสภาพคล่อง' },
+    { id: 217, cat: 'การคำนวณ', q: 'สินค้า A ขายได้กำไร 30% ของราคาขาย ราคาขาย 100 บาท ต้นทุนเท่าไร?', choices: ['30 บาท','60 บาท','70 บาท','130 บาท'], answer: 2, explain: 'ถ้ากำไร = 30% ของ 100 = 30 บาท → ต้นทุน = 100 − 30 = 70 บาท' },
+    { id: 218, cat: 'จริยธรรมธุรกิจ', q: 'การ "ฟอกขาว" สินค้าหมดอายุก่อนขายเป็นเรื่องอะไร?', choices: ['การตลาดที่ดี','ผิดจริยธรรมและผิดกฎหมาย','ปกติของธุรกิจ','การประหยัด'], answer: 1, explain: 'การปลอมแปลงข้อมูลสินค้าเป็นการหลอกลวงผู้บริโภค ผิดทั้งจริยธรรมและกฎหมาย' },
+    { id: 219, cat: 'หลักการสหกรณ์สากล', q: '"ความเอื้ออาทรต่อชุมชน" (Concern for Community) คืออะไร?', choices: ['ขายของถูก','สหกรณ์ทำงานเพื่อการพัฒนาที่ยั่งยืนของชุมชน','รับสมาชิกเฉพาะคนรวย','ปิดกิจการ'], answer: 1, explain: 'หลักข้อที่ 7: สหกรณ์ต้องคำนึงถึงการพัฒนาที่ยั่งยืนของชุมชนที่ตนตั้งอยู่' },
+    { id: 220, cat: 'การวิเคราะห์', q: 'ถ้ายอดขายลดลง 20% และต้นทุนเท่าเดิม ผลต่อกำไรจะเป็นอย่างไร?', choices: ['กำไรเพิ่มขึ้น','กำไรเท่าเดิม','กำไรลดลงมากกว่า 20%','ไม่กระทบ'], answer: 2, explain: 'เมื่อรายได้ลด แต่ต้นทุนคงที่ → กำไรลดลงในอัตราที่มากกว่าการลดลงของรายได้' },
+  ]
+};
+
+let quizState = { level: null, questions: [], idx: 0, answers: [], startTime: 0, timerInterval: null };
+let quizLeaderboardLevel = 'p4-6';
+
+function shuffleArray(arr) { return arr.slice().sort(() => Math.random() - 0.5); }
+
+async function renderQuizSelectScreen() {
+  document.getElementById('quizSelect').style.display = '';
+  document.getElementById('quizPlay').style.display = 'none';
+  document.getElementById('quizResult').style.display = 'none';
+  await renderQuizLeaderboard();
+  await renderQuizMyHistory();
+}
+
+async function renderQuizLeaderboard() {
+  const el = document.getElementById('quizLeaderboard');
+  if (!sb) {
+    el.innerHTML = `<div class="quiz-empty">ต้องเชื่อม Cloud เพื่อดูอันดับ</div>`;
+    return;
+  }
+  try {
+    const { data } = await sb.from('quiz_attempts')
+      .select('member_id, member_name, score, total, duration_sec, created_at')
+      .eq('level', quizLeaderboardLevel)
+      .order('score', { ascending: false })
+      .order('duration_sec', { ascending: true })
+      .limit(10);
+    if (!data || data.length === 0) {
+      el.innerHTML = `<div class="quiz-empty">ยังไม่มีใครทำ — มาเป็นคนแรก!</div>`;
+      return;
+    }
+    // dedupe by member, keep best
+    const best = {};
+    data.forEach(r => {
+      const key = r.member_id || r.member_name;
+      if (!best[key] || r.score > best[key].score) best[key] = r;
+    });
+    const top = Object.values(best).sort((a,b) => b.score - a.score || a.duration_sec - b.duration_sec).slice(0, 5);
+    el.innerHTML = top.map((r, i) => `
+      <div class="qlb-row">
+        <div class="qlb-rank rk-${i+1 <= 3 ? i+1 : 'x'}">${i+1}</div>
+        <div class="qlb-name">${r.member_name || 'ไม่ระบุ'}</div>
+        <div style="text-align:right;">
+          <div class="qlb-score">${r.score}/${r.total}</div>
+          <div class="qlb-meta">${Math.floor((r.duration_sec||0)/60)}:${String((r.duration_sec||0)%60).padStart(2,'0')}</div>
+        </div>
+      </div>`).join('');
+  } catch (e) { console.error(e); el.innerHTML = `<div class="quiz-empty">โหลดอันดับไม่สำเร็จ</div>`; }
+}
+
+function setQuizLeaderboard(lvl) {
+  quizLeaderboardLevel = lvl;
+  document.querySelectorAll('.qz-tab').forEach(el => el.classList.toggle('active', el.dataset.lvl === lvl));
+  renderQuizLeaderboard();
+}
+
+async function renderQuizMyHistory() {
+  const el = document.getElementById('quizMyHistory');
+  if (!currentUser) { el.innerHTML = `<div class="quiz-empty">เข้าสู่ระบบเพื่อบันทึกประวัติ</div>`; return; }
+  if (!sb) { el.innerHTML = `<div class="quiz-empty">ต้องเชื่อม Cloud เพื่อดูประวัติ</div>`; return; }
+  try {
+    const { data } = await sb.from('quiz_attempts')
+      .select('level, score, total, duration_sec, created_at')
+      .eq('member_id', currentUser.id)
+      .order('created_at', { ascending: false })
+      .limit(5);
+    if (!data || data.length === 0) {
+      el.innerHTML = `<div class="quiz-empty">ยังไม่เคยทำ — เริ่มเลย!</div>`;
+      return;
+    }
+    el.innerHTML = data.map(r => {
+      const d = new Date(r.created_at);
+      const dd = `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()+543}`;
+      const lvlName = r.level === 'p4-6' ? 'ป.4-6' : 'ม.1-3';
+      return `<div class="qhist-row">
+        <div style="flex:1;">
+          <div style="font-weight:700;font-size:13px;">${lvlName} · ${dd}</div>
+          <div class="qlb-meta">ใช้เวลา ${Math.floor((r.duration_sec||0)/60)}:${String((r.duration_sec||0)%60).padStart(2,'0')}</div>
+        </div>
+        <div class="qlb-score">${r.score}/${r.total}</div>
+      </div>`;
+    }).join('');
+  } catch (e) { console.error(e); }
+}
+
+function startQuiz(level) {
+  const bank = QUIZ_BANK[level];
+  if (!bank) return;
+  quizState.level = level;
+  quizState.questions = shuffleArray(bank).slice(0, 10);
+  quizState.idx = 0;
+  quizState.answers = [];
+  quizState.startTime = Date.now();
+
+  document.getElementById('quizSelect').style.display = 'none';
+  document.getElementById('quizResult').style.display = 'none';
+  document.getElementById('quizPlay').style.display = '';
+  startQuizTimer();
+  renderCurrentQuestion();
+}
+
+function startQuizTimer() {
+  if (quizState.timerInterval) clearInterval(quizState.timerInterval);
+  quizState.timerInterval = setInterval(() => {
+    const sec = Math.floor((Date.now() - quizState.startTime) / 1000);
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    const el = document.getElementById('qpTimer');
+    if (el) el.textContent = `${m}:${String(s).padStart(2,'0')}`;
+  }, 500);
+}
+
+function renderCurrentQuestion() {
+  const total = quizState.questions.length;
+  const q = quizState.questions[quizState.idx];
+  document.getElementById('qpProgressFill').style.width = `${(quizState.idx / total) * 100}%`;
+  document.getElementById('qpProgressText').textContent = `${quizState.idx + 1}/${total}`;
+  document.getElementById('qcCategory').textContent = q.cat;
+  document.getElementById('qcQuestion').textContent = q.q;
+  const letters = ['ก', 'ข', 'ค', 'ง'];
+  document.getElementById('qcChoices').innerHTML = q.choices.map((c, i) => `
+    <button class="qc-choice" onclick="answerQuiz(${i})">
+      <div class="qc-letter">${letters[i]}</div>
+      <div>${c}</div>
+    </button>
+  `).join('');
+}
+
+function answerQuiz(choiceIdx) {
+  const q = quizState.questions[quizState.idx];
+  const correct = choiceIdx === q.answer;
+  quizState.answers.push({ qId: q.id, picked: choiceIdx, correct });
+
+  // Highlight buttons
+  const btns = document.querySelectorAll('#qcChoices .qc-choice');
+  btns.forEach((b, i) => {
+    b.disabled = true;
+    if (i === q.answer) b.classList.add('correct');
+    else if (i === choiceIdx) b.classList.add('wrong');
+  });
+
+  // Show explain + next
+  const choicesEl = document.getElementById('qcChoices');
+  const explainHTML = `
+    <div class="qc-explain"><strong>${correct ? '✅ ถูกต้อง!' : '❌ ไม่ถูก'}</strong> ${q.explain}</div>
+    <button class="qc-next" onclick="nextQuiz()">${quizState.idx + 1 >= quizState.questions.length ? 'ดูผลคะแนน →' : 'ข้อต่อไป →'}</button>
+  `;
+  choicesEl.insertAdjacentHTML('afterend', `<div id="qcAfter">${explainHTML}</div>`);
+}
+
+function nextQuiz() {
+  document.getElementById('qcAfter')?.remove();
+  quizState.idx++;
+  if (quizState.idx >= quizState.questions.length) {
+    finishQuiz();
+  } else {
+    renderCurrentQuestion();
+  }
+}
+
+function finishQuiz() {
+  clearInterval(quizState.timerInterval);
+  const score = quizState.answers.filter(a => a.correct).length;
+  const total = quizState.questions.length;
+  const duration = Math.floor((Date.now() - quizState.startTime) / 1000);
+  const pct = Math.round(score / total * 100);
+
+  // Badge by score
+  let badge, msg;
+  if (pct === 100) { badge = '🏆'; msg = 'เก่งมาก! ทำได้คะแนนเต็ม!'; }
+  else if (pct >= 80) { badge = '🌟'; msg = 'ยอดเยี่ยม!'; }
+  else if (pct >= 60) { badge = '👍'; msg = 'ดี ทำต่อไปนะ'; }
+  else if (pct >= 40) { badge = '💪'; msg = 'ต้องฝึกฝนเพิ่ม'; }
+  else { badge = '📚'; msg = 'ลองใหม่อีกครั้งนะ'; }
+
+  document.getElementById('qrBadge').textContent = badge;
+  document.getElementById('qrScore').textContent = score;
+  document.getElementById('qrTotal').textContent = total;
+  document.getElementById('qrPct').textContent = `${pct}%`;
+  document.getElementById('qrMsg').textContent = msg;
+  document.getElementById('qrMeta').textContent = `ใช้เวลา ${Math.floor(duration/60)}:${String(duration%60).padStart(2,'0')}`;
+
+  // Review
+  document.getElementById('qrReview').innerHTML = quizState.questions.map((q, i) => {
+    const a = quizState.answers[i];
+    const correct = a.correct;
+    return `
+      <div class="qr-item ${correct ? '' : 'wrong'}">
+        <div class="qr-item-q">${i+1}. ${q.q}</div>
+        ${!correct ? `<div class="qr-item-a wrong">คุณตอบ: ${q.choices[a.picked]}</div>` : ''}
+        <div class="qr-item-a correct-mark">${correct ? '✓ ' : '✓ คำตอบที่ถูก: '}${q.choices[q.answer]}</div>
+      </div>
+    `;
+  }).join('');
+
+  document.getElementById('quizPlay').style.display = 'none';
+  document.getElementById('quizResult').style.display = '';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+
+  // Save to Supabase
+  saveQuizAttempt(score, total, duration);
+  // Audit
+  logAudit('quiz_attempt', 'quiz', String(quizState.level), `Quiz ${quizState.level === 'p4-6' ? 'ป.4-6' : 'ม.1-3'} ${score}/${total}`, {
+    score, total, duration_sec: duration
+  });
+}
+
+async function saveQuizAttempt(score, total, duration) {
+  if (!sb || !currentUser) return;
+  try {
+    const correctIds = quizState.answers.filter(a => a.correct).map(a => a.qId);
+    const wrongIds = quizState.answers.filter(a => !a.correct).map(a => a.qId);
+    await sb.from('quiz_attempts').insert({
+      member_id: currentUser.id,
+      member_name: currentUser.name,
+      level: quizState.level,
+      score, total,
+      correct_ids: correctIds,
+      wrong_ids: wrongIds,
+      duration_sec: duration
+    });
+  } catch (e) { console.error('saveQuizAttempt failed', e); }
+}
+
+function retryQuiz() {
+  startQuiz(quizState.level);
+}
+
+function quitQuiz() {
+  if (quizState.timerInterval) clearInterval(quizState.timerInterval);
+  renderQuizSelectScreen();
+}
 
 // Initial cloud load (if configured)
 (async () => {

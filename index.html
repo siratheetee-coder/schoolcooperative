@@ -3919,7 +3919,7 @@ function getTerm(d) {
 }
 
 // ============== VIEW ROUTER ==============
-const APP_VERSION = 'V 1.4';
+const APP_VERSION = 'V 1.5';
 const DEV_BY = `พัฒนาโดย ครูสิรธีร์ ตีเมืองซ้าย ${APP_VERSION}`;
 const VIEW_META = {
   pos:    { title: 'สหกรณ์โรงเรียนบ้านหินลาด', sub: DEV_BY, showCart: true },
@@ -4849,21 +4849,97 @@ function downloadReport(type) {
   }
 
   if (type === 'pdf') {
+    const logoURL = new URL('./logo-no-bg.png', location.href).href;
     const win = window.open('', '_blank');
     win.document.write(`<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8"><title>${filename}</title>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
-@page { size: A4; margin: 16mm 14mm; }
+@page { size: A4; margin: 18mm 14mm 14mm; }
 * { box-sizing: border-box; }
 body { font-family:'Sarabun',sans-serif; padding:0; margin:0; color:#2A2218; background:#FFFBF3;}
-.header { background:linear-gradient(135deg,#46A697,#2D7D6F 60%,#226258); color:white; padding:22px 28px; border-radius:0 0 20px 20px; margin-bottom:22px; position:relative; overflow:hidden;}
-.header::before { content:""; position:absolute; top:-50px; right:-30px; width:180px; height:180px; background:radial-gradient(circle,rgba(255,200,87,0.25),transparent 70%); border-radius:50%;}
-.brand { display:flex; align-items:center; gap:12px; margin-bottom:6px; position:relative; z-index:1;}
-.logo { width:44px; height:44px; border-radius:12px; background:linear-gradient(135deg,#FFC857,#FFB627); color:#174740; display:grid; place-items:center; font-size:22px; font-weight:700;}
-.header h1 { margin:0; font-size:22px; font-weight:800;}
-.header .org { font-size:13px; opacity:0.85; margin-top:2px;}
-.header .period { margin-top:12px; display:inline-block; background:rgba(255,255,255,0.18); padding:6px 14px; border-radius:12px; font-size:13px; font-weight:600; position:relative; z-index:1;}
-.container { padding:0 24px 24px;}
+
+/* === Formal Thai school letterhead === */
+.letterhead {
+  padding: 0 8mm 14px;
+  border-bottom: 3px double #2D7D6F;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+.letterhead-logo {
+  width: 88px; height: 88px;
+  flex-shrink: 0;
+  object-fit: contain;
+}
+.letterhead-text {
+  flex: 1;
+  text-align: center;
+}
+.letterhead-text .school-name {
+  font-size: 26px;
+  font-weight: 800;
+  color: #174740;
+  letter-spacing: 0.5px;
+  margin: 0;
+  line-height: 1.1;
+}
+.letterhead-text .school-sub {
+  font-size: 13px;
+  color: #4A3F30;
+  margin-top: 4px;
+  font-weight: 500;
+}
+.letterhead-text .school-en {
+  font-size: 11px;
+  color: #6B5E4C;
+  margin-top: 2px;
+  font-style: italic;
+  font-weight: 400;
+}
+.letterhead-spacer { width: 88px; flex-shrink: 0; }
+
+/* === Report title block === */
+.report-title-block {
+  text-align: center;
+  margin-bottom: 18px;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, #FFF8EE, #FFFBF3);
+  border-radius: 12px;
+  border: 1px solid #E8D6B3;
+}
+.report-title-block .doc-type {
+  font-size: 12px;
+  color: #6B5E4C;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+.report-title-block h1 {
+  margin: 4px 0 6px;
+  font-size: 22px;
+  font-weight: 800;
+  color: #2D7D6F;
+}
+.report-title-block .subtitle {
+  font-size: 13px;
+  color: #4A3F30;
+  font-weight: 600;
+}
+.report-title-block .meta {
+  margin-top: 8px;
+  font-size: 11px;
+  color: #6B5E4C;
+  display: flex;
+  justify-content: center;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+.report-title-block .meta span {
+  display: inline-flex; align-items: center; gap: 4px;
+}
+
+.container { padding:0 8mm 14px;}
 .sum-cards { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:22px;}
 .sum-card { background:white; border-radius:14px; padding:14px 16px; border-left:5px solid #2D7D6F; box-shadow:0 2px 8px rgba(0,0,0,0.06);}
 .sum-card.gold { border-left-color:#FFB627;}
@@ -4883,6 +4959,18 @@ tfoot td { background:linear-gradient(135deg,#FFC857,#FFB627); color:#174740; fo
 tfoot td.label { text-align:right;}
 tfoot td.num { text-align:right;}
 tfoot tr.sub td { background:#F5EAD3; color:#226258; font-size:11px; padding:8px; border-top:none;}
+.signatures {
+  margin-top: 40px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+  page-break-inside: avoid;
+}
+.sig-col { text-align: center; font-size: 11px; color: #2A2218;}
+.sig-line { height: 40px; }
+.sig-name { font-weight: 600; color: #2A2218; }
+.sig-role { margin-top: 4px; font-size: 11px; color: #4A3F30; font-weight: 600;}
+.sig-date { margin-top: 6px; font-size: 10px; color: #6B5E4C;}
 .footer { margin-top:24px; padding-top:14px; border-top:1px dashed #E8D6B3; font-size:10px; color:#6B5E4C; text-align:center;}
 .action-bar {
   position: fixed; bottom: 0; left: 0; right: 0;
@@ -4923,11 +5011,27 @@ body { padding-bottom: 80px; }
   thead { display:table-header-group;} tfoot { display:table-footer-group;} tr { page-break-inside:avoid;}
 }
 </style></head><body>
-<div class="header">
-  <div class="brand"><div class="logo">🏫</div><div><h1>รายงานยอดขาย</h1><div class="org">สหกรณ์โรงเรียนบ้านหินลาด · ร้านนักเรียน</div></div></div>
-  <div class="period">📅 ${periodText} · พิมพ์ ${thDateTime(new Date())}</div>
+<div class="letterhead">
+  <img class="letterhead-logo" src="${logoURL}" alt="โลโก้โรงเรียน" onerror="this.style.display='none'">
+  <div class="letterhead-text">
+    <h2 class="school-name">โรงเรียนบ้านหินลาด</h2>
+    <div class="school-sub">สังกัดสำนักงานคณะกรรมการการศึกษาขั้นพื้นฐาน กระทรวงศึกษาธิการ</div>
+    <div class="school-en">Banhinlat School · School Cooperative System</div>
+  </div>
+  <div class="letterhead-spacer"></div>
 </div>
+
 <div class="container">
+  <div class="report-title-block">
+    <div class="doc-type">เอกสารรายงาน</div>
+    <h1>📊 รายงานยอดขายสหกรณ์โรงเรียน</h1>
+    <div class="subtitle">${periodText}</div>
+    <div class="meta">
+      <span>📅 พิมพ์เมื่อ ${thDateTime(new Date())}</span>
+      <span>🧾 ${cur.length.toLocaleString()} บิล</span>
+      <span>💰 ฿${totalSales.toLocaleString()}</span>
+    </div>
+  </div>
   <div class="sum-cards">
     <div class="sum-card"><div class="l">💰 ยอดขายรวม</div><div class="v">฿${totalSales.toLocaleString()}</div></div>
     <div class="sum-card gold"><div class="l">💵 กำไรสุทธิ (${margin}%)</div><div class="v">฿${totalProfit.toLocaleString()}</div></div>
@@ -4944,8 +5048,24 @@ body { padding-bottom: 80px; }
       <tr class="sub"><td class="label" colspan="8">อัตรากำไร (Margin)</td><td class="num">${margin}%</td></tr>
     </tfoot>
   </table>
+  <div class="signatures">
+    <div class="sig-col">
+      <div class="sig-line"></div>
+      <div class="sig-name">(...........................................)</div>
+      <div class="sig-role">ผู้จัดทำรายงาน / ครูที่ปรึกษาสหกรณ์</div>
+      <div class="sig-date">วันที่ ......./......./.......</div>
+    </div>
+    <div class="sig-col">
+      <div class="sig-line"></div>
+      <div class="sig-name">(...........................................)</div>
+      <div class="sig-role">ผู้อำนวยการโรงเรียนบ้านหินลาด</div>
+      <div class="sig-date">วันที่ ......./......./.......</div>
+    </div>
+  </div>
+
   <div class="footer">
-    เอกสารนี้สร้างโดยระบบสหกรณ์โรงเรียนบ้านหินลาด · พิมพ์เมื่อ ${thDateTime(new Date())}
+    <div>เอกสารนี้สร้างโดยระบบสหกรณ์โรงเรียนบ้านหินลาด · พิมพ์เมื่อ ${thDateTime(new Date())}</div>
+    <div style="margin-top:3px;opacity:0.75;">พัฒนาโดย ครูสิรธีร์ ตีเมืองซ้าย · ${APP_VERSION}</div>
   </div>
 </div>
 

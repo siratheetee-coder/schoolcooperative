@@ -4363,7 +4363,7 @@ function getTerm(d) {
 }
 
 // ============== VIEW ROUTER ==============
-const APP_VERSION = 'V 2.5';
+const APP_VERSION = 'V 2.6';
 // === School config with safe fallbacks ===
 const SC = window.SCHOOL_CONFIG || {};
 const SCHOOL = {
@@ -5095,7 +5095,10 @@ function renderProfitChart(cur) {
 
   const max = Math.max(...buckets.map(b => Math.abs(b.val)), 1);
   const topIdx = buckets.reduce((idx, b, i, arr) => b.val > arr[idx].val ? i : idx, 0);
-  const W = 600, H = 140, padL = 8, padR = 8, padT = 20, padB = 24;
+  // ใช้ความกว้างจริงของ container ป้องกัน SVG ยืดบน desktop
+  const containerEl = document.getElementById('profitChart');
+  const W = Math.max(360, Math.floor(containerEl?.getBoundingClientRect().width || 600));
+  const H = 140, padL = 8, padR = 8, padT = 20, padB = 24;
   const innerW = W - padL - padR;
   const innerH = H - padT - padB;
   const n = buckets.length;
@@ -5129,7 +5132,7 @@ function renderProfitChart(cur) {
   ).join('');
 
   document.getElementById('profitChart').innerHTML = `
-    <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
+    <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" style="width:100%;height:100%;display:block;">
       <defs>
         <linearGradient id="profitGradient" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stop-color="#FFB627" stop-opacity="0.6"/>
@@ -6298,6 +6301,17 @@ async function refreshPushStatusLabel() {
   el.textContent = isOn ? '✅ เปิดอยู่' : '⭕ ปิด';
 }
 setTimeout(refreshPushStatusLabel, 2000);
+
+// Re-render charts on window resize (desktop layout switch)
+let _resizeTimer = null;
+window.addEventListener('resize', () => {
+  clearTimeout(_resizeTimer);
+  _resizeTimer = setTimeout(() => {
+    if (document.getElementById('view-report')?.classList.contains('active')) {
+      renderReport();
+    }
+  }, 250);
+});
 
 async function loadFromCloud() {
   if (!sb) return;

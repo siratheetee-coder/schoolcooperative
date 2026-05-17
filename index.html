@@ -3919,7 +3919,7 @@ function getTerm(d) {
 }
 
 // ============== VIEW ROUTER ==============
-const APP_VERSION = 'V 1.5';
+const APP_VERSION = 'V 1.6';
 const DEV_BY = `พัฒนาโดย ครูสิรธีร์ ตีเมืองซ้าย ${APP_VERSION}`;
 const VIEW_META = {
   pos:    { title: 'สหกรณ์โรงเรียนบ้านหินลาด', sub: DEV_BY, showCart: true },
@@ -5015,8 +5015,9 @@ body { padding-bottom: 80px; }
   <img class="letterhead-logo" src="${logoURL}" alt="โลโก้โรงเรียน" onerror="this.style.display='none'">
   <div class="letterhead-text">
     <h2 class="school-name">โรงเรียนบ้านหินลาด</h2>
+    <div class="school-sub">สำนักงานเขตพื้นที่การศึกษาประถมศึกษามหาสารคาม เขต 1</div>
     <div class="school-sub">สังกัดสำนักงานคณะกรรมการการศึกษาขั้นพื้นฐาน กระทรวงศึกษาธิการ</div>
-    <div class="school-en">Banhinlat School · School Cooperative System</div>
+    <div class="school-en">Ban Hinlad School · Digital School Cooperative System</div>
   </div>
   <div class="letterhead-spacer"></div>
 </div>
@@ -5024,20 +5025,20 @@ body { padding-bottom: 80px; }
 <div class="container">
   <div class="report-title-block">
     <div class="doc-type">เอกสารรายงาน</div>
-    <h1>📊 รายงานยอดขายสหกรณ์โรงเรียน</h1>
+    <h1>รายงานยอดขายสหกรณ์โรงเรียน</h1>
     <div class="subtitle">${periodText}</div>
     <div class="meta">
-      <span>📅 พิมพ์เมื่อ ${thDateTime(new Date())}</span>
-      <span>🧾 ${cur.length.toLocaleString()} บิล</span>
-      <span>💰 ฿${totalSales.toLocaleString()}</span>
+      <span>พิมพ์เมื่อ ${thDateTime(new Date())}</span>
+      <span>จำนวน ${cur.length.toLocaleString()} บิล</span>
+      <span>ยอดรวม ${totalSales.toLocaleString()} บาท</span>
     </div>
   </div>
   <div class="sum-cards">
-    <div class="sum-card"><div class="l">💰 ยอดขายรวม</div><div class="v">฿${totalSales.toLocaleString()}</div></div>
-    <div class="sum-card gold"><div class="l">💵 กำไรสุทธิ (${margin}%)</div><div class="v">฿${totalProfit.toLocaleString()}</div></div>
-    <div class="sum-card blue"><div class="l">📉 ต้นทุน + 🧾 ${cur.length} บิล</div><div class="v">฿${totalCost.toLocaleString()}</div></div>
+    <div class="sum-card"><div class="l">ยอดขายรวม (Revenue)</div><div class="v">${totalSales.toLocaleString()} บาท</div></div>
+    <div class="sum-card gold"><div class="l">กำไรสุทธิ (Profit) — อัตรากำไร ${margin}%</div><div class="v">${totalProfit.toLocaleString()} บาท</div></div>
+    <div class="sum-card blue"><div class="l">ต้นทุนสินค้า (Cost) — ${cur.length} บิล</div><div class="v">${totalCost.toLocaleString()} บาท</div></div>
   </div>
-  <h2>📋 รายการขายทั้งหมด</h2>
+  <h2>รายการขายทั้งหมด</h2>
   <table>
     <thead><tr>${rows[0].map((h,i) => `<th class="${i>=5?'num':''}">${h}</th>`).join('')}</tr></thead>
     <tbody>${rows.slice(1).map(r => `<tr>${r.map((c,i) => `<td class="${i>=5?'num':''}">${typeof c === 'number' ? c.toLocaleString() : c}</td>`).join('')}</tr>`).join('')}</tbody>

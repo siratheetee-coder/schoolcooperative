@@ -3206,6 +3206,11 @@
         <div class="tt">ประวัติ Audit Log</div>
         <div class="ts">บันทึกทุกการกระทำ</div>
       </button>
+      <button class="tool-btn" onclick="openPushSettings()">
+        <div class="ti" style="background:linear-gradient(135deg,#FFB07A,#E8804D);color:white;box-shadow:0 4px 0 #B23E32;">🔔</div>
+        <div class="tt">การแจ้งเตือน</div>
+        <div class="ts" id="pushStatusLabel">ตั้งค่า Push</div>
+      </button>
       <button class="tool-btn" onclick="openBackup()" style="grid-column:1/-1;">
         <div class="ti" style="background:linear-gradient(135deg,#5FB597,#2D7D6F);color:white;box-shadow:0 4px 0 #174740;">💾</div>
         <div class="tt">สำรองข้อมูล (Backup)</div>
@@ -3919,7 +3924,7 @@ function getTerm(d) {
 }
 
 // ============== VIEW ROUTER ==============
-const APP_VERSION = 'V 1.6';
+const APP_VERSION = 'V 1.7';
 const DEV_BY = `พัฒนาโดย ครูสิรธีร์ ตีเมืองซ้าย ${APP_VERSION}`;
 const VIEW_META = {
   pos:    { title: 'สหกรณ์โรงเรียนบ้านหินลาด', sub: DEV_BY, showCart: true },
@@ -5642,6 +5647,156 @@ function showCloudStatus() {
   pill.classList.add('show');
 }
 
+// ============== PUSH NOTIFICATIONS ==============
+// VAPID public key — generate with: npx web-push generate-vapid-keys
+// Paste public key here, set private key in Supabase Edge Function secret
+const VAPID_PUBLIC_KEY = (window.SUPABASE_CONFIG && window.SUPABASE_CONFIG.vapidPublicKey) || '';
+const PUSH_ENABLED = !!VAPID_PUBLIC_KEY && 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+
+function urlBase64ToUint8Array(base64) {
+  const padding = '='.repeat((4 - base64.length % 4) % 4);
+  const b64 = (base64 + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const raw = atob(b64);
+  const out = new Uint8Array(raw.length);
+  for (let i = 0; i < raw.length; i++) out[i] = raw.charCodeAt(i);
+  return out;
+}
+
+async function getPushSubscription() {
+  if (!PUSH_ENABLED) return null;
+  const reg = await navigator.serviceWorker.ready;
+  return await reg.pushManager.getSubscription();
+}
+
+async function subscribePush() {
+  if (!PUSH_ENABLED) { showToast('เบราว์เซอร์ไม่รองรับการแจ้งเตือน', true); return false; }
+  if (!sb) { showToast('ต้องเชื่อม Cloud ก่อนใช้แจ้งเตือน', true); return false; }
+  if (!currentUser) { showToast('กรุณาเข้าสู่ระบบก่อน', true); return false; }
+
+  try {
+    // Request permission
+    const perm = await Notification.requestPermission();
+    if (perm !== 'granted') { showToast('คุณปฏิเสธการแจ้งเตือน', true); return false; }
+
+    const reg = await navigator.serviceWorker.ready;
+    let sub = await reg.pushManager.getSubscription();
+    if (!sub) {
+      sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+      });
+    }
+
+    const json = sub.toJSON();
+    // Upsert by endpoint
+    await sb.from('push_subscriptions').upsert({
+      member_id: currentUser.id,
+      member_name: currentUser.name,
+      role: currentUser.role || 'student',
+      endpoint: json.endpoint,
+      p256dh: json.keys.p256dh,
+      auth: json.keys.auth,
+      user_agent: navigator.userAgent.slice(0, 200),
+      last_used_at: new Date().toISOString()
+    }, { onConflict: 'endpoint' });
+
+    localStorage.setItem('coopPushOn', '1');
+    showToast('🔔 เปิดการแจ้งเตือนเรียบร้อย!');
+    return true;
+  } catch (e) {
+    console.error('subscribe push failed', e);
+    showToast('เปิดการแจ้งเตือนไม่สำเร็จ', true);
+    return false;
+  }
+}
+
+async function unsubscribePush() {
+  if (!PUSH_ENABLED) return;
+  try {
+    const sub = await getPushSubscription();
+    if (sub) {
+      const endpoint = sub.endpoint;
+      await sub.unsubscribe();
+      if (sb) await sb.from('push_subscriptions').delete().eq('endpoint', endpoint);
+    }
+    localStorage.removeItem('coopPushOn');
+    showToast('ปิดการแจ้งเตือนแล้ว');
+  } catch (e) { console.error('unsubscribe failed', e); }
+}
+
+async function sendPush(payload) {
+  if (!sb) return;
+  try {
+    await sb.functions.invoke('send-push', { body: payload });
+  } catch (e) { console.error('sendPush failed', e); }
+}
+
+// auto-prompt: หลัง login 3 วินาที ถ้ายังไม่เปิด ให้ถาม
+async function maybePromptPush() {
+  if (!PUSH_ENABLED || !currentUser) return;
+  if (localStorage.getItem('coopPushOn') === '1') return;
+  if (localStorage.getItem('coopPushAsked') === '1') return;
+  // ขอครั้งเดียวต่อ user
+  setTimeout(() => {
+    if (Notification.permission === 'default') {
+      if (confirm(`🔔 เปิดการแจ้งเตือนจากระบบสหกรณ์?\n\nคุณจะได้รับแจ้งเตือนเมื่อ:\n• สินค้าใกล้หมด\n• มีคำขออนุมัติใหม่\n• คำขอของคุณถูกอนุมัติ\n• และอื่นๆ`)) {
+        subscribePush();
+      }
+      localStorage.setItem('coopPushAsked', '1');
+    }
+  }, 3000);
+}
+
+// SW message: NAVIGATE from notification click
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.addEventListener('message', (e) => {
+    if (e.data?.type === 'NAVIGATE' && e.data.url) {
+      const path = e.data.url.replace(/^.*#/, '');
+      if (path && path !== '/') setView(path);
+    }
+  });
+}
+
+async function openPushSettings() {
+  if (!PUSH_ENABLED) {
+    alert('⚠ เบราว์เซอร์นี้ไม่รองรับ Push Notification\n\nต้องการ:\n• Chrome/Edge/Firefox (Android, Windows, Mac)\n• Safari iOS 16.4+ (ต้องติดตั้งเป็น PWA)\n\nหรือยังไม่ได้ตั้งค่า VAPID_PUBLIC_KEY ใน supabase-config.js');
+    return;
+  }
+  const sub = await getPushSubscription();
+  const isOn = !!sub && Notification.permission === 'granted';
+  const msg = `🔔 การแจ้งเตือน — สถานะ: ${isOn ? '✅ เปิด' : '⭕ ปิด'}\n\n` +
+    `เลือกการดำเนินการ:\n` +
+    `1 = ${isOn ? 'ปิด' : 'เปิด'}การแจ้งเตือน\n` +
+    `2 = ทดสอบส่งแจ้งเตือนถึงตัวเอง\n` +
+    `3 = ยกเลิก`;
+  const ans = prompt(msg, isOn ? '2' : '1');
+  if (ans === '1') {
+    if (isOn) await unsubscribePush();
+    else await subscribePush();
+  } else if (ans === '2') {
+    if (!isOn) { showToast('เปิดการแจ้งเตือนก่อน', true); return; }
+    await sendPush({
+      audience: 'member',
+      member_id: currentUser.id,
+      title: '🔔 ทดสอบการแจ้งเตือน',
+      body: `สวัสดี ${currentUser.name} — ระบบส่งแจ้งเตือนได้!`,
+      url: '/',
+      tag: 'test'
+    });
+    showToast('ส่งการแจ้งเตือนทดสอบแล้ว');
+  }
+}
+
+// อัปเดตป้าย "สถานะ Push" บนปุ่ม admin
+async function refreshPushStatusLabel() {
+  const el = document.getElementById('pushStatusLabel');
+  if (!el || !PUSH_ENABLED) return;
+  const sub = await getPushSubscription();
+  const isOn = !!sub && Notification.permission === 'granted';
+  el.textContent = isOn ? '✅ เปิดอยู่' : '⭕ ปิด';
+}
+setTimeout(refreshPushStatusLabel, 2000);
+
 async function loadFromCloud() {
   if (!sb) return;
   try {
@@ -5864,6 +6019,37 @@ confirmPay = function() {
       items: items.map(i => `${i.name}×${i.qty}`).join(', '),
       note: `ขาย ${items.length} รายการ ฿${total}`
     });
+
+    // Push: บิลใหญ่ (เกิน 100฿) → ครู
+    if (total >= 100) {
+      sendPush({
+        audience: 'teachers',
+        title: `💰 บิลใหญ่ ฿${total.toLocaleString()}`,
+        body: `${sale.seller} ขาย ${items.length} รายการ${currentBuyer ? ' ให้ ' + currentBuyer.name : ''}`,
+        url: '/#report',
+        tag: 'big-sale'
+      });
+    }
+    // Push: สินค้าใกล้หมด → ครู
+    const lowItems = items.map(i => products.find(p => p.id === i.id)).filter(p => p && p.stock <= p.lowAt && p.stock > 0);
+    const outItems = items.map(i => products.find(p => p.id === i.id)).filter(p => p && p.stock <= 0);
+    if (outItems.length) {
+      sendPush({
+        audience: 'teachers',
+        title: `❗ สินค้าหมดสต็อก`,
+        body: outItems.map(p => p.name).join(', '),
+        url: '/#stock',
+        tag: 'out-stock'
+      });
+    } else if (lowItems.length) {
+      sendPush({
+        audience: 'teachers',
+        title: `⚠ สินค้าใกล้หมด`,
+        body: lowItems.map(p => `${p.name} เหลือ ${p.stock}`).join(', '),
+        url: '/#stock',
+        tag: 'low-stock'
+      });
+    }
   }
   closePay();
   cart.clear();
@@ -5983,6 +6169,14 @@ async function sbSaveRequest(req) {
     }).select().single();
     if (error) throw error;
     req.id = data.id;
+    // Push: คำขอใหม่ → ครู
+    sendPush({
+      audience: 'teachers',
+      title: `📋 มีคำขออนุมัติใหม่`,
+      body: `${req.requestedByName}: ${req.summary || req.type}`,
+      url: '/#admin',
+      tag: `req-${req.id}`
+    });
   } catch (e) { console.error('saveRequest failed', e); }
 }
 
@@ -6084,6 +6278,17 @@ function approveRequest(id) {
   renderProducts();
   updateBellBadge();
   showToast('✅ อนุมัติเรียบร้อย');
+  // Push: แจ้งนักเรียนผู้ขอ
+  if (req.requestedById) {
+    sendPush({
+      audience: 'member',
+      member_id: req.requestedById,
+      title: `✅ คำขอของคุณได้รับอนุมัติ`,
+      body: req.summary || 'ครูอนุมัติคำขอแล้ว',
+      url: '/#stock',
+      tag: `req-${req.id}`
+    });
+  }
 }
 
 function rejectRequest(id) {
@@ -6103,6 +6308,17 @@ function rejectRequest(id) {
   renderRequests();
   updateBellBadge();
   showToast('ปฏิเสธคำขอแล้ว');
+  // Push: แจ้งนักเรียนผู้ขอ
+  if (req.requestedById) {
+    sendPush({
+      audience: 'member',
+      member_id: req.requestedById,
+      title: `❌ คำขอของคุณถูกปฏิเสธ`,
+      body: (req.summary || '') + (reason ? ` — ${reason}` : ''),
+      url: '/',
+      tag: `req-${req.id}`
+    });
+  }
 }
 
 let currentReqTab = 'pending';
@@ -6330,6 +6546,15 @@ function voidSale() {
   renderReport();
   renderProducts();
   showToast(`ยกเลิกบิล #${s.id} เรียบร้อย`);
+  // Push: แจ้งครูคนอื่นว่ามีบิลถูกยกเลิก
+  sendPush({
+    audience: 'teachers',
+    exclude_member_id: currentUser ? currentUser.id : undefined,
+    title: `🚫 มีบิลถูกยกเลิก`,
+    body: `บิล #${s.id} ฿${s.total} โดย ${currentUser.name}${reason ? ' — ' + reason : ''}`,
+    url: '/#report',
+    tag: `void-${s.id}`
+  });
 }
 
 // ============== SHIFT SCHEDULE ==============
@@ -7684,6 +7909,7 @@ setUser = function(m) {
   _origSetUser(m);
   if (sb) startRealtime();
   maybeShowNotiBanner();
+  maybePromptPush();
 };
 
 // Hook: stop on logout

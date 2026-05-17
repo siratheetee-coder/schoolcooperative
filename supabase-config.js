@@ -12,6 +12,10 @@
 // ============================================================
 
 window.SUPABASE_CONFIG = {
-  url:     'https://znbtmgbcbdnrbtmxgnhj.supabase.co',       // เช่น 'https://xxxxx.supabase.co'
-  anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpuYnRtZ2JjYmRucmJ0bXhnbmhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1OTAwNjEsImV4cCI6MjA5NDE2NjA2MX0.30TWJzCmC43S2RHJtuDEq4soBeLQfQv3vuntoZICRsg',  // ยาวมาก ขึ้นต้นด้วย 'eyJ...'
+  url:     'https://znbtmgbcbdnrbtmxgnhj.supabase.co',
+  anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpuYnRtZ2JjYmRucmJ0bXhnbmhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1OTAwNjEsImV4cCI6MjA5NDE2NjA2MX0.30TWJzCmC43S2RHJtuDEq4soBeLQfQv3vuntoZICRsg',
+  // === Push Notifications (VAPID) ===
+  // วิธีสร้าง: ดู PUSH-SETUP.md
+  // วาง public key ที่นี่ (Base64URL); ใส่ private key ใน Supabase Secret
+  vapidPublicKey: '',  // เช่น 'BNn...XYz'  ← ว่างไว้ = ปิดการแจ้งเตือน
 };

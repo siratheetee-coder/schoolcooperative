@@ -3186,6 +3186,100 @@
     font-size: 13px;
     box-shadow: 0 4px 0 var(--gold-600), 0 6px 12px rgba(232,154,14,0.3);
   }
+
+  /* ============================================================
+     DESKTOP LAYOUT — เต็มจอ ไม่บีบเหมือนมือถือ
+     ============================================================ */
+  @media (min-width: 1024px) {
+    .phone {
+      max-width: 1280px;
+      padding-left: 24px;
+      padding-right: 24px;
+    }
+
+    /* POS product grid: 2 → 4 cols */
+    .grid {
+      grid-template-columns: repeat(4, 1fr);
+      gap: 18px;
+      padding: 8px 32px 28px;
+    }
+
+    /* Quick-add (category picker) ใน POS ก็กว้างขึ้น */
+    .quick-add { grid-template-columns: repeat(6, 1fr) !important; }
+
+    /* Reports: 4 summary cards side-by-side แทนที่จะ wrap */
+    .summary {
+      grid-template-columns: repeat(4, 1fr) !important;
+      gap: 16px;
+    }
+
+    /* Bottom nav: กว้างเต็มเหมือน phone container */
+    .bottom-nav-inner {
+      max-width: 1280px;
+      padding: 10px 14px;
+    }
+    .nav-item .ico { font-size: 22px; }
+    .nav-item .lbl { font-size: 12px; }
+    .bottom-nav-inner.with-admin .nav-item .ico { font-size: 20px; }
+    .bottom-nav-inner.with-admin .nav-item .lbl { font-size: 11px; }
+
+    /* Modals: กลางจอ ไม่ติดล่าง */
+    .modal-bg { align-items: center; }
+    .modal {
+      max-width: 560px;
+      border-radius: 28px;
+      max-height: 85vh;
+    }
+
+    /* Stock list: รายการสินค้าหลายคอลัมน์ */
+    .stock-list {
+      display: grid !important;
+      grid-template-columns: repeat(2, 1fr) !important;
+      gap: 10px !important;
+    }
+
+    /* Admin tools + stats */
+    .admin-tools { grid-template-columns: repeat(4, 1fr) !important; }
+    .admin-stats { grid-template-columns: repeat(6, 1fr) !important; }
+    .admin-members { padding-left: 32px !important; padding-right: 32px !important; }
+
+    /* Members list (shares view) — แสดงเป็น grid */
+    .members {
+      display: grid !important;
+      grid-template-columns: repeat(3, 1fr) !important;
+      gap: 12px !important;
+      padding: 4px 32px 20px !important;
+    }
+
+    /* Shift schedule grid */
+    .shift-grid {
+      display: grid !important;
+      grid-template-columns: repeat(5, 1fr) !important;
+      padding: 4px 32px 20px !important;
+    }
+
+    /* Quiz: topic cards 5 cols */
+    .quiz-topic-grid { grid-template-columns: repeat(5, 1fr) !important; }
+    .quiz-level-grid { grid-template-columns: 1fr 1fr !important; }
+
+    /* Header — เพิ่ม padding sides */
+    .header-top { padding-left: 28px !important; padding-right: 28px !important; }
+
+    /* แท็ก Desktop เล็ก ๆ ที่ subtitle */
+    .brand-text .sub::after {
+      content: ' · 💻 Desktop';
+      font-size: 10px;
+      opacity: 0.55;
+      margin-left: 4px;
+    }
+  }
+
+  /* === Ultra-wide (เครื่อง PC จอใหญ่) === */
+  @media (min-width: 1440px) {
+    .phone { max-width: 1400px; }
+    .grid { grid-template-columns: repeat(5, 1fr); }
+    .bottom-nav-inner { max-width: 1400px; }
+  }
 </style>
 </head>
 <body>
@@ -4269,7 +4363,7 @@ function getTerm(d) {
 }
 
 // ============== VIEW ROUTER ==============
-const APP_VERSION = 'V 2.4';
+const APP_VERSION = 'V 2.5';
 // === School config with safe fallbacks ===
 const SC = window.SCHOOL_CONFIG || {};
 const SCHOOL = {

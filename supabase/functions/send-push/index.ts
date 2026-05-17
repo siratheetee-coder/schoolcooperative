@@ -64,10 +64,18 @@ Deno.serve(async (req) => {
       icon: body.icon || "/logo-no-bg.png",
     });
 
+    // urgency: 'high' บอก push service ให้ส่งทันทีแม้เครื่องหลับ
+    // TTL 24h: เก็บไว้รอส่งถ้าเครื่องออฟไลน์
+    const pushOptions = {
+      TTL: 86400,
+      urgency: 'high' as const,
+      headers: { 'Topic': body.tag || 'coop' },
+    };
     const results = await Promise.allSettled(subs.map((s) =>
       webpush.sendNotification(
         { endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } },
-        payload
+        payload,
+        pushOptions
       )
     ));
 

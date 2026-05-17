@@ -1,5 +1,5 @@
 // ============== Service Worker — สหกรณ์โรงเรียน ==============
-const CACHE_VERSION = 'v12';  // เปลี่ยนเลขนี้เพื่อ force ลบ cache เก่า
+const CACHE_VERSION = 'v13';  // เปลี่ยนเลขนี้เพื่อ force ลบ cache เก่า
 const CACHE = `coop-${CACHE_VERSION}`;
 const CORE_ASSETS = [
   './',
@@ -89,9 +89,11 @@ self.addEventListener('push', e => {
       badge: './logo-no-bg.png',
       tag: data.tag,
       renotify: true,
-      requireInteraction: false,
+      requireInteraction: true,   // ค้างอยู่จนกดเอง (สำคัญตอนหน้าจอดับ)
+      silent: false,               // มีเสียง
       data: { url: data.url },
-      vibrate: [120, 60, 120]
+      vibrate: [200, 100, 200, 100, 200],   // สั่นยาวขึ้น เห็นชัดขึ้น
+      timestamp: Date.now()
     })
   );
 });

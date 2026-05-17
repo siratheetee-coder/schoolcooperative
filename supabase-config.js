@@ -17,5 +17,5 @@ window.SUPABASE_CONFIG = {
   // === Push Notifications (VAPID) ===
   // วิธีสร้าง: ดู PUSH-SETUP.md
   // วาง public key ที่นี่ (Base64URL); ใส่ private key ใน Supabase Secret
-  vapidPublicKey: '',  // เช่น 'BNn...XYz'  ← ว่างไว้ = ปิดการแจ้งเตือน
+  vapidPublicKey: 'BLOekTSLxGegh0WcTuHro3N6KOjrIBonyD3pAFRB1apfyNlPa_ChLsb0Hcx7siD1RsfM2cF5axYOXOoxobaVi7g',  // เช่น 'BNn...XYz'  ← ว่างไว้ = ปิดการแจ้งเตือน
 };

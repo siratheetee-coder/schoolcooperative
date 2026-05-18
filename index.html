@@ -167,14 +167,23 @@
     border: 1px solid rgba(255,255,255,0.25);
   }
   .avatar {
-    width: 36px; height: 36px;
-    border-radius: 50%;
+    min-width: 36px; height: 36px;
+    padding: 0 8px;
+    border-radius: 12px;
     background: linear-gradient(135deg, var(--gold-400), var(--gold-500));
     display: grid; place-items: center;
     font-weight: 700;
+    font-size: 13px;
     color: var(--green-700);
     box-shadow: inset -1px -2px 3px rgba(0,0,0,0.2), inset 1px 2px 3px rgba(255,255,255,0.5);
+    white-space: nowrap;
+    letter-spacing: -0.2px;
   }
+  .avatar[data-len="1"] { font-size: 15px; }
+  .avatar[data-len="2"] { font-size: 14px; }
+  .avatar[data-len="3"] { font-size: 12px; }
+  .avatar[data-len="4"] { font-size: 11px; }
+  .avatar[data-len="5"] { font-size: 10px; }
   .seller-info { flex: 1; line-height: 1.2; }
   .seller-info .label { font-size: 11px; opacity: 0.8; }
   .seller-info .name { font-weight: 600; font-size: 14px; }
@@ -1097,12 +1106,13 @@
   }
   .buyer-cell:active { transform: scale(0.95); }
   .buyer-cell .bav {
-    width: 36px; height: 36px;
+    min-width: 36px; height: 36px; padding: 0 8px;
     border-radius: 12px;
     display: grid; place-items: center;
     color: white;
     font-weight: 700;
     font-size: 13px;
+    white-space: nowrap;
     box-shadow:
       inset 1px 1px 1px rgba(255,255,255,0.3),
       inset -1px -1px 1px rgba(0,0,0,0.15),
@@ -1884,17 +1894,25 @@
   }
   .quick-user:active { transform: scale(0.95); box-shadow: var(--shadow-inset);}
   .quick-user .qav {
-    width: 32px; height: 32px;
+    min-width: 36px; height: 36px;
+    padding: 0 8px;
     border-radius: 11px;
     display: grid; place-items: center;
     color: white;
     font-weight: 700;
     font-size: 12px;
+    white-space: nowrap;
+    letter-spacing: -0.2px;
     box-shadow:
       inset 1px 1px 1px rgba(255,255,255,0.3),
       inset -1px -1px 1px rgba(0,0,0,0.15),
       0 2px 0 rgba(0,0,0,0.15);
   }
+  .quick-user .qav[data-len="1"] { font-size: 15px; }
+  .quick-user .qav[data-len="2"] { font-size: 13px; }
+  .quick-user .qav[data-len="3"] { font-size: 11px; }
+  .quick-user .qav[data-len="4"] { font-size: 10px; }
+  .quick-user .qav[data-len="5"] { font-size: 9px; }
   .quick-user .qname {
     font-size: 10px;
     font-weight: 600;
@@ -2497,6 +2515,18 @@
   }
   .pc-zero { stroke: rgba(154,130,90,0.2); stroke-dasharray: 3,3; stroke-width: 1; }
 
+  /* === Avatar global fit-content + length-based sizing === */
+  .bav, .pav, .detail-av, .av-small, .slot-person .av, .buyer-row .name .av, .a-member .av-small {
+    white-space: nowrap;
+    letter-spacing: -0.2px;
+  }
+  .bav[data-len="3"], .pav[data-len="3"], .av-small[data-len="3"] { font-size: 11px; }
+  .bav[data-len="4"], .pav[data-len="4"], .av-small[data-len="4"] { font-size: 10px; }
+  .bav[data-len="5"], .pav[data-len="5"], .av-small[data-len="5"] { font-size: 9px; }
+  .detail-av[data-len="3"] { font-size: 24px; }
+  .detail-av[data-len="4"] { font-size: 20px; }
+  .detail-av[data-len="5"] { font-size: 16px; }
+
   /* ===== Quiz System ===== */
   #view-quiz { padding: 16px 16px 100px; }
   .quiz-screen { animation: fadeIn 0.3s ease; }
@@ -2903,16 +2933,24 @@
   }
   .member-card:active { transform: scale(0.98);}
   .m-avatar {
-    width: 50px; height: 50px;
+    min-width: 50px; height: 50px;
+    padding: 0 10px;
     border-radius: 16px;
     display: grid; place-items: center;
     color: white; font-weight: 700; font-size: 18px;
     flex-shrink: 0;
+    white-space: nowrap;
+    letter-spacing: -0.3px;
     box-shadow:
       inset 1px 1px 2px rgba(255,255,255,0.3),
       inset -1px -1px 2px rgba(0,0,0,0.15),
       0 3px 0 rgba(0,0,0,0.15);
   }
+  .m-avatar[data-len="1"] { font-size: 22px; }
+  .m-avatar[data-len="2"] { font-size: 18px; }
+  .m-avatar[data-len="3"] { font-size: 15px; }
+  .m-avatar[data-len="4"] { font-size: 13px; }
+  .m-avatar[data-len="5"] { font-size: 12px; }
   .av-1 { background: linear-gradient(135deg, #FF8B7A, #E0594A);}
   .av-2 { background: linear-gradient(135deg, #7AB8E0, #4D8FCA);}
   .av-3 { background: linear-gradient(135deg, #B89AE0, #8266CA);}
@@ -3022,11 +3060,12 @@
     box-shadow: var(--shadow-sm);
   }
   .av-small {
-    width: 36px; height: 36px;
+    min-width: 36px; height: 36px; padding: 0 8px;
     border-radius: 12px;
     display: grid; place-items: center;
     color: white; font-weight: 700; font-size: 14px;
     flex-shrink: 0;
+    white-space: nowrap;
   }
   .div-info { flex: 1; line-height: 1.2; min-width: 0;}
   .div-info .n { font-weight: 600; font-size: 13px;}
@@ -3089,10 +3128,11 @@
   /* member detail */
   .detail-head { display: flex; align-items: center; gap: 14px; margin-bottom: 16px;}
   .detail-av {
-    width: 60px; height: 60px;
+    min-width: 60px; height: 60px; padding: 0 12px;
     border-radius: 20px;
     display: grid; place-items: center;
-    color: white; font-weight: 700; font-size: 22px;
+    color: white; font-weight: 700; font-size: 24px;
+    white-space: nowrap;
     box-shadow:
       inset 1px 1px 2px rgba(255,255,255,0.3),
       inset -1px -1px 2px rgba(0,0,0,0.15),
@@ -4000,7 +4040,7 @@
     </div>
     <div class="field">
       <label>ตัวอักษร avatar (2 ตัว)</label>
-      <input type="text" id="mAvatar" maxlength="2" placeholder="เช่น นภ" />
+      <input type="text" id="mAvatar" maxlength="5" placeholder="เช่น นภ, ก้อง, เบิร์ด" />
     </div>
     <div class="field">
       <label>สี avatar</label>
@@ -4363,7 +4403,7 @@ function getTerm(d) {
 }
 
 // ============== VIEW ROUTER ==============
-const APP_VERSION = 'V 2.8';
+const APP_VERSION = 'V 2.9';
 // === School config with safe fallbacks ===
 const SC = window.SCHOOL_CONFIG || {};
 const SCHOOL = {
@@ -4457,7 +4497,7 @@ function renderBuyerGrid() {
   `;
   const cells = candidates.map(m => `
     <button class="buyer-cell" onclick="pickBuyer(${m.id})">
-      <div class="bav av-${m.color}">${m.avatar}</div>
+      <div class="bav av-${m.color}" data-len="${m.avatar.length}">${m.avatar}</div>
       <div class="bn">${m.name.replace('น้อง','').split(' ')[0]}</div>
     </button>
   `).join('');
@@ -5705,7 +5745,7 @@ function renderMembers() {
       const sh = memberShares(m.id);
       return `
         <div class="member-card" onclick="openMemberDetail(${m.id})">
-          <div class="m-avatar av-${m.color}">${m.avatar}</div>
+          <div class="m-avatar av-${m.color}" data-len="${m.avatar.length}">${m.avatar}</div>
           <div class="m-info-share">
             <div class="m-name">${m.name}</div>
             <div class="m-meta-share">
@@ -5767,7 +5807,7 @@ function openMemberDetail(mid) {
   const m = members.find(x => x.id === mid);
   const sh = memberShares(mid);
   document.getElementById('detailHead').innerHTML = `
-    <div class="detail-av av-${m.color}">${m.avatar}</div>
+    <div class="detail-av av-${m.color}" data-len="${m.avatar.length}">${m.avatar}</div>
     <div class="detail-info-block">
       <div class="n">${m.name}</div>
       <div class="s">${m.class} · รหัส ${m.code}</div>
@@ -5822,7 +5862,7 @@ function renderDividend() {
     ? `<div style="text-align:center;color:var(--ink-soft);padding:14px;font-size:13px;">ยังไม่มีสมาชิกที่มีหุ้น</div>`
     : rows.map(({m, sh, div}) => `
       <div class="div-item">
-        <div class="av-small av-${m.color}">${m.avatar}</div>
+        <div class="av-small av-${m.color}" data-len="${m.avatar.length}">${m.avatar}</div>
         <div class="div-info">
           <div class="n">${m.name}</div>
           <div class="s">${sh.toLocaleString()} หุ้น · ${m.class}</div>
@@ -5870,7 +5910,7 @@ function renderPatronage() {
     ? `<div style="text-align:center;color:var(--ink-soft);padding:14px;font-size:13px;">ยังไม่มีสมาชิกที่ซื้อของในปี ${year}<br><span style="font-size:11px;">(ระบุ "ผู้ซื้อ" ตอนชำระเงินเพื่อสะสมยอด)</span></div>`
     : rows.map(({m, purchase, refund}) => `
       <div class="div-item">
-        <div class="av-small av-${m.color}">${m.avatar}</div>
+        <div class="av-small av-${m.color}" data-len="${m.avatar.length}">${m.avatar}</div>
         <div class="div-info">
           <div class="n">${m.name}</div>
           <div class="s">ซื้อสะสม ฿${purchase.toLocaleString()} · ${m.class}</div>
@@ -5943,7 +5983,7 @@ function renderQuickGrid() {
     : 'พิมพ์รหัสนักเรียน + PIN';
   document.getElementById('quickGrid').innerHTML = teachers.map(m => `
     <button class="quick-user" onclick="quickLogin(${m.id})">
-      <div class="qav av-${m.color}">${m.avatar}</div>
+      <div class="qav av-${m.color}" data-len="${m.avatar.length}">${m.avatar}</div>
       <div class="qname">${m.name.replace('น้อง','').split(' ')[0]}</div>
     </button>
   `).join('');
@@ -5951,7 +5991,9 @@ function renderQuickGrid() {
 
 function setUser(m) {
   currentUser = m;
-  document.getElementById('userAvatar').textContent = m.avatar.charAt(0);
+  const userAvEl = document.getElementById('userAvatar');
+  userAvEl.textContent = m.avatar;
+  userAvEl.setAttribute('data-len', m.avatar.length);
   const badge = m.role === 'teacher'
     ? '<span class="role-badge teacher">👨‍🏫 ครู</span>'
     : '<span class="role-badge student">นักเรียน</span>';
@@ -7170,7 +7212,7 @@ function renderShiftPicker() {
   const candidates = members.filter(m => m.role === 'student');
   list.innerHTML = candidates.map(m => `
     <div class="picker-item ${sel.has(m.id) ? 'sel' : ''}" onclick="toggleShiftPick(${m.id})">
-      <div class="pav av-${m.color}">${m.avatar}</div>
+      <div class="pav av-${m.color}" data-len="${m.avatar.length}">${m.avatar}</div>
       <div class="pinfo">
         <div class="pn">${m.name}</div>
         <div class="ps">${m.class} · รหัส ${m.code}</div>
@@ -8027,7 +8069,7 @@ function renderAdmin() {
   });
   document.getElementById('adminMembers').innerHTML = sorted.map(m => `
     <div class="a-member" onclick="openMemberModal(${m.id})">
-      <div class="av-small av-${m.color}">${m.avatar}</div>
+      <div class="av-small av-${m.color}" data-len="${m.avatar.length}">${m.avatar}</div>
       <div class="info">
         <div class="n">${m.name} ${m.role === 'teacher' ? '<span class="role-badge teacher">ครู</span>' : ''}</div>
         <div class="s">${m.class} · รหัส ${m.code}</div>

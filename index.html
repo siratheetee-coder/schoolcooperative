@@ -4403,7 +4403,7 @@ function getTerm(d) {
 }
 
 // ============== VIEW ROUTER ==============
-const APP_VERSION = 'V 3.2';
+const APP_VERSION = 'V 3.3';
 // === School config with safe fallbacks ===
 const SC = window.SCHOOL_CONFIG || {};
 const SCHOOL = {
@@ -6054,7 +6054,9 @@ function updateTodaySales() {
   if (!currentUser) return;
   const today = new Date().toDateString();
   const tot = sales
-    .filter(s => s.date.toDateString() === today && s.seller.includes(currentUser.name.replace('น้อง','').split(' ')[0]))
+    .filter(s => !s.isVoided
+              && s.date.toDateString() === today
+              && s.seller.includes(currentUser.name.replace('น้อง','').split(' ')[0]))
     .reduce((sum, s) => sum + s.total, 0);
   document.getElementById('userToday').textContent = tot.toLocaleString();
 }
@@ -7122,6 +7124,7 @@ function voidSale() {
   closeSaleDetail();
   renderReport();
   renderProducts();
+  updateTodaySales();
   showToast(`ยกเลิกบิล #${s.id} เรียบร้อย`);
   // Push: แจ้งครูคนอื่นว่ามีบิลถูกยกเลิก
   sendPush({

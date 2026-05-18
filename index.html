@@ -4403,7 +4403,7 @@ function getTerm(d) {
 }
 
 // ============== VIEW ROUTER ==============
-const APP_VERSION = 'V 3.3';
+const APP_VERSION = 'V 3.4';
 // === School config with safe fallbacks ===
 const SC = window.SCHOOL_CONFIG || {};
 const SCHOOL = {
@@ -4487,20 +4487,26 @@ function closeBuyerPicker() { document.getElementById('buyerPickerModal').classL
 function renderBuyerGrid() {
   const q = document.getElementById('buyerSearch').value.trim().toLowerCase();
   const grid = document.getElementById('buyerGrid');
-  const candidates = members.filter(m => m.role === 'student')
-    .filter(m => !q || m.name.toLowerCase().includes(q) || m.code.includes(q));
+  // รวมครูกับนักเรียน — ครูขึ้นก่อน
+  const candidates = [...members].sort((a, b) => {
+    if (a.role !== b.role) return a.role === 'teacher' ? -1 : 1;
+    return a.name.localeCompare(b.name, 'th');
+  }).filter(m => !q || m.name.toLowerCase().includes(q) || m.code.includes(q));
+
   const general = `
     <button class="buyer-cell general" onclick="pickBuyer(null)">
       <div class="bav general">👤</div>
       <div class="bn">ทั่วไป</div>
     </button>
   `;
-  const cells = candidates.map(m => `
-    <button class="buyer-cell" onclick="pickBuyer(${m.id})">
+  const cells = candidates.map(m => {
+    const isTeacher = m.role === 'teacher';
+    return `
+    <button class="buyer-cell ${isTeacher ? 'teacher' : ''}" onclick="pickBuyer(${m.id})">
       <div class="bav av-${m.color}" data-len="${m.avatar.length}">${m.avatar}</div>
-      <div class="bn">${m.name.replace('น้อง','').split(' ')[0]}</div>
+      <div class="bn">${isTeacher ? '👨‍🏫 ' : ''}${m.name.replace('น้อง','').split(' ')[0]}</div>
     </button>
-  `).join('');
+  `;}).join('');
   grid.innerHTML = general + cells;
 }
 

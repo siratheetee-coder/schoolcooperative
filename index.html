@@ -4403,7 +4403,7 @@ function getTerm(d) {
 }
 
 // ============== VIEW ROUTER ==============
-const APP_VERSION = 'V 3.0';
+const APP_VERSION = 'V 3.1';
 // === School config with safe fallbacks ===
 const SC = window.SCHOOL_CONFIG || {};
 const SCHOOL = {
@@ -6526,14 +6526,27 @@ async function sbSaveProduct(p, isNew) {
       if (error) throw error;
       p.id = data.id;
     } else {
-      await sb.from('products').update({
+      const { error } = await sb.from('products').update({
         name: p.name, emoji: p.emoji, price: p.price,
         cost: p.cost || 0, category: p.category || 'other',
         image_url: p.imageUrl || null,
         stock: p.stock, low_at: p.lowAt
       }).eq('id', p.id);
+      if (error) throw error;
     }
-  } catch (e) { console.error('saveProduct failed', e); }
+  } catch (e) {
+    console.error('saveProduct failed', e);
+    showToast(`บันทึกขึ้น Cloud ไม่สำเร็จ: ${e.message || e}`, true);
+    // ลบจาก local ถ้า insert ใหม่ล้มเหลว เพื่อไม่ให้ค้างปลอม
+    if (isNew && !p.id) {
+      const idx = products.findIndex(x => x === p);
+      if (idx >= 0) {
+        products.splice(idx, 1);
+        renderProducts();
+        renderStock();
+      }
+    }
+  }
 }
 
 async function sbDeleteProduct(id) {

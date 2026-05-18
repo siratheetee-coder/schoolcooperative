@@ -439,9 +439,59 @@
     display: grid; place-items: center;
     box-shadow: 0 2px 0 var(--gold-600);
   }
-  .cart-info { flex: 1; line-height: 1.15; }
+  .cart-info { flex: 1; line-height: 1.15; text-align: left; }
   .cart-info .lbl { font-size: 11px; opacity: 0.85; }
   .cart-info .amt { font-size: 20px; font-weight: 700; }
+
+  /* tappable cart area */
+  .cart-view-btn {
+    flex: 1;
+    background: transparent; border: none; color: inherit;
+    display: flex; align-items: center; gap: 14px;
+    cursor: pointer; padding: 0; font-family: inherit;
+    transition: opacity 0.15s;
+  }
+  .cart-view-btn:active { opacity: 0.75; }
+  .cart-bar.empty .cart-view-btn { cursor: default; pointer-events: none; }
+
+  /* cart item row in modal */
+  .cart-item-row {
+    display: flex; align-items: center; gap: 12px;
+    background: var(--cream-100);
+    border-radius: 14px;
+    padding: 10px 12px;
+  }
+  .cart-item-row .ci-emoji {
+    width: 40px; height: 40px;
+    border-radius: 12px;
+    background: linear-gradient(145deg, #fff, var(--cream-200));
+    display: grid; place-items: center;
+    font-size: 22px; flex-shrink: 0;
+    box-shadow: inset 1px 1px 2px rgba(154,130,90,0.15), inset -1px -1px 2px rgba(255,255,255,0.9);
+  }
+  .cart-item-row .ci-info { flex: 1; min-width: 0; line-height: 1.2; }
+  .cart-item-row .ci-name { font-weight: 700; font-size: 14px; }
+  .cart-item-row .ci-price { font-size: 11px; color: var(--ink-soft); }
+  .cart-item-row .ci-qty {
+    display: flex; align-items: center; gap: 8px;
+    background: white; border-radius: 12px; padding: 4px;
+    box-shadow: var(--shadow-inset);
+  }
+  .cart-item-row .ci-qty button {
+    width: 28px; height: 28px; border: none;
+    border-radius: 9px;
+    background: var(--cream-200); color: var(--ink);
+    font-size: 18px; font-weight: 700; cursor: pointer;
+    font-family: inherit;
+  }
+  .cart-item-row .ci-qty button.plus { background: linear-gradient(135deg, var(--green-400), var(--green-500)); color: white; }
+  .cart-item-row .ci-qty button:active { transform: scale(0.92); }
+  .cart-item-row .ci-qty .n { min-width: 22px; text-align: center; font-weight: 800; font-size: 14px;}
+  .cart-item-row .ci-line {
+    text-align: right; font-weight: 800; color: var(--gold-600); font-size: 14px;
+    min-width: 64px;
+  }
+  .cart-empty-msg { padding: 30px 14px; text-align: center; color: var(--ink-soft); font-size: 13px;}
   .pay-btn {
     background: linear-gradient(135deg, var(--gold-400), var(--gold-500));
     color: var(--green-700);
@@ -3800,15 +3850,34 @@
 
 <!-- ============== CART BAR (POS only) ============== -->
 <div class="cart-bar empty" id="cartBar">
-  <div class="cart-icon">
-    🛒
-    <span class="badge" id="cartCount">0</span>
-  </div>
-  <div class="cart-info">
-    <div class="lbl">ตะกร้า</div>
-    <div class="amt">฿<span id="cartTotal">0</span></div>
-  </div>
+  <button class="cart-view-btn" onclick="openCartView()" aria-label="ดูตะกร้า">
+    <div class="cart-icon">
+      🛒
+      <span class="badge" id="cartCount">0</span>
+    </div>
+    <div class="cart-info">
+      <div class="lbl">ดูตะกร้า</div>
+      <div class="amt">฿<span id="cartTotal">0</span></div>
+    </div>
+  </button>
   <button class="pay-btn" onclick="openPay()">ชำระเงิน →</button>
+</div>
+
+<!-- ============== CART VIEW MODAL ============== -->
+<div class="modal-bg" id="cartViewModal">
+  <div class="modal">
+    <div class="modal-close"></div>
+    <h2 style="margin-top:0;">🛒 สินค้าในตะกร้า</h2>
+    <div id="cartItemList" style="display:flex;flex-direction:column;gap:10px;margin-bottom:14px;"></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;background:var(--cream-200);padding:14px 16px;border-radius:14px;margin-bottom:12px;">
+      <div style="font-weight:700;font-size:15px;">รวมทั้งหมด</div>
+      <div style="font-weight:800;font-size:22px;color:var(--green-700);">฿<span id="cartViewTotal">0</span></div>
+    </div>
+    <div style="display:flex;gap:10px;">
+      <button onclick="closeCartView()" style="flex:1;padding:14px;border:none;border-radius:14px;background:var(--cream-200);font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;">← กลับไปเลือก</button>
+      <button onclick="closeCartView();openPay()" style="flex:1.5;padding:14px;border:none;border-radius:14px;background:linear-gradient(135deg,var(--green-400),var(--green-500));color:white;font-family:inherit;font-size:14px;font-weight:800;cursor:pointer;box-shadow:0 4px 0 var(--green-700);">ชำระเงิน →</button>
+    </div>
+  </div>
 </div>
 
 <!-- ============== ADMIN FAB ============== -->
@@ -4408,7 +4477,7 @@ function getTerm(d) {
 }
 
 // ============== VIEW ROUTER ==============
-const APP_VERSION = 'V 3.5';
+const APP_VERSION = 'V 3.6';
 // === School config with safe fallbacks ===
 const SC = window.SCHOOL_CONFIG || {};
 const SCHOOL = {
@@ -4650,12 +4719,76 @@ function updateCart() {
   let total = 0, count = 0;
   cart.forEach((qty, id) => {
     const p = products.find(x => x.id === id);
+    if (!p) return;
     total += p.price * qty;
     count += qty;
   });
   document.getElementById('cartCount').textContent = count;
   document.getElementById('cartTotal').textContent = total;
   document.getElementById('cartBar').classList.toggle('empty', count === 0);
+  // ถ้า modal ดูตะกร้าเปิดอยู่ → re-render
+  if (document.getElementById('cartViewModal')?.classList.contains('show')) {
+    renderCartView();
+  }
+}
+
+function openCartView() {
+  if (cart.size === 0) return;
+  renderCartView();
+  document.getElementById('cartViewModal').classList.add('show');
+}
+function closeCartView() { document.getElementById('cartViewModal').classList.remove('show'); }
+
+function renderCartView() {
+  const list = document.getElementById('cartItemList');
+  const totalEl = document.getElementById('cartViewTotal');
+  if (cart.size === 0) {
+    list.innerHTML = `<div class="cart-empty-msg">🛒 ตะกร้าว่าง — เลือกสินค้าจากหน้าขายก่อน</div>`;
+    totalEl.textContent = '0';
+    return;
+  }
+  let total = 0;
+  const rows = [];
+  cart.forEach((qty, id) => {
+    const p = products.find(x => x.id === id);
+    if (!p) return;
+    const line = p.price * qty;
+    total += line;
+    rows.push(`
+      <div class="cart-item-row">
+        <div class="ci-emoji">${p.emoji}</div>
+        <div class="ci-info">
+          <div class="ci-name">${p.name}</div>
+          <div class="ci-price">฿${p.price} × ${qty}</div>
+        </div>
+        <div class="ci-qty">
+          <button onclick="adjustCart(${p.id},-1)">−</button>
+          <div class="n">${qty}</div>
+          <button class="plus" onclick="adjustCart(${p.id},1)">+</button>
+        </div>
+        <div class="ci-line">฿${line.toLocaleString()}</div>
+      </div>
+    `);
+  });
+  list.innerHTML = rows.join('');
+  totalEl.textContent = total.toLocaleString();
+}
+
+function adjustCart(id, delta) {
+  const p = products.find(x => x.id === id);
+  if (!p) return;
+  const cur = cart.get(id) || 0;
+  const next = cur + delta;
+  if (next <= 0) {
+    cart.delete(id);
+  } else if (next > p.stock) {
+    showToast('สต็อกไม่พอ', true);
+    return;
+  } else {
+    cart.set(id, next);
+  }
+  updateCart();
+  renderProducts();
 }
 
 function openPay() {

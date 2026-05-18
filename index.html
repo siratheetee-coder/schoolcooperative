@@ -3687,6 +3687,11 @@
         <div class="tt">ตั้งค่า Quiz</div>
         <div class="ts" id="quizSettingsLabel">เปิด/ปิด Post-test</div>
       </button>
+      <button class="tool-btn" onclick="resetPatronageStart()">
+        <div class="ti" style="background:linear-gradient(135deg,#FFC857,#E89A0E);color:#174740;box-shadow:0 4px 0 #B07F0A;">🎁</div>
+        <div class="tt">Reset เฉลี่ยคืน</div>
+        <div class="ts" id="patStartLabel">เริ่มนับใหม่</div>
+      </button>
       <button class="tool-btn" onclick="openBackup()" style="grid-column:1/-1;">
         <div class="ti" style="background:linear-gradient(135deg,#5FB597,#2D7D6F);color:white;box-shadow:0 4px 0 #174740;">💾</div>
         <div class="tt">สำรองข้อมูล (Backup)</div>
@@ -3735,7 +3740,7 @@
         <h3>⚙️ ตั้งค่าการจ่ายปันผล</h3>
         <div class="div-row">
           <label>อัตราปันผลต่อปี</label>
-          <input type="number" id="divRate" class="div-input" value="6" oninput="renderDividend()" /> <span style="font-weight:700;">%</span>
+          <input type="number" id="divRate" class="div-input" value="10" oninput="renderDividend()" /> <span style="font-weight:700;">%</span>
         </div>
         <div class="div-row">
           <label>ปีที่จ่าย (พ.ศ.)</label>
@@ -4403,7 +4408,7 @@ function getTerm(d) {
 }
 
 // ============== VIEW ROUTER ==============
-const APP_VERSION = 'V 3.4';
+const APP_VERSION = 'V 3.5';
 // === School config with safe fallbacks ===
 const SC = window.SCHOOL_CONFIG || {};
 const SCHOOL = {
@@ -5883,8 +5888,12 @@ const PATRONAGE_MAX = 10; // %
 function memberPurchaseTotal(memberId, year) {
   // year is พ.ศ. (e.g. 2569). Convert to ค.ศ.
   const ce = year - 543;
+  const startTs = patronageStartDate ? new Date(patronageStartDate).getTime() : 0;
   return sales
-    .filter(s => !s.isVoided && s.buyerId === memberId && s.date.getFullYear() === ce)
+    .filter(s => !s.isVoided
+              && s.buyerId === memberId
+              && s.date.getFullYear() === ce
+              && (!startTs || s.date.getTime() >= startTs))
     .reduce((sum, s) => sum + s.total, 0);
 }
 
@@ -6345,8 +6354,48 @@ async function refreshQuizSettingsLabel() {
   if (!el || !sb) return;
   await loadAppSettings();
   el.textContent = postTestEnabled ? '✅ Post-test เปิดอยู่' : '🔒 Post-test ปิด';
+  refreshPatronageStartLabel();
+}
+async function refreshPatronageStartLabel() {
+  const el = document.getElementById('patStartLabel');
+  if (!el) return;
+  if (!patronageStartDate) { el.textContent = 'นับทุกบิล'; return; }
+  const d = new Date(patronageStartDate);
+  el.textContent = `เริ่มนับ ${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()+543}`;
 }
 setTimeout(refreshQuizSettingsLabel, 2000);
+
+async function resetPatronageStart() {
+  if (!isTeacher()) { showToast('เฉพาะครูเท่านั้น', true); return; }
+  if (!sb) { showToast('ต้องเชื่อม Cloud', true); return; }
+  // เริ่มพรุ่งนี้ 00:00
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  tomorrow.setHours(0, 0, 0, 0);
+  const isoStr = tomorrow.toISOString();
+  const fmt = `${tomorrow.getDate()}/${tomorrow.getMonth()+1}/${tomorrow.getFullYear()+543}`;
+
+  if (!confirm(`🎁 Reset เฉลี่ยคืน?\n\nการซื้อทุกบิลก่อนวันที่ ${fmt} จะไม่ถูกนับในการเฉลี่ยคืน\nระบบจะเริ่มนับยอดซื้อใหม่ตั้งแต่พรุ่งนี้\n\nกด OK เพื่อยืนยัน`)) return;
+  try {
+    await sb.from('app_settings').upsert({
+      key: 'patronage_start_date',
+      value: isoStr,
+      updated_at: new Date().toISOString(),
+      updated_by_id: currentUser.id,
+      updated_by_name: currentUser.name
+    }, { onConflict: 'key' });
+    patronageStartDate = isoStr;
+    showToast(`🎁 Reset แล้ว — เริ่มนับเฉลี่ยคืน ${fmt}`);
+    refreshPatronageStartLabel();
+    if (typeof renderPatronage === 'function') renderPatronage();
+    logAudit('quiz_settings', 'settings', 'patronage_start_date', `เริ่มนับเฉลี่ยคืน ${fmt}`, {
+      start_date: isoStr
+    });
+  } catch (e) {
+    console.error(e);
+    showToast('บันทึกไม่สำเร็จ: ' + (e.message || e), true);
+  }
+}
 
 // อัปเดตป้าย "สถานะ Push" บนปุ่ม admin
 async function refreshPushStatusLabel() {
@@ -8625,13 +8674,22 @@ let quizState = { level: null, topic: null, phase: 'pre', questions: [], idx: 0,
 let quizLeaderboardLevel = 'p4-6';
 let quizUserCompletions = {}; // key = "level:topic:phase" → true if user has done
 let postTestEnabled = false; // ครูเป็นคนเปิด — โหลดจาก app_settings
+let patronageStartDate = null; // ISO date string — เฉลี่ยคืนนับจากวันนี้ขึ้นไป
 
 async function loadAppSettings() {
   if (!sb) return;
   try {
-    const { data } = await sb.from('app_settings').select('key, value').eq('key', 'post_test_enabled').single();
-    if (data) postTestEnabled = data.value === true || data.value === 'true';
-  } catch (e) { /* default false */ }
+    const { data } = await sb.from('app_settings').select('key, value');
+    if (data) {
+      for (const row of data) {
+        if (row.key === 'post_test_enabled') {
+          postTestEnabled = row.value === true || row.value === 'true';
+        } else if (row.key === 'patronage_start_date') {
+          patronageStartDate = typeof row.value === 'string' ? row.value : row.value;
+        }
+      }
+    }
+  } catch (e) { /* defaults */ }
 }
 
 async function setPostTestEnabled(enabled) {

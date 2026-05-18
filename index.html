@@ -4363,7 +4363,7 @@ function getTerm(d) {
 }
 
 // ============== VIEW ROUTER ==============
-const APP_VERSION = 'V 2.7';
+const APP_VERSION = 'V 2.8';
 // === School config with safe fallbacks ===
 const SC = window.SCHOOL_CONFIG || {};
 const SCHOOL = {
@@ -5935,7 +5935,13 @@ const TEST_PIN = '1234';
 let currentUser = null;
 
 function renderQuickGrid() {
-  document.getElementById('quickGrid').innerHTML = members.map(m => `
+  // เฉพาะครู (role === 'teacher') — นักเรียนต้องพิมพ์รหัสเอง เพื่อกัน layout ล้น
+  const teachers = members.filter(m => m.role === 'teacher');
+  const divider = document.querySelector('.quick-divider span');
+  if (divider) divider.textContent = teachers.length
+    ? 'แตะ Avatar ครูเพื่อเข้าระบบเร็ว'
+    : 'พิมพ์รหัสนักเรียน + PIN';
+  document.getElementById('quickGrid').innerHTML = teachers.map(m => `
     <button class="quick-user" onclick="quickLogin(${m.id})">
       <div class="qav av-${m.color}">${m.avatar}</div>
       <div class="qname">${m.name.replace('น้อง','').split(' ')[0]}</div>

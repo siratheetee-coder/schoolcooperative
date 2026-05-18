@@ -3920,7 +3920,7 @@
 
     <div class="field">
       <label>ราคาต้นทุน (บาท) <span style="color:var(--ink-soft);font-weight:400;">— สำหรับคำนวณกำไร</span></label>
-      <input type="number" id="pCost" placeholder="0" inputmode="numeric" />
+      <input type="number" id="pCost" placeholder="0.00" step="0.01" min="0" inputmode="decimal" />
     </div>
 
     <div class="field">
@@ -4403,7 +4403,7 @@ function getTerm(d) {
 }
 
 // ============== VIEW ROUTER ==============
-const APP_VERSION = 'V 2.9';
+const APP_VERSION = 'V 3.0';
 // === School config with safe fallbacks ===
 const SC = window.SCHOOL_CONFIG || {};
 const SCHOOL = {
@@ -6951,7 +6951,7 @@ function renderRequests() {
 saveProduct = function() {
   const name = document.getElementById('pName').value.trim();
   const price = parseInt(document.getElementById('pPrice').value) || 0;
-  const cost = parseInt(document.getElementById('pCost').value) || 0;
+  const cost = parseFloat(document.getElementById('pCost').value) || 0;
   const category = selectedProductCategory;
   const addQty = parseInt(document.getElementById('pStock').value) || 0;
   if (!name) { showToast('กรุณาใส่ชื่อสินค้า', true); return; }
@@ -7332,7 +7332,7 @@ function parseBulkProductPreview() {
     const cols = line.split(delim).map(c => c.trim().replace(/^"|"$/g, ''));
     const name = cols[0] || '';
     const price = parseInt(cols[1]) || 0;
-    const cost = parseInt(cols[2]) || 0;
+    const cost = parseFloat(cols[2]) || 0;
     const catRaw = (cols[3] || '').toLowerCase();
     const category = VALID_CATEGORIES.includes(catRaw) ? catRaw : 'other';
     const emoji = (cols[4] || '🍱').slice(0, 4);

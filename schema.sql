@@ -9,7 +9,7 @@ create table if not exists products (
   name text not null,
   emoji text default '🍱',
   price int not null default 0,
-  cost int not null default 0,
+  cost numeric(10,2) not null default 0,
   category text default 'other' check (category in ('drink','snack','icecream','stationery','book','other')),
   stock int not null default 0,
   low_at int not null default 10,
@@ -17,8 +17,12 @@ create table if not exists products (
   is_active boolean default true,
   created_at timestamptz default now()
 );
--- อัปเกรดตารางเดิม
-alter table products add column if not exists cost int default 0;
+-- อัปเกรดตารางเดิม (numeric รองรับทศนิยม)
+alter table products add column if not exists cost numeric(10,2) default 0;
+do $$ begin
+  alter table products alter column cost type numeric(10,2) using cost::numeric(10,2);
+exception when others then null;
+end $$;
 alter table products add column if not exists category text default 'other';
 alter table products add column if not exists image_url text;
 
@@ -86,11 +90,15 @@ create table if not exists sale_items (
   name text,
   emoji text,
   price int,
-  cost int default 0,
+  cost numeric(10,2) default 0,
   qty int
 );
--- อัปเกรดตารางเดิม
-alter table sale_items add column if not exists cost int default 0;
+-- อัปเกรดตารางเดิม (numeric รองรับทศนิยม)
+alter table sale_items add column if not exists cost numeric(10,2) default 0;
+do $$ begin
+  alter table sale_items alter column cost type numeric(10,2) using cost::numeric(10,2);
+exception when others then null;
+end $$;
 create index if not exists sale_items_sale_idx on sale_items (sale_id);
 
 -- 8. AUDIT LOGS (บันทึกทุกการกระทำสำคัญ — ป้องกันการทุจริต)

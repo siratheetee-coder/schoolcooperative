@@ -167,23 +167,23 @@
     border: 1px solid rgba(255,255,255,0.25);
   }
   .avatar {
-    min-width: 36px; height: 36px;
-    padding: 0 8px;
-    border-radius: 12px;
+    min-width: 42px; height: 42px;
+    padding: 0 12px;
+    border-radius: 13px;
     background: linear-gradient(135deg, var(--gold-400), var(--gold-500));
     display: grid; place-items: center;
     font-weight: 700;
-    font-size: 13px;
+    font-size: 14px;
     color: var(--green-700);
     box-shadow: inset -1px -2px 3px rgba(0,0,0,0.2), inset 1px 2px 3px rgba(255,255,255,0.5);
     white-space: nowrap;
     letter-spacing: -0.2px;
   }
-  .avatar[data-len="1"] { font-size: 15px; }
-  .avatar[data-len="2"] { font-size: 14px; }
-  .avatar[data-len="3"] { font-size: 12px; }
-  .avatar[data-len="4"] { font-size: 11px; }
-  .avatar[data-len="5"] { font-size: 10px; }
+  .avatar[data-len="1"] { font-size: 18px; }
+  .avatar[data-len="2"] { font-size: 16px; }
+  .avatar[data-len="3"] { font-size: 14px; }
+  .avatar[data-len="4"] { font-size: 13px; }
+  .avatar[data-len="5"] { font-size: 12px; }
   .seller-info { flex: 1; line-height: 1.2; }
   .seller-info .label { font-size: 11px; opacity: 0.8; }
   .seller-info .name { font-weight: 600; font-size: 14px; }
@@ -1156,12 +1156,12 @@
   }
   .buyer-cell:active { transform: scale(0.95); }
   .buyer-cell .bav {
-    min-width: 36px; height: 36px; padding: 0 8px;
-    border-radius: 12px;
+    min-width: 46px; height: 46px; padding: 0 14px;
+    border-radius: 14px;
     display: grid; place-items: center;
     color: white;
     font-weight: 700;
-    font-size: 13px;
+    font-size: 15px;
     white-space: nowrap;
     box-shadow:
       inset 1px 1px 1px rgba(255,255,255,0.3),
@@ -1944,13 +1944,13 @@
   }
   .quick-user:active { transform: scale(0.95); box-shadow: var(--shadow-inset);}
   .quick-user .qav {
-    min-width: 36px; height: 36px;
-    padding: 0 8px;
-    border-radius: 11px;
+    min-width: 42px; height: 42px;
+    padding: 0 12px;
+    border-radius: 13px;
     display: grid; place-items: center;
     color: white;
     font-weight: 700;
-    font-size: 12px;
+    font-size: 13px;
     white-space: nowrap;
     letter-spacing: -0.2px;
     box-shadow:
@@ -1958,11 +1958,11 @@
       inset -1px -1px 1px rgba(0,0,0,0.15),
       0 2px 0 rgba(0,0,0,0.15);
   }
-  .quick-user .qav[data-len="1"] { font-size: 15px; }
-  .quick-user .qav[data-len="2"] { font-size: 13px; }
-  .quick-user .qav[data-len="3"] { font-size: 11px; }
-  .quick-user .qav[data-len="4"] { font-size: 10px; }
-  .quick-user .qav[data-len="5"] { font-size: 9px; }
+  .quick-user .qav[data-len="1"] { font-size: 18px; }
+  .quick-user .qav[data-len="2"] { font-size: 16px; }
+  .quick-user .qav[data-len="3"] { font-size: 14px; }
+  .quick-user .qav[data-len="4"] { font-size: 12px; }
+  .quick-user .qav[data-len="5"] { font-size: 11px; }
   .quick-user .qname {
     font-size: 10px;
     font-weight: 600;
@@ -2570,12 +2570,16 @@
     white-space: nowrap;
     letter-spacing: -0.2px;
   }
-  .bav[data-len="3"], .pav[data-len="3"], .av-small[data-len="3"] { font-size: 11px; }
-  .bav[data-len="4"], .pav[data-len="4"], .av-small[data-len="4"] { font-size: 10px; }
-  .bav[data-len="5"], .pav[data-len="5"], .av-small[data-len="5"] { font-size: 9px; }
+  .bav[data-len="1"], .pav[data-len="1"], .av-small[data-len="1"] { font-size: 18px; }
+  .bav[data-len="2"], .pav[data-len="2"], .av-small[data-len="2"] { font-size: 16px; }
+  .bav[data-len="3"], .pav[data-len="3"], .av-small[data-len="3"] { font-size: 14px; }
+  .bav[data-len="4"], .pav[data-len="4"], .av-small[data-len="4"] { font-size: 13px; }
+  .bav[data-len="5"], .pav[data-len="5"], .av-small[data-len="5"] { font-size: 12px; }
+  .detail-av[data-len="1"] { font-size: 32px; }
+  .detail-av[data-len="2"] { font-size: 28px; }
   .detail-av[data-len="3"] { font-size: 24px; }
   .detail-av[data-len="4"] { font-size: 20px; }
-  .detail-av[data-len="5"] { font-size: 16px; }
+  .detail-av[data-len="5"] { font-size: 17px; }
 
   /* ===== Quiz System ===== */
   #view-quiz { padding: 16px 16px 100px; }
@@ -2983,11 +2987,11 @@
   }
   .member-card:active { transform: scale(0.98);}
   .m-avatar {
-    min-width: 50px; height: 50px;
-    padding: 0 10px;
-    border-radius: 16px;
+    min-width: 58px; height: 58px;
+    padding: 0 14px;
+    border-radius: 18px;
     display: grid; place-items: center;
-    color: white; font-weight: 700; font-size: 18px;
+    color: white; font-weight: 700; font-size: 20px;
     flex-shrink: 0;
     white-space: nowrap;
     letter-spacing: -0.3px;
@@ -2996,11 +3000,11 @@
       inset -1px -1px 2px rgba(0,0,0,0.15),
       0 3px 0 rgba(0,0,0,0.15);
   }
-  .m-avatar[data-len="1"] { font-size: 22px; }
-  .m-avatar[data-len="2"] { font-size: 18px; }
-  .m-avatar[data-len="3"] { font-size: 15px; }
-  .m-avatar[data-len="4"] { font-size: 13px; }
-  .m-avatar[data-len="5"] { font-size: 12px; }
+  .m-avatar[data-len="1"] { font-size: 26px; }
+  .m-avatar[data-len="2"] { font-size: 22px; }
+  .m-avatar[data-len="3"] { font-size: 18px; }
+  .m-avatar[data-len="4"] { font-size: 16px; }
+  .m-avatar[data-len="5"] { font-size: 14px; }
   .av-1 { background: linear-gradient(135deg, #FF8B7A, #E0594A);}
   .av-2 { background: linear-gradient(135deg, #7AB8E0, #4D8FCA);}
   .av-3 { background: linear-gradient(135deg, #B89AE0, #8266CA);}
@@ -3110,10 +3114,10 @@
     box-shadow: var(--shadow-sm);
   }
   .av-small {
-    min-width: 36px; height: 36px; padding: 0 8px;
-    border-radius: 12px;
+    min-width: 42px; height: 42px; padding: 0 12px;
+    border-radius: 13px;
     display: grid; place-items: center;
-    color: white; font-weight: 700; font-size: 14px;
+    color: white; font-weight: 700; font-size: 15px;
     flex-shrink: 0;
     white-space: nowrap;
   }
@@ -3178,10 +3182,10 @@
   /* member detail */
   .detail-head { display: flex; align-items: center; gap: 14px; margin-bottom: 16px;}
   .detail-av {
-    min-width: 60px; height: 60px; padding: 0 12px;
-    border-radius: 20px;
+    min-width: 68px; height: 68px; padding: 0 16px;
+    border-radius: 22px;
     display: grid; place-items: center;
-    color: white; font-weight: 700; font-size: 24px;
+    color: white; font-weight: 700; font-size: 26px;
     white-space: nowrap;
     box-shadow:
       inset 1px 1px 2px rgba(255,255,255,0.3),
@@ -4477,7 +4481,7 @@ function getTerm(d) {
 }
 
 // ============== VIEW ROUTER ==============
-const APP_VERSION = 'V 3.7';
+const APP_VERSION = 'V 3.8';
 // === School config with safe fallbacks ===
 const SC = window.SCHOOL_CONFIG || {};
 const SCHOOL = {

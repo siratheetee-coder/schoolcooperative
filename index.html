@@ -1129,13 +1129,24 @@
 
   /* member picker (in pay flow) */
   .buyer-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 8px;
-    max-height: 280px;
+    max-height: 360px;
     overflow-y: auto;
     padding: 4px;
   }
+  .buyer-grid-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .buyer-section-head {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--green-700);
+    margin: 8px 4px 6px;
+    letter-spacing: 0.2px;
+  }
+  .buyer-section-head:first-child { margin-top: 0; }
   .buyer-cell {
     background: var(--cream-100);
     border: 2px solid transparent;
@@ -4481,7 +4492,7 @@ function getTerm(d) {
 }
 
 // ============== VIEW ROUTER ==============
-const APP_VERSION = 'V 3.9';
+const APP_VERSION = 'V 4.0';
 // === School config with safe fallbacks ===
 const SC = window.SCHOOL_CONFIG || {};
 const SCHOOL = {
@@ -4562,20 +4573,33 @@ function openBuyerPicker() {
 }
 function closeBuyerPicker() { document.getElementById('buyerPickerModal').classList.remove('show'); }
 
+function getRecentBuyers(limit = 8) {
+  // เก็บลูกค้าล่าสุดที่ไม่ซ้ำ — ดูจาก sales (ไม่ voided + มี buyerId)
+  const seen = new Set();
+  const out = [];
+  const sortedByDate = [...sales].filter(s => !s.isVoided && s.buyerId).sort((a, b) => b.date - a.date);
+  for (const s of sortedByDate) {
+    if (seen.has(s.buyerId)) continue;
+    seen.add(s.buyerId);
+    const m = members.find(x => x.id === s.buyerId);
+    if (m) out.push(m);
+    if (out.length >= limit) break;
+  }
+  return out;
+}
+
+function cellHtml(m, isTeacher) {
+  return `
+    <button class="buyer-cell ${isTeacher ? 'teacher' : ''}" onclick="pickBuyer(${m.id})">
+      <div class="bav av-${m.color}" data-len="${m.avatar.length}">${m.avatar}</div>
+      <div class="bn">${isTeacher ? '👨‍🏫 ' : ''}${m.name.replace('น้อง','').split(' ')[0]}</div>
+    </button>
+  `;
+}
+
 function renderBuyerGrid() {
   const q = document.getElementById('buyerSearch').value.trim().toLowerCase();
   const grid = document.getElementById('buyerGrid');
-  // รวมครูกับนักเรียน — ครูขึ้นก่อน
-  const candidates = [...members].sort((a, b) => {
-    if (a.role !== b.role) return a.role === 'teacher' ? -1 : 1;
-    return a.name.localeCompare(b.name, 'th');
-  }).filter(m => {
-    if (!q) return true;
-    return m.name.toLowerCase().includes(q)
-        || m.code.toLowerCase().includes(q)
-        || (m.avatar || '').toLowerCase().includes(q)
-        || (m.class || '').toLowerCase().includes(q);
-  });
 
   const general = `
     <button class="buyer-cell general" onclick="pickBuyer(null)">
@@ -4583,15 +4607,36 @@ function renderBuyerGrid() {
       <div class="bn">ทั่วไป</div>
     </button>
   `;
-  const cells = candidates.map(m => {
-    const isTeacher = m.role === 'teacher';
-    return `
-    <button class="buyer-cell ${isTeacher ? 'teacher' : ''}" onclick="pickBuyer(${m.id})">
-      <div class="bav av-${m.color}" data-len="${m.avatar.length}">${m.avatar}</div>
-      <div class="bn">${isTeacher ? '👨‍🏫 ' : ''}${m.name.replace('น้อง','').split(' ')[0]}</div>
-    </button>
-  `;}).join('');
-  grid.innerHTML = general + cells;
+
+  // ถ้ามี search — แสดงผลค้นหาตรง ๆ ข้าม section recent
+  if (q) {
+    const candidates = [...members].sort((a, b) => {
+      if (a.role !== b.role) return a.role === 'teacher' ? -1 : 1;
+      return a.name.localeCompare(b.name, 'th');
+    }).filter(m => m.name.toLowerCase().includes(q)
+                || m.code.toLowerCase().includes(q)
+                || (m.avatar || '').toLowerCase().includes(q)
+                || (m.class || '').toLowerCase().includes(q));
+    grid.innerHTML = general + candidates.map(m => cellHtml(m, m.role === 'teacher')).join('');
+    return;
+  }
+
+  // โหมดปกติ: แสดง Recent ก่อน แล้วต่อด้วย All
+  const recent = getRecentBuyers(8);
+  const recentIds = new Set(recent.map(m => m.id));
+  const recentSection = recent.length > 0 ? `
+    <div class="buyer-section-head">⚡ ลูกค้าล่าสุด</div>
+    <div class="buyer-grid-row">${recent.map(m => cellHtml(m, m.role === 'teacher')).join('')}</div>
+    <div class="buyer-section-head">รายชื่อทั้งหมด</div>
+  ` : '';
+
+  const allCandidates = [...members].filter(m => !recentIds.has(m.id)).sort((a, b) => {
+    if (a.role !== b.role) return a.role === 'teacher' ? -1 : 1;
+    return a.name.localeCompare(b.name, 'th');
+  });
+  const allCells = allCandidates.map(m => cellHtml(m, m.role === 'teacher')).join('');
+
+  grid.innerHTML = recentSection + `<div class="buyer-grid-row">${general}${allCells}</div>`;
 }
 
 function pickBuyer(id) {

@@ -4481,7 +4481,7 @@ function getTerm(d) {
 }
 
 // ============== VIEW ROUTER ==============
-const APP_VERSION = 'V 3.8';
+const APP_VERSION = 'V 3.9';
 // === School config with safe fallbacks ===
 const SC = window.SCHOOL_CONFIG || {};
 const SCHOOL = {
@@ -5192,16 +5192,19 @@ function renderReport() {
   document.getElementById('txnCount').textContent = `${cur.length.toLocaleString()} รายการ · แสดง 10 ล่าสุด`;
   document.getElementById('txnList').innerHTML = recentAll.length === 0
     ? `<div style="text-align:center;color:var(--ink-soft);padding:14px;font-size:13px;">ยังไม่มีข้อมูล</div>`
-    : recentAll.map(s => `
+    : recentAll.map(s => {
+      const buyerLabel = s.buyerName ? `🛒 ${s.buyerName}` : '🛒 ลูกค้าทั่วไป';
+      return `
       <div class="txn ${s.isVoided ? 'voided' : ''}" style="cursor:pointer;" onclick="openSaleDetail(${s.id})">
         <div class="txn-icon">${s.items[0]?.emoji || '🧾'}</div>
         <div class="txn-info">
           <div class="t">บิล #${s.id} · ${s.items.length} รายการ ${s.isVoided ? '<span class="void-badge">ยกเลิก</span>' : ''}</div>
-          <div class="s">${thDateTime(s.date)} · ${s.seller}</div>
+          <div class="s">${buyerLabel} · 🧑‍💼 ${s.seller}</div>
+          <div class="s" style="opacity:0.7;">${thDateTime(s.date)}</div>
         </div>
         <div class="txn-amt">฿${s.total.toLocaleString()}</div>
       </div>
-    `).join('');
+    `;}).join('');
 }
 
 function renderChart(cur) {
@@ -8435,8 +8438,9 @@ function showVoidedList() {
           <div class="txn-icon">${s.items[0]?.emoji || '🧾'}</div>
           <div class="txn-info" style="flex:1;">
             <div class="t">บิล #${s.id} <span class="void-badge">ยกเลิก</span></div>
-            <div class="s">${thDateTime(s.date)} · ${s.seller}</div>
-            <div class="s" style="color:var(--red-500);">โดย ${s.voidedByName || '-'} · ${s.voidReason || 'ไม่ระบุ'}</div>
+            <div class="s">🛒 ${s.buyerName || 'ลูกค้าทั่วไป'} · 🧑‍💼 ${s.seller}</div>
+            <div class="s" style="opacity:0.75;">${thDateTime(s.date)}</div>
+            <div class="s" style="color:var(--red-500);">ยกเลิกโดย ${s.voidedByName || '-'} · ${s.voidReason || 'ไม่ระบุ'}</div>
           </div>
           <div class="txn-amt">฿${s.total.toLocaleString()}</div>
         </div>

@@ -4144,7 +4144,7 @@
     <div style="text-align:center;font-size:12px;color:var(--ink-soft);margin-bottom:12px;">ระบุเพื่อสะสมยอดสำหรับเฉลี่ยคืนสิ้นปี</div>
     <div class="search-box" style="margin-bottom:12px;">
       <span class="icon">🔍</span>
-      <input type="text" id="buyerSearch" placeholder="ค้นหารหัส/ชื่อ..." oninput="renderBuyerGrid()" />
+      <input type="text" id="buyerSearch" placeholder="ค้นหารหัส / ชื่อเล่น / ชื่อจริง..." oninput="renderBuyerGrid()" />
     </div>
     <div class="buyer-grid" id="buyerGrid"></div>
     <div class="actions" style="margin-top:14px;">
@@ -4477,7 +4477,7 @@ function getTerm(d) {
 }
 
 // ============== VIEW ROUTER ==============
-const APP_VERSION = 'V 3.6';
+const APP_VERSION = 'V 3.7';
 // === School config with safe fallbacks ===
 const SC = window.SCHOOL_CONFIG || {};
 const SCHOOL = {
@@ -4565,7 +4565,13 @@ function renderBuyerGrid() {
   const candidates = [...members].sort((a, b) => {
     if (a.role !== b.role) return a.role === 'teacher' ? -1 : 1;
     return a.name.localeCompare(b.name, 'th');
-  }).filter(m => !q || m.name.toLowerCase().includes(q) || m.code.includes(q));
+  }).filter(m => {
+    if (!q) return true;
+    return m.name.toLowerCase().includes(q)
+        || m.code.toLowerCase().includes(q)
+        || (m.avatar || '').toLowerCase().includes(q)
+        || (m.class || '').toLowerCase().includes(q);
+  });
 
   const general = `
     <button class="buyer-cell general" onclick="pickBuyer(null)">

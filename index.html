@@ -3587,10 +3587,16 @@
 
     <div class="rcard">
       <div class="rcard-head">
-        <h3>📝 รายการขายล่าสุด</h3>
+        <h3>📝 รายการขาย</h3>
         <span class="hint" id="txnCount">0 รายการ</span>
       </div>
+      <div class="search-box" style="margin-bottom:10px;">
+        <span class="icon">🔍</span>
+        <input type="text" id="txnSearchInput" placeholder="ค้นหาชื่อผู้ขาย / ผู้ซื้อ / บิล#..." oninput="setTxnSearch(this.value)" />
+        <button type="button" id="txnSearchClear" onclick="clearTxnSearch()" style="display:none;border:none;background:transparent;font-size:18px;color:var(--ink-soft);cursor:pointer;padding:0;">✕</button>
+      </div>
       <div id="txnList"></div>
+      <button id="txnExpandBtn" onclick="toggleTxnExpand()" style="width:100%;margin-top:10px;padding:10px;border:none;border-radius:12px;background:var(--cream-200);color:var(--green-700);font-family:inherit;font-weight:700;font-size:13px;cursor:pointer;display:none;">⬇ ดูทั้งหมด</button>
     </div>
 
     <div class="download-card">
@@ -4492,7 +4498,7 @@ function getTerm(d) {
 }
 
 // ============== VIEW ROUTER ==============
-const APP_VERSION = 'V 4.0';
+const APP_VERSION = 'V 4.1';
 // === School config with safe fallbacks ===
 const SC = window.SCHOOL_CONFIG || {};
 const SCHOOL = {
@@ -5233,11 +5239,49 @@ function renderReport() {
     `;}).join('');
 
   // include voided in recent list so teacher can see them; subtotal already excludes voided
-  const recentAll = filterSales(currentPeriod, 0, true).sort((a,b) => b.date - a.date).slice(0, 10);
-  document.getElementById('txnCount').textContent = `${cur.length.toLocaleString()} รายการ · แสดง 10 ล่าสุด`;
-  document.getElementById('txnList').innerHTML = recentAll.length === 0
-    ? `<div style="text-align:center;color:var(--ink-soft);padding:14px;font-size:13px;">ยังไม่มีข้อมูล</div>`
-    : recentAll.map(s => {
+  renderTxnList();
+}
+
+let txnSearch = '';
+let txnExpanded = false;
+
+function setTxnSearch(v) {
+  txnSearch = v.trim().toLowerCase();
+  document.getElementById('txnSearchClear').style.display = txnSearch ? '' : 'none';
+  renderTxnList();
+}
+function clearTxnSearch() {
+  document.getElementById('txnSearchInput').value = '';
+  setTxnSearch('');
+}
+function toggleTxnExpand() {
+  txnExpanded = !txnExpanded;
+  renderTxnList();
+}
+
+function renderTxnList() {
+  const all = filterSales(currentPeriod, 0, true).sort((a,b) => b.date - a.date);
+  let matched = all;
+  if (txnSearch) {
+    matched = all.filter(s =>
+      (s.seller || '').toLowerCase().includes(txnSearch)
+      || (s.buyerName || '').toLowerCase().includes(txnSearch)
+      || String(s.id).includes(txnSearch)
+    );
+  }
+  const showAll = txnSearch || txnExpanded;
+  const display = showAll ? matched : matched.slice(0, 10);
+
+  const countLabel = txnSearch
+    ? `${matched.length.toLocaleString()} จาก ${all.length.toLocaleString()} บิล`
+    : showAll
+      ? `แสดงทั้งหมด ${all.length.toLocaleString()} บิล`
+      : `${all.length.toLocaleString()} บิล · แสดง 10 ล่าสุด`;
+  document.getElementById('txnCount').textContent = countLabel;
+
+  document.getElementById('txnList').innerHTML = display.length === 0
+    ? `<div style="text-align:center;color:var(--ink-soft);padding:14px;font-size:13px;">${txnSearch ? 'ไม่พบรายการที่ตรงกับการค้นหา' : 'ยังไม่มีข้อมูล'}</div>`
+    : display.map(s => {
       const buyerLabel = s.buyerName ? `🛒 ${s.buyerName}` : '🛒 ลูกค้าทั่วไป';
       return `
       <div class="txn ${s.isVoided ? 'voided' : ''}" style="cursor:pointer;" onclick="openSaleDetail(${s.id})">
@@ -5250,6 +5294,15 @@ function renderReport() {
         <div class="txn-amt">฿${s.total.toLocaleString()}</div>
       </div>
     `;}).join('');
+
+  // Toggle "ดูทั้งหมด" button
+  const btn = document.getElementById('txnExpandBtn');
+  if (txnSearch || all.length <= 10) {
+    btn.style.display = 'none';
+  } else {
+    btn.style.display = '';
+    btn.innerHTML = txnExpanded ? '⬆ ย่อรายการ' : `⬇ ดูทั้งหมด (${all.length})`;
+  }
 }
 
 function renderChart(cur) {

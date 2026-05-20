@@ -2576,6 +2576,29 @@
   }
   .pc-zero { stroke: rgba(154,130,90,0.2); stroke-dasharray: 3,3; stroke-width: 1; }
 
+  /* === Notification feed === */
+  .noti-item {
+    display: flex; align-items: flex-start; gap: 12px;
+    background: var(--cream-100); border-radius: 14px;
+    padding: 12px 14px; cursor: pointer;
+    border-left: 4px solid transparent;
+    transition: background 0.15s;
+  }
+  .noti-item:hover { background: var(--cream-200); }
+  .noti-item.unread { background: linear-gradient(135deg, #E8F4F0, var(--cream-100)); border-left-color: var(--green-500); }
+  .noti-item .ni-ico {
+    width: 40px; height: 40px; border-radius: 12px;
+    background: white; display: grid; place-items: center;
+    font-size: 20px; flex-shrink: 0;
+    box-shadow: inset 1px 1px 2px rgba(154,130,90,0.15);
+  }
+  .noti-item.unread .ni-ico { background: linear-gradient(135deg, var(--green-400), var(--green-500)); color: white; }
+  .noti-item .ni-body { flex: 1; min-width: 0; line-height: 1.35; }
+  .noti-item .ni-title { font-size: 13px; font-weight: 700; color: var(--ink); }
+  .noti-item .ni-msg { font-size: 12px; color: var(--ink-soft); margin-top: 2px; }
+  .noti-item .ni-time { font-size: 10px; color: var(--gold-600); margin-top: 4px; font-weight: 600; }
+  .noti-empty { text-align: center; padding: 30px; color: var(--ink-soft); font-size: 13px; }
+
   /* === Avatar global fit-content + length-based sizing === */
   .bav, .pav, .detail-av, .av-small, .slot-person .av, .buyer-row .name .av, .a-member .av-small {
     white-space: nowrap;
@@ -3451,10 +3474,16 @@
           <div class="sub" id="headerSub">พัฒนาโดย ครูสิรธีร์ ตีเมืองซ้าย V 1.3</div>
         </div>
       </div>
-      <button class="icon-btn bell-btn" id="bellBtn" onclick="openRequests()" aria-label="คำขออนุมัติ">
-        🔔
-        <span class="bell-badge" id="bellBadge" style="display:none;">0</span>
-      </button>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button class="icon-btn bell-btn" id="notiBtn" onclick="openNotifications()" aria-label="การแจ้งเตือน">
+          📬
+          <span class="bell-badge" id="notiBadge" style="display:none;">0</span>
+        </button>
+        <button class="icon-btn bell-btn" id="bellBtn" onclick="openRequests()" aria-label="คำขออนุมัติ">
+          🔔
+          <span class="bell-badge" id="bellBadge" style="display:none;">0</span>
+        </button>
+      </div>
     </div>
     <div class="seller-card" onclick="logout()" title="แตะเพื่อออกจากระบบ">
       <div class="avatar" id="userAvatar">น</div>
@@ -4368,6 +4397,22 @@ T0002,ครูสมหญิง สุขใจ,ครูที่ปรึก
 </div>
 
 <!-- ============== REQUESTS MODAL ============== -->
+<!-- ============== NOTIFICATIONS MODAL ============== -->
+<div class="modal-bg" id="notiModal" onclick="if(event.target===this)closeNotifications()">
+  <div class="modal">
+    <div class="modal-close"></div>
+    <h2 style="margin-top:0;display:flex;align-items:center;gap:10px;">
+      📬 การแจ้งเตือน
+      <span id="notiCountPill" style="background:var(--cream-200);color:var(--ink-soft);font-size:12px;padding:3px 10px;border-radius:10px;font-weight:600;">0</span>
+    </h2>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-size:12px;">
+      <span style="color:var(--ink-soft);">เหตุการณ์ที่ผ่านมา</span>
+      <button onclick="markAllNotiRead()" style="border:none;background:transparent;color:var(--green-700);font-size:12px;cursor:pointer;font-family:inherit;text-decoration:underline;">✓ ทำเครื่องหมายว่าอ่านแล้วทั้งหมด</button>
+    </div>
+    <div id="notiList" style="display:flex;flex-direction:column;gap:8px;max-height:60vh;overflow-y:auto;margin:0 -8px;padding:0 8px;"></div>
+  </div>
+</div>
+
 <div class="modal-bg" id="requestsModal" onclick="if(event.target===this)closeRequests()">
   <div class="modal">
     <div class="modal-close"></div>
@@ -4498,7 +4543,7 @@ function getTerm(d) {
 }
 
 // ============== VIEW ROUTER ==============
-const APP_VERSION = 'V 4.1';
+const APP_VERSION = 'V 4.2';
 // === School config with safe fallbacks ===
 const SC = window.SCHOOL_CONFIG || {};
 const SCHOOL = {
@@ -6292,6 +6337,162 @@ function updateBellBadge() {
   }
 }
 
+// ============== NOTIFICATION FEED ==============
+// Source = audit_logs + low-stock derived from products array
+// Filter per role: teachers see system events, students see their own request outcomes
+
+function timeAgo(d) {
+  const diff = (Date.now() - d.getTime()) / 1000;
+  if (diff < 60) return 'เมื่อสักครู่';
+  if (diff < 3600) return `${Math.floor(diff/60)} นาทีที่แล้ว`;
+  if (diff < 86400) return `${Math.floor(diff/3600)} ชั่วโมงที่แล้ว`;
+  if (diff < 604800) return `${Math.floor(diff/86400)} วันที่แล้ว`;
+  return `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()+543}`;
+}
+
+function buildNotifications() {
+  if (!currentUser) return [];
+  const teacher = isTeacher();
+  const items = [];
+
+  // 1) จาก audit_logs
+  auditLogs.forEach(log => {
+    const created = log.createdAt instanceof Date ? log.createdAt : new Date(log.createdAt);
+    const actorName = log.actorName || log.actor_name || 'ระบบ';
+    const targetName = log.targetName || log.target_name || '';
+    let title = '', msg = '', ico = '📣', url = '/', show = false;
+    if (log.action === 'submit_request' && teacher) {
+      title = '📋 คำขออนุมัติใหม่';
+      msg = `${actorName}: ${targetName}`;
+      ico = '📋'; url = '#admin'; show = true;
+    } else if ((log.action === 'approve_request' || log.action === 'reject_request')
+               && log.metadata && log.metadata.requested_by) {
+      const meta = log.metadata;
+      if (!teacher && meta.requested_by && currentUser.name && meta.requested_by.includes(currentUser.name.replace('น้อง','').split(' ')[0])) {
+        title = log.action === 'approve_request' ? '✅ คำขอของคุณได้รับอนุมัติ' : '❌ คำขอของคุณถูกปฏิเสธ';
+        msg = targetName;
+        ico = log.action === 'approve_request' ? '✅' : '❌';
+        url = '#stock'; show = true;
+      }
+    } else if (log.action === 'void_sale' && teacher) {
+      title = '🚫 บิลถูกยกเลิก';
+      msg = `${targetName} โดย ${actorName}`;
+      ico = '🚫'; url = '#report'; show = true;
+    } else if (log.action === 'create_sale' && teacher && log.metadata?.total >= (SCHOOL.bigSale || 100)) {
+      title = '💰 บิลใหญ่';
+      msg = `${targetName} · ฿${(log.metadata.total||0).toLocaleString()}`;
+      ico = '💰'; url = '#report'; show = true;
+    } else if (log.action === 'pay_dividend') {
+      title = '🎁 จ่ายปันผล/เฉลี่ยคืน';
+      msg = targetName;
+      ico = '🎁'; url = '#shares'; show = true;
+    } else if (log.action === 'quiz_settings' && !teacher) {
+      title = '📚 มีการเปลี่ยนแปลงระบบ Quiz';
+      msg = targetName;
+      ico = '📚'; url = '#quiz'; show = true;
+    }
+    if (show) items.push({ id: 'a' + log.id, time: created, title, msg, ico, url });
+  });
+
+  // 2) สินค้าใกล้หมด (teacher) — สังเกตจาก products array
+  if (teacher) {
+    products.forEach(p => {
+      if (p.stock <= 0) {
+        items.push({
+          id: 'out-' + p.id, time: new Date(), pinned: true,
+          title: '❗ สินค้าหมดสต็อก', msg: p.name, ico: '❗', url: '#stock'
+        });
+      } else if (p.stock <= (p.lowAt || 10)) {
+        items.push({
+          id: 'low-' + p.id, time: new Date(), pinned: true,
+          title: '⚠ สินค้าใกล้หมด', msg: `${p.name} เหลือ ${p.stock} ${p.unit||''}`,
+          ico: '⚠', url: '#stock'
+        });
+      }
+    });
+  }
+
+  // Sort: pinned first (stock alerts), then by time desc
+  items.sort((a, b) => {
+    if (a.pinned !== b.pinned) return a.pinned ? -1 : 1;
+    return b.time - a.time;
+  });
+  return items.slice(0, 30);
+}
+
+function getLastReadTs() {
+  const v = localStorage.getItem(`coopNotiRead:${currentUser?.id}`);
+  return v ? parseInt(v) : 0;
+}
+function setLastReadTs(ts) {
+  if (!currentUser) return;
+  localStorage.setItem(`coopNotiRead:${currentUser.id}`, ts);
+}
+
+function updateNotiBadge() {
+  const badge = document.getElementById('notiBadge');
+  if (!badge || !currentUser) return;
+  const items = buildNotifications();
+  const lastRead = getLastReadTs();
+  const unread = items.filter(it => !it.pinned && it.time.getTime() > lastRead).length;
+  badge.textContent = unread;
+  badge.style.display = unread > 0 ? 'grid' : 'none';
+}
+
+function openNotifications() {
+  if (!currentUser) return;
+  renderNotifications();
+  document.getElementById('notiModal').classList.add('show');
+  // ทำเครื่องหมายอ่านอัตโนมัติเมื่อเปิดดู
+  setTimeout(() => {
+    setLastReadTs(Date.now());
+    updateNotiBadge();
+  }, 500);
+}
+function closeNotifications() { document.getElementById('notiModal').classList.remove('show'); }
+
+function markAllNotiRead() {
+  setLastReadTs(Date.now());
+  updateNotiBadge();
+  renderNotifications();
+}
+
+function renderNotifications() {
+  const list = document.getElementById('notiList');
+  const items = buildNotifications();
+  const lastRead = getLastReadTs();
+  document.getElementById('notiCountPill').textContent = items.length;
+  if (items.length === 0) {
+    list.innerHTML = `<div class="noti-empty">ยังไม่มีการแจ้งเตือน</div>`;
+    return;
+  }
+  list.innerHTML = items.map(it => {
+    const unread = !it.pinned && it.time.getTime() > lastRead;
+    const timeStr = it.pinned ? 'ยังคงค้าง' : timeAgo(it.time);
+    return `
+      <div class="noti-item ${unread ? 'unread' : ''}" onclick="handleNotiClick('${it.url}')">
+        <div class="ni-ico">${it.ico}</div>
+        <div class="ni-body">
+          <div class="ni-title">${it.title}</div>
+          <div class="ni-msg">${it.msg}</div>
+          <div class="ni-time">${timeStr}</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function handleNotiClick(url) {
+  closeNotifications();
+  const view = (url || '').replace(/^.*#/, '').replace('/', '');
+  if (view && ['pos','stock','report','shares','admin','quiz'].includes(view)) {
+    setView(view);
+  }
+}
+
+// อัปเดต badge ทุก 30 วินาที + เมื่อมี event
+setInterval(() => updateNotiBadge(), 30000);
+
 function applyRoleVisibility() {
   // Hide dividend/patronage "pay" buttons for non-teacher
   document.querySelectorAll('.pay-div-btn').forEach(btn => {
@@ -6728,6 +6929,7 @@ async function loadFromCloud() {
         createdAt: new Date(a.created_at)
       }));
       nextAuditId = alogs.length ? Math.max(...alogs.map(x => x.id)) + 1 : 1;
+      if (typeof updateNotiBadge === 'function') updateNotiBadge();
     }
 
     // shift assignments
@@ -8222,6 +8424,7 @@ function logAudit(action, targetType, targetId, targetName, metadata = null) {
   };
   auditLogs.push(entry);
   sbInsertAudit(entry);
+  if (typeof updateNotiBadge === 'function') updateNotiBadge();
 }
 
 let auditFilter = 'all';
@@ -8649,6 +8852,26 @@ function startRealtime() {
     .subscribe();
   realtimeChannels.push(reqChannel);
 
+  // === AUDIT LOGS (live notifications) ===
+  const auditChannel = sb.channel('coop-audit')
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'audit_logs' }, payload => {
+      const a = payload.new;
+      if (auditLogs.find(x => x.id === a.id)) return;
+      auditLogs.unshift({
+        id: a.id,
+        actorId: a.actor_id, actorName: a.actor_name, actorRole: a.actor_role,
+        action: a.action, targetType: a.target_type, targetId: a.target_id,
+        targetName: a.target_name, metadata: a.metadata,
+        createdAt: new Date(a.created_at)
+      });
+      // Trim to last 500
+      if (auditLogs.length > 500) auditLogs.length = 500;
+      updateNotiBadge();
+      if (document.getElementById('notiModal').classList.contains('show')) renderNotifications();
+    })
+    .subscribe();
+  realtimeChannels.push(auditChannel);
+
   // === PRODUCTS (live stock updates) ===
   const prodChannel = sb.channel('coop-products')
     .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, payload => {
@@ -8790,6 +9013,7 @@ setUser = function(m) {
   if (sb) startRealtime();
   maybeShowNotiBanner();
   maybePromptPush();
+  updateNotiBadge();
 };
 
 // Hook: stop on logout

@@ -4548,7 +4548,7 @@ function getTerm(d) {
 }
 
 // ============== VIEW ROUTER ==============
-const APP_VERSION = 'V 4.3';
+const APP_VERSION = 'V 4.4';
 // === School config with safe fallbacks ===
 const SC = window.SCHOOL_CONFIG || {};
 const SCHOOL = {
@@ -9461,6 +9461,58 @@ function nextQuiz() {
   }
 }
 
+// ระดับความเข้าใจตามคะแนน
+function getExpertiseLevel(pct) {
+  if (pct === 100) return {
+    badge: '🏆',
+    label: 'ยินดีด้วย! คุณคือผู้เชี่ยวชาญด้านสหกรณ์',
+    toast: 'ยินดีด้วย! คุณคือผู้เชี่ยวชาญด้านสหกรณ์',
+    color: '#E89A0E'
+  };
+  if (pct >= 90) return {
+    badge: '🥇',
+    label: 'ระดับเชี่ยวชาญ — เก่งเกือบสมบูรณ์แบบ!',
+    toast: 'ระดับเชี่ยวชาญ',
+    color: '#FFB627'
+  };
+  if (pct >= 80) return {
+    badge: '🌟',
+    label: 'ระดับชำนาญ — ทำได้ดีมาก',
+    toast: 'ระดับชำนาญ',
+    color: '#46A697'
+  };
+  if (pct >= 70) return {
+    badge: '👍',
+    label: 'ระดับเข้าใจดี — ทำต่อไปอีกหน่อย',
+    toast: 'ระดับเข้าใจดี',
+    color: '#2D7D6F'
+  };
+  if (pct >= 60) return {
+    badge: '😊',
+    label: 'ระดับพอใช้ได้ — เกือบสำเร็จแล้ว',
+    toast: 'ระดับพอใช้ได้',
+    color: '#7AB8E0'
+  };
+  if (pct >= 50) return {
+    badge: '💪',
+    label: 'ระดับเริ่มต้น — มีพื้นฐานบ้างแล้ว',
+    toast: 'ระดับเริ่มต้น',
+    color: '#9C7CB8'
+  };
+  if (pct >= 40) return {
+    badge: '📖',
+    label: 'ต้องทบทวนเพิ่มเติม — ลองอ่านคำอธิบายแต่ละข้อ',
+    toast: 'ต้องทบทวนเพิ่มเติม',
+    color: '#E0594A'
+  };
+  return {
+    badge: '📚',
+    label: 'ลองใหม่อีกครั้ง — ฝึกบ่อย ๆ จะเก่งขึ้น',
+    toast: 'ลองใหม่อีกครั้ง',
+    color: '#C44'
+  };
+}
+
 function finishQuiz() {
   clearInterval(quizState.timerInterval);
   const score = quizState.answers.filter(a => a.correct).length;
@@ -9468,21 +9520,20 @@ function finishQuiz() {
   const duration = Math.floor((Date.now() - quizState.startTime) / 1000);
   const pct = Math.round(score / total * 100);
 
-  // Badge by score
-  let badge, msg;
-  if (pct === 100) { badge = '🏆'; msg = 'เก่งมาก! ทำได้คะแนนเต็ม!'; }
-  else if (pct >= 80) { badge = '🌟'; msg = 'ยอดเยี่ยม!'; }
-  else if (pct >= 60) { badge = '👍'; msg = 'ดี ทำต่อไปนะ'; }
-  else if (pct >= 40) { badge = '💪'; msg = 'ต้องฝึกฝนเพิ่ม'; }
-  else { badge = '📚'; msg = 'ลองใหม่อีกครั้งนะ'; }
+  // === ระดับความเข้าใจ (Expertise Level) ===
+  // คำนวณจากเปอร์เซ็นต์คะแนน
+  const level = getExpertiseLevel(pct);
 
-  document.getElementById('qrBadge').textContent = badge;
+  document.getElementById('qrBadge').textContent = level.badge;
   document.getElementById('qrPhase').textContent = quizState.phase === 'pre' ? '📝 Pre-test' : '🎓 Post-test';
   document.getElementById('qrScore').textContent = score;
   document.getElementById('qrTotal').textContent = total;
   document.getElementById('qrPct').textContent = `${pct}%`;
-  document.getElementById('qrMsg').textContent = msg;
+  document.getElementById('qrMsg').textContent = level.label;
   document.getElementById('qrMeta').textContent = `ใช้เวลา ${Math.floor(duration/60)}:${String(duration%60).padStart(2,'0')}`;
+
+  // แสดง toast สำคัญพร้อม emoji
+  showToast(`${level.badge} ${level.toast} ${score}/${total}`);
 
   // เปรียบเทียบ post กับ pre
   const cmpEl = document.getElementById('qrCompare');

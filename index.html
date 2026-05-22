@@ -22,10 +22,25 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
+<!-- Demo mode detect — must run BEFORE supabase-config.js -->
+<script>
+  window.DEMO_MODE = /[?&#]demo=?1?(&|$)/i.test(location.search + location.hash) || location.hash === '#demo';
+  if (window.DEMO_MODE) {
+    // ปิด Supabase ใน demo mode (เก็บข้อมูลแค่ในเครื่อง)
+    window.SUPABASE_CONFIG = { url: '', anonKey: '' };
+    console.log('🎭 Demo Mode active');
+  }
+</script>
+
 <!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="school-config.js"></script>
-<script src="supabase-config.js"></script>
+<script>
+  // โหลด supabase-config เฉพาะถ้าไม่ใช่ demo
+  if (!window.DEMO_MODE) {
+    document.write('<script src="supabase-config.js"><\/script>');
+  }
+</script>
 <style>
   /* ============== PALETTE ============== */
   :root {
@@ -1647,6 +1662,32 @@
   }
 
   /* ============== CLOUD STATUS ============== */
+  .demo-banner {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 200;
+    background: linear-gradient(90deg, #F4A82E, #E89A0E);
+    color: #2C1810;
+    padding: 6px 12px;
+    text-align: center;
+    font-size: 12px;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    cursor: pointer;
+    user-select: none;
+    display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap;
+  }
+  .demo-banner .demo-pill {
+    background: rgba(0,0,0,0.18);
+    padding: 2px 10px;
+    border-radius: 10px;
+    font-size: 11px;
+    color: white;
+  }
+  .demo-banner .demo-text { font-size: 11px; opacity: 0.85; }
+  body.has-demo-banner { padding-top: 28px; }
+  body.has-demo-banner .login-screen { padding-top: 28px; }
+
   .cloud-pill {
     position: fixed;
     top: 12px;
@@ -3492,6 +3533,12 @@
   <button class="close" onclick="dismissInstall()">✕</button>
 </div>
 
+<!-- ============== DEMO MODE BANNER ============== -->
+<div id="demoBanner" class="demo-banner" style="display:none;" onclick="showDemoMenu()">
+  <span class="demo-pill">🎭 โหมดทดลอง</span>
+  <span class="demo-text">ข้อมูลไม่ถูกบันทึก · แตะที่นี่เพื่อรีเซ็ต</span>
+</div>
+
 <!-- ============== LOGIN SCREEN ============== -->
 <div class="login-screen" id="loginScreen">
   <div class="login-card">
@@ -4606,7 +4653,7 @@ function getTerm(d) {
 }
 
 // ============== VIEW ROUTER ==============
-const APP_VERSION = 'V 4.8';
+const APP_VERSION = 'V 4.9';
 // === School config with safe fallbacks ===
 const SC = window.SCHOOL_CONFIG || {};
 const SCHOOL = {
@@ -6420,7 +6467,7 @@ function setUser(m) {
     ? '<span class="role-badge teacher">👨‍🏫 ครู</span>'
     : '<span class="role-badge student">นักเรียน</span>';
   document.getElementById('userName').innerHTML = `${m.name} (รหัส ${m.code})${badge}`;
-  localStorage.setItem('coopUser', m.id);
+  if (!window.DEMO_MODE) localStorage.setItem('coopUser', m.id);
   // toggle admin nav button + 5-column layout
   const navAdmin = document.getElementById('navAdmin');
   const navInner = document.querySelector('.bottom-nav-inner');
@@ -6724,10 +6771,101 @@ confirmPay = function() {
 
 // Initial: try restore
 renderQuickGrid();
-const savedUserId = localStorage.getItem('coopUser');
-if (savedUserId) {
-  const m = members.find(x => x.id === parseInt(savedUserId));
-  if (m) setUser(m);
+
+// ============== DEMO MODE ==============
+function initDemoMode() {
+  if (!window.DEMO_MODE) return;
+  document.body.classList.add('has-demo-banner');
+  document.getElementById('demoBanner').style.display = 'flex';
+
+  // ห้ามใช้ localStorage บันทึก user → ใช้ sessionStorage แทน
+  // (ปิดแท็บแล้วลืม)
+  try { localStorage.removeItem('coopUser'); } catch(e) {}
+
+  // Seed ข้อมูลตัวอย่าง ~30 วัน
+  seedDemoData();
+
+  // Auto-login เป็นครู
+  const teacher = members.find(m => m.role === 'teacher');
+  if (teacher) setUser(teacher);
+}
+
+function seedDemoData() {
+  // เคลียร์เพื่อกัน double-seed
+  sales.length = 0;
+  // นักเรียนที่ขายของ (random pick)
+  const sellers = members.filter(m => m.role === 'student');
+  const buyers = members.filter(m => m.role === 'student');
+  const now = new Date();
+  let saleId = 1;
+  // gen 30 วันย้อนหลัง วันละ ~5-12 บิล
+  for (let d = 29; d >= 0; d--) {
+    const day = new Date(now);
+    day.setDate(day.getDate() - d);
+    const bills = 5 + Math.floor(Math.random() * 8);
+    for (let i = 0; i < bills; i++) {
+      const date = new Date(day);
+      // ช่วงเวลาขาย 9-15 น.
+      date.setHours(9 + Math.floor(Math.random() * 6));
+      date.setMinutes(Math.floor(Math.random() * 60));
+      const itemCount = 1 + Math.floor(Math.random() * 3);
+      const items = [];
+      for (let k = 0; k < itemCount; k++) {
+        const p = products[Math.floor(Math.random() * products.length)];
+        const qty = 1 + Math.floor(Math.random() * 3);
+        items.push({ id: p.id, name: p.name, emoji: p.emoji, price: p.price, cost: p.cost || 0, qty });
+      }
+      const seller = sellers[Math.floor(Math.random() * sellers.length)];
+      const buyer = Math.random() > 0.4 ? buyers[Math.floor(Math.random() * buyers.length)] : null;
+      const total = items.reduce((s, x) => s + x.price * x.qty, 0);
+      sales.push({
+        id: saleId++,
+        date,
+        seller: seller.name,
+        sellerId: seller.id,
+        buyerId: buyer?.id || null,
+        buyerName: buyer?.name || '',
+        items,
+        total,
+        isVoided: false
+      });
+    }
+  }
+  // เพิ่ม pending request ตัวอย่าง
+  pendingRequests.push({
+    id: nextRequestId++,
+    requestedById: sellers[0]?.id,
+    requestedByName: sellers[0]?.name || 'นักเรียน',
+    type: 'restock',
+    payload: { id: products[0]?.id, addQty: 50 },
+    summary: `เติมสต็อก "${products[0]?.name}" +50 ชิ้น`,
+    status: 'pending',
+    requestedAt: new Date()
+  });
+}
+
+function showDemoMenu() {
+  if (!window.DEMO_MODE) return;
+  if (confirm('🔄 รีเซ็ตข้อมูลตัวอย่างกลับไปเริ่มต้นใหม่?')) {
+    location.reload();
+  }
+}
+
+// ห้าม Service Worker cache demo data
+if (window.DEMO_MODE && 'serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then(regs => {
+    // ไม่ unregister — แค่ไม่ให้รบกวน
+  });
+}
+
+if (window.DEMO_MODE) {
+  initDemoMode();
+} else {
+  const savedUserId = localStorage.getItem('coopUser');
+  if (savedUserId) {
+    const m = members.find(x => x.id === parseInt(savedUserId));
+    if (m) setUser(m);
+  }
 }
 
 // ============== SUPABASE INTEGRATION ==============

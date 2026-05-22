@@ -2617,7 +2617,7 @@
     white-space: nowrap;
     margin-bottom: 3px;
   }
-  .bar-col .lbl { font-size: 9px; color: var(--ink-soft); font-weight: 600; text-align: center; line-height: 1.1; }
+  .bar-col .lbl { font-size: 9px; color: var(--ink-soft); font-weight: 600; text-align: center; line-height: 1.1; min-height: 11px; }
 
   /* === Donut Chart (by category) === */
   .donut-wrap {
@@ -4699,7 +4699,7 @@ function getTerm(d) {
 }
 
 // ============== VIEW ROUTER ==============
-const APP_VERSION = 'V 5.1';
+const APP_VERSION = 'V 5.2';
 // === School config with safe fallbacks ===
 const SC = window.SCHOOL_CONFIG || {};
 const SCHOOL = {
@@ -5599,7 +5599,7 @@ function renderChart(cur) {
           ${i === topIdx && b.val > 0 ? `<span class="val">฿${b.val.toLocaleString()}</span>` : ''}
         </div>
       </div>
-      <div class="lbl">${showLabel(i) ? b.lbl : ''}</div>
+      <div class="lbl">${showLabel(i) ? b.lbl : '&nbsp;'}</div>
     </div>
   `).join('');
 }

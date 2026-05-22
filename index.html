@@ -4135,6 +4135,11 @@
     <div class="modal-close"></div>
     <h3 id="shiftModalTitle">จัดเวร</h3>
     <div style="text-align:center;font-size:12px;color:var(--ink-soft);margin-bottom:14px;" id="shiftModalSub"></div>
+    <div class="search-box" style="margin-bottom:12px;">
+      <span class="icon">🔍</span>
+      <input type="text" id="shiftSearch" placeholder="ค้นหารหัส / ชื่อเล่น / ชื่อจริง / ชั้น..." oninput="renderShiftPickerList()" />
+      <button type="button" id="shiftSearchClear" onclick="clearShiftSearch()" style="display:none;border:none;background:transparent;font-size:18px;color:var(--ink-soft);cursor:pointer;padding:0;">✕</button>
+    </div>
     <div class="picker-list" id="shiftPicker"></div>
     <div style="font-size:11px;color:var(--ink-soft);text-align:center;margin-top:10px;">แตะเลือกหลายคนได้</div>
     <div class="actions" style="margin-top:14px;">
@@ -4543,7 +4548,7 @@ function getTerm(d) {
 }
 
 // ============== VIEW ROUTER ==============
-const APP_VERSION = 'V 4.2';
+const APP_VERSION = 'V 4.3';
 // === School config with safe fallbacks ===
 const SC = window.SCHOOL_CONFIG || {};
 const SCHOOL = {
@@ -7710,23 +7715,61 @@ function renderTodayShift() {
 
 // Shift editor (teacher)
 let editingShift = null; // { dow, slot, selectedIds: Set }
+let shiftSearch = '';
+
 function openShiftEdit(dow, slot) {
   if (!isTeacher()) return;
   const sm = SLOT_META[slot];
   const current = shiftsFor(dow, slot).map(a => a.memberId);
   editingShift = { dow, slot, selectedIds: new Set(current) };
+  shiftSearch = '';
+  const searchInput = document.getElementById('shiftSearch');
+  if (searchInput) searchInput.value = '';
+  document.getElementById('shiftSearchClear').style.display = 'none';
   document.getElementById('shiftModalTitle').textContent = `${DAY_NAMES[dow]} · ${sm.name}`;
   document.getElementById('shiftModalSub').textContent = `${sm.ico} ${sm.time}`;
-  renderShiftPicker();
+  renderShiftPickerList();
   document.getElementById('shiftModal').classList.add('show');
 }
 function closeShiftEdit() { document.getElementById('shiftModal').classList.remove('show'); }
 
-function renderShiftPicker() {
+function clearShiftSearch() {
+  document.getElementById('shiftSearch').value = '';
+  renderShiftPickerList();
+}
+
+function renderShiftPickerList() {
+  if (!editingShift) return;
+  const searchInput = document.getElementById('shiftSearch');
+  shiftSearch = searchInput ? searchInput.value.trim().toLowerCase() : '';
+  document.getElementById('shiftSearchClear').style.display = shiftSearch ? '' : 'none';
+
   const list = document.getElementById('shiftPicker');
   const sel = editingShift.selectedIds;
-  // Only students for selling shifts (skip teachers)
-  const candidates = members.filter(m => m.role === 'student');
+
+  // เฉพาะนักเรียน — ผู้ที่เลือกแล้วลอยขึ้นบน
+  let candidates = members.filter(m => m.role === 'student');
+  if (shiftSearch) {
+    candidates = candidates.filter(m =>
+      m.name.toLowerCase().includes(shiftSearch)
+      || m.code.toLowerCase().includes(shiftSearch)
+      || (m.avatar || '').toLowerCase().includes(shiftSearch)
+      || (m.class || '').toLowerCase().includes(shiftSearch));
+  }
+  // Sort: ที่เลือกขึ้นก่อน ตามด้วยตามชั้น+ชื่อ
+  candidates.sort((a, b) => {
+    const sa = sel.has(a.id) ? 0 : 1;
+    const sb = sel.has(b.id) ? 0 : 1;
+    if (sa !== sb) return sa - sb;
+    return (a.class || '').localeCompare(b.class || '', 'th')
+        || a.name.localeCompare(b.name, 'th');
+  });
+
+  if (candidates.length === 0) {
+    list.innerHTML = `<div style="text-align:center;padding:24px;color:var(--ink-soft);font-size:13px;">ไม่พบรายชื่อที่ตรง</div>`;
+    return;
+  }
+
   list.innerHTML = candidates.map(m => `
     <div class="picker-item ${sel.has(m.id) ? 'sel' : ''}" onclick="toggleShiftPick(${m.id})">
       <div class="pav av-${m.color}" data-len="${m.avatar.length}">${m.avatar}</div>
@@ -7738,10 +7781,14 @@ function renderShiftPicker() {
     </div>
   `).join('');
 }
+
+// keep old name as alias
+function renderShiftPicker() { renderShiftPickerList(); }
+
 function toggleShiftPick(id) {
   if (editingShift.selectedIds.has(id)) editingShift.selectedIds.delete(id);
   else editingShift.selectedIds.add(id);
-  renderShiftPicker();
+  renderShiftPickerList();
 }
 
 async function sbDeleteShifts(dow, slot) {

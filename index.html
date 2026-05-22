@@ -4605,7 +4605,7 @@ function getTerm(d) {
 }
 
 // ============== VIEW ROUTER ==============
-const APP_VERSION = 'V 4.6';
+const APP_VERSION = 'V 4.7';
 // === School config with safe fallbacks ===
 const SC = window.SCHOOL_CONFIG || {};
 const SCHOOL = {
@@ -6437,6 +6437,19 @@ function setUser(m) {
   applyRoleVisibility();
   renderTodayShift();
   document.getElementById('loginScreen').classList.add('hidden');
+
+  // ซิงค์ role ของ push_subscriptions ให้ตรงกับ role ปัจจุบันใน members
+  // (กันกรณีโค้ดเก่าเคย save role ผิด)
+  syncPushSubscriptionRole();
+}
+
+async function syncPushSubscriptionRole() {
+  if (!sb || !currentUser) return;
+  try {
+    await sb.from('push_subscriptions')
+      .update({ role: currentUser.role || 'student', member_name: currentUser.name })
+      .eq('member_id', currentUser.id);
+  } catch (e) { /* silent */ }
 }
 
 function updateBellBadge() {
@@ -6788,11 +6801,18 @@ async function subscribePush() {
     }
 
     const json = sub.toJSON();
+    // เช็ค role ของ user ใน DB ก่อนบันทึก (กันกรณี currentUser.role ไม่ตรง)
+    let resolvedRole = currentUser.role || 'student';
+    try {
+      const { data: m } = await sb.from('members').select('role').eq('id', currentUser.id).maybeSingle();
+      if (m && m.role) resolvedRole = m.role;
+    } catch (e) { /* fallback ใช้ currentUser.role */ }
+
     // Upsert by endpoint
     await sb.from('push_subscriptions').upsert({
       member_id: currentUser.id,
       member_name: currentUser.name,
-      role: currentUser.role || 'student',
+      role: resolvedRole,
       endpoint: json.endpoint,
       p256dh: json.keys.p256dh,
       auth: json.keys.auth,

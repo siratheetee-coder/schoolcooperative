@@ -13,14 +13,26 @@
   "categories": ["education", "business", "productivity"],
   "icons": [
     {
-      "src": "logo-no-bg.png",
-      "sizes": "any",
+      "src": "web-app-manifest-192x192.png",
+      "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "logo-no-bg.png",
-      "sizes": "any",
+      "src": "web-app-manifest-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "web-app-manifest-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "web-app-manifest-512x512.png",
+      "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
     }
@@ -30,13 +42,13 @@
       "name": "หน้าขาย (POS)",
       "short_name": "ขาย",
       "url": "./index.html#pos",
-      "icons": [{ "src": "logo-no-bg.png", "sizes": "any", "type": "image/png" }]
+      "icons": [{ "src": "web-app-manifest-192x192.png", "sizes": "192x192", "type": "image/png" }]
     },
     {
       "name": "รายงานยอดขาย",
       "short_name": "รายงาน",
       "url": "./index.html#report",
-      "icons": [{ "src": "logo-no-bg.png", "sizes": "any", "type": "image/png" }]
+      "icons": [{ "src": "web-app-manifest-192x192.png", "sizes": "192x192", "type": "image/png" }]
     }
   ]
 }

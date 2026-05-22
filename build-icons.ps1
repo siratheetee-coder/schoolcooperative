@@ -34,16 +34,35 @@ Write-Host "Trimming transparent padding..."
 $logo = Trim-Transparent $logoRaw
 "Trimmed logo size: $($logo.Width) x $($logo.Height)" | Write-Host
 
-function Build-Icon($size, $outName, $scalePct) {
+# Build rounded-rect path (squircle-ish corner)
+function New-RoundedRectPath($w, $h, $radius) {
+    $path = New-Object System.Drawing.Drawing2D.GraphicsPath
+    $d = $radius * 2
+    $path.AddArc(0, 0, $d, $d, 180, 90)
+    $path.AddArc($w - $d, 0, $d, $d, 270, 90)
+    $path.AddArc($w - $d, $h - $d, $d, $d, 0, 90)
+    $path.AddArc(0, $h - $d, $d, $d, 90, 90)
+    $path.CloseFigure()
+    return $path
+}
+
+# $cornerPct 0 = square, 0.22 = iOS-style squircle
+function Build-Icon($size, $outName, $scalePct, $cornerPct = 0) {
     $bmp = New-Object System.Drawing.Bitmap $size, $size
     $g = [System.Drawing.Graphics]::FromImage($bmp)
     $g.SmoothingMode = 'AntiAlias'
     $g.InterpolationMode = 'HighQualityBicubic'
     $g.PixelOffsetMode = 'HighQuality'
 
-    # Fill background
     $brush = New-Object System.Drawing.SolidBrush $bgColor
-    $g.FillRectangle($brush, 0, 0, $size, $size)
+    if ($cornerPct -gt 0) {
+        $radius = [int]($size * $cornerPct)
+        $path = New-RoundedRectPath $size $size $radius
+        $g.SetClip($path)
+        $g.FillPath($brush, $path)
+    } else {
+        $g.FillRectangle($brush, 0, 0, $size, $size)
+    }
 
     # Compute logo size keeping aspect, fit within (size * scalePct) box
     $maxDim = $size * $scalePct
@@ -60,21 +79,24 @@ function Build-Icon($size, $outName, $scalePct) {
     $g.DrawImage($logo, $x, $y, $w, $h)
 
     $brush.Dispose()
+    if ($cornerPct -gt 0 -and $path) { $path.Dispose() }
     $g.Dispose()
 
     $outPath = Join-Path (Get-Location) $outName
     $bmp.Save($outPath, [System.Drawing.Imaging.ImageFormat]::Png)
     $bmp.Dispose()
-    Write-Host "Wrote $outName ($size x $size)"
+    Write-Host "Wrote $outName ($size x $size) corner=$cornerPct"
 }
 
-# Apple touch icon — iOS auto-rounds, fills edge-to-edge
-Build-Icon 180 "apple-touch-icon.png" 0.88
-# PWA manifest icons (maskable safe-zone = inner 80%)
-Build-Icon 192 "web-app-manifest-192x192.png" 0.78
-Build-Icon 512 "web-app-manifest-512x512.png" 0.78
-# Favicon size
-Build-Icon 96 "favicon-96x96.png" 0.88
+# Rounded set (purpose: any) — สำหรับ browser tab + Android launcher
+Build-Icon 180 "apple-touch-icon.png" 0.78 0.22         # iOS auto-rounds but rounding helps tab preview
+Build-Icon 192 "web-app-manifest-192x192.png" 0.72 0.22
+Build-Icon 512 "web-app-manifest-512x512.png" 0.72 0.22
+Build-Icon 96  "favicon-96x96.png" 0.78 0.22
+
+# Square set (purpose: maskable) — Android launcher จะตัดมุมเอง ต้องเต็มสี่เหลี่ยม
+Build-Icon 192 "web-app-manifest-192x192-maskable.png" 0.62 0
+Build-Icon 512 "web-app-manifest-512x512-maskable.png" 0.62 0
 
 $logo.Dispose()
 $logoRaw.Dispose()

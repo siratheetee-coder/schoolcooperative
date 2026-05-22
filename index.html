@@ -2444,6 +2444,57 @@
   }
   .period-label b { color: var(--green-600); }
 
+  .date-nav {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    justify-content: center;
+    margin: 8px 20px 0;
+    flex-wrap: wrap;
+  }
+  .date-nav-btn {
+    border: none;
+    background: rgba(154,130,90,0.18);
+    color: var(--ink);
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    font-size: 18px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: inherit;
+  }
+  .date-nav-btn:hover { background: rgba(154,130,90,0.32); }
+  .date-nav-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+  .date-nav-input {
+    border: 1.5px solid rgba(154,130,90,0.3);
+    background: white;
+    padding: 7px 10px;
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 13px;
+    color: var(--ink);
+    cursor: pointer;
+    min-width: 130px;
+  }
+  .date-nav-input:focus { outline: none; border-color: var(--green-500); }
+  .date-nav-today {
+    border: none;
+    background: linear-gradient(135deg, var(--green-400), var(--green-500));
+    color: white;
+    padding: 7px 14px;
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 2px 0 var(--green-700);
+    transition: all 0.15s;
+  }
+  .date-nav-today:hover { transform: translateY(-1px); }
+  .date-nav-today.hidden { display: none; }
+
   .summary {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -3554,6 +3605,12 @@
       <button class="period-btn" data-p="term"  onclick="setPeriod('term')">เทอม</button>
       <button class="period-btn" data-p="year"  onclick="setPeriod('year')">ปี</button>
     </div>
+    <div class="date-nav">
+      <button class="date-nav-btn" onclick="shiftReportDate(-1)" title="ก่อนหน้า">‹</button>
+      <input type="date" id="reportDatePicker" class="date-nav-input" onchange="setReportDate(this.value)">
+      <button class="date-nav-btn" onclick="shiftReportDate(1)" title="ถัดไป" id="reportDateNext">›</button>
+      <button class="date-nav-today" onclick="resetReportDate()" id="reportDateToday">วันนี้</button>
+    </div>
     <div class="period-label" id="periodLabel"></div>
 
     <div class="summary">
@@ -4548,7 +4605,7 @@ function getTerm(d) {
 }
 
 // ============== VIEW ROUTER ==============
-const APP_VERSION = 'V 4.5';
+const APP_VERSION = 'V 4.6';
 // === School config with safe fallbacks ===
 const SC = window.SCHOOL_CONFIG || {};
 const SCHOOL = {
@@ -5183,10 +5240,63 @@ function deleteProduct() {
 
 // ============== REPORT LOGIC ==============
 let currentPeriod = 'day';
+let reportRefDate = new Date(TODAY);  // วันที่ที่กำลังดูรายงาน (default = วันนี้)
+
+function isReportToday() {
+  return reportRefDate.toDateString() === TODAY.toDateString();
+}
+function shiftReportDate(dir) {
+  const d = new Date(reportRefDate);
+  if (currentPeriod === 'day')   d.setDate(d.getDate() + dir);
+  else if (currentPeriod === 'month') d.setMonth(d.getMonth() + dir);
+  else if (currentPeriod === 'term')  d.setMonth(d.getMonth() + dir * 5);
+  else if (currentPeriod === 'year')  d.setFullYear(d.getFullYear() + dir);
+  // ห้ามล่วงเลยอนาคต
+  if (d > TODAY) return;
+  reportRefDate = d;
+  syncReportDateUI();
+  renderReport();
+}
+function setReportDate(val) {
+  if (!val) return;
+  const d = new Date(val + 'T00:00:00');
+  if (isNaN(d)) return;
+  if (d > TODAY) { reportRefDate = new Date(TODAY); }
+  else reportRefDate = d;
+  syncReportDateUI();
+  renderReport();
+}
+function resetReportDate() {
+  reportRefDate = new Date(TODAY);
+  syncReportDateUI();
+  renderReport();
+}
+function syncReportDateUI() {
+  const picker = document.getElementById('reportDatePicker');
+  if (picker) {
+    const y = reportRefDate.getFullYear();
+    const m = String(reportRefDate.getMonth()+1).padStart(2,'0');
+    const dd = String(reportRefDate.getDate()).padStart(2,'0');
+    picker.value = `${y}-${m}-${dd}`;
+    picker.max = `${TODAY.getFullYear()}-${String(TODAY.getMonth()+1).padStart(2,'0')}-${String(TODAY.getDate()).padStart(2,'0')}`;
+  }
+  const todayBtn = document.getElementById('reportDateToday');
+  if (todayBtn) todayBtn.classList.toggle('hidden', isReportToday());
+  const nextBtn = document.getElementById('reportDateNext');
+  if (nextBtn) {
+    // ปิดปุ่มถัดไปถ้าถึงปัจจุบันแล้ว
+    const probe = new Date(reportRefDate);
+    if (currentPeriod === 'day')   probe.setDate(probe.getDate() + 1);
+    else if (currentPeriod === 'month') probe.setMonth(probe.getMonth() + 1);
+    else if (currentPeriod === 'term')  probe.setMonth(probe.getMonth() + 5);
+    else if (currentPeriod === 'year')  probe.setFullYear(probe.getFullYear() + 1);
+    nextBtn.disabled = probe > TODAY;
+  }
+}
 
 function filterSales(period = currentPeriod, offset = 0, includeVoided = false) {
   // offset: 0 = current period, 1 = previous period
-  const t = new Date(TODAY);
+  const t = new Date(reportRefDate);
   return sales.filter(s => {
     if (!includeVoided && s.isVoided) return false;
     if (period === 'day') {
@@ -5214,13 +5324,14 @@ function filterSales(period = currentPeriod, offset = 0, includeVoided = false) 
 }
 
 const PERIOD_LABELS = {
-  day: () => `วันนี้ · <b>${thDate(TODAY)}</b>`,
-  month: () => `เดือนนี้ · <b>${TH_MONTHS_FULL[TODAY.getMonth()]} ${TODAY.getFullYear()+543}</b>`,
-  term: () => `เทอมนี้ · <b>เทอม ${getTerm(TODAY).num} / ${getTerm(TODAY).year+543}</b>`,
-  year: () => `ปีนี้ · <b>${TODAY.getFullYear()+543}</b>`,
+  day:   () => `${isReportToday() ? 'วันนี้' : 'วันที่'} · <b>${thDate(reportRefDate)}</b>`,
+  month: () => `เดือน · <b>${TH_MONTHS_FULL[reportRefDate.getMonth()]} ${reportRefDate.getFullYear()+543}</b>`,
+  term:  () => `เทอม · <b>เทอม ${getTerm(reportRefDate).num} / ${getTerm(reportRefDate).year+543}</b>`,
+  year:  () => `ปี · <b>${reportRefDate.getFullYear()+543}</b>`,
 };
 
 function renderReport() {
+  syncReportDateUI();
   const cur = filterSales(currentPeriod, 0);
   const prev = filterSales(currentPeriod, 1);
 
@@ -5366,14 +5477,14 @@ function renderChart(cur) {
     });
     hint = 'รายชั่วโมง';
   } else if (currentPeriod === 'month') {
-    const t = TODAY;
+    const t = reportRefDate;
     const dim = new Date(t.getFullYear(), t.getMonth()+1, 0).getDate();
     buckets = [];
     for (let d = 1; d <= dim; d++) buckets.push({ lbl: String(d), val: 0 });
     cur.forEach(s => { buckets[s.date.getDate()-1].val += s.total; });
     hint = `รายวัน (${dim} วัน)`;
   } else if (currentPeriod === 'term') {
-    const term = getTerm(TODAY);
+    const term = getTerm(reportRefDate);
     const months = term.num === 1 ? [4,5,6,7,8] : [10,11,0,1,2];
     buckets = months.map(m => ({ lbl: TH_MONTHS[m], val: 0, m }));
     cur.forEach(s => { const b = buckets.find(x => x.m === s.date.getMonth()); if (b) b.val += s.total; });
@@ -5413,7 +5524,7 @@ function renderProfitChart(cur) {
       }
     });
   } else if (currentPeriod === 'month') {
-    const t = TODAY;
+    const t = reportRefDate;
     const dim = new Date(t.getFullYear(), t.getMonth()+1, 0).getDate();
     buckets = [];
     for (let d = 1; d <= dim; d++) buckets.push({ lbl: String(d), val: 0 });
@@ -5422,7 +5533,7 @@ function renderProfitChart(cur) {
       buckets[s.date.getDate()-1].val += profit;
     });
   } else if (currentPeriod === 'term') {
-    const term = getTerm(TODAY);
+    const term = getTerm(reportRefDate);
     const months = term.num === 1 ? [4,5,6,7,8] : [10,11,0,1,2];
     buckets = months.map(m => ({ lbl: TH_MONTHS[m], val: 0, m }));
     cur.forEach(s => {
@@ -5571,6 +5682,7 @@ function renderDonutChart(cur) {
 function setPeriod(p) {
   currentPeriod = p;
   document.querySelectorAll('.period-btn').forEach(el => el.classList.toggle('active', el.dataset.p === p));
+  syncReportDateUI();
   renderReport();
 }
 
@@ -5590,7 +5702,7 @@ function buildReportRows() {
   return rows;
 }
 function periodSuffix() {
-  const t = TODAY;
+  const t = reportRefDate;
   if (currentPeriod === 'day') return `${t.getDate()}-${t.getMonth()+1}-${t.getFullYear()+543}`;
   if (currentPeriod === 'month') return `${TH_MONTHS[t.getMonth()]}-${t.getFullYear()+543}`;
   if (currentPeriod === 'term') return `เทอม${getTerm(t).num}-${getTerm(t).year+543}`;

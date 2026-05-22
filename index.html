@@ -2672,25 +2672,71 @@
   /* === Notification feed === */
   .noti-item {
     display: flex; align-items: flex-start; gap: 12px;
-    background: var(--cream-100); border-radius: 14px;
-    padding: 12px 14px; cursor: pointer;
-    border-left: 4px solid transparent;
-    transition: background 0.15s;
+    background: white;
+    border-radius: 16px;
+    padding: 12px 14px;
+    cursor: pointer;
+    border-left: 5px solid var(--green-400);
+    box-shadow: 0 2px 6px rgba(154,130,90,0.10);
+    transition: transform 0.15s, box-shadow 0.15s;
+    position: relative;
   }
-  .noti-item:hover { background: var(--cream-200); }
-  .noti-item.unread { background: linear-gradient(135deg, #E8F4F0, var(--cream-100)); border-left-color: var(--green-500); }
+  .noti-item:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(154,130,90,0.18); }
   .noti-item .ni-ico {
-    width: 40px; height: 40px; border-radius: 12px;
-    background: white; display: grid; place-items: center;
-    font-size: 20px; flex-shrink: 0;
-    box-shadow: inset 1px 1px 2px rgba(154,130,90,0.15);
+    width: 44px; height: 44px; border-radius: 14px;
+    background: linear-gradient(135deg, var(--green-400), var(--green-500));
+    color: white;
+    display: grid; place-items: center;
+    font-size: 22px;
+    flex-shrink: 0;
+    box-shadow: 0 3px 8px rgba(34,98,88,0.30);
   }
-  .noti-item.unread .ni-ico { background: linear-gradient(135deg, var(--green-400), var(--green-500)); color: white; }
-  .noti-item .ni-body { flex: 1; min-width: 0; line-height: 1.35; }
-  .noti-item .ni-title { font-size: 13px; font-weight: 700; color: var(--ink); }
-  .noti-item .ni-msg { font-size: 12px; color: var(--ink-soft); margin-top: 2px; }
-  .noti-item .ni-time { font-size: 10px; color: var(--gold-600); margin-top: 4px; font-weight: 600; }
-  .noti-empty { text-align: center; padding: 30px; color: var(--ink-soft); font-size: 13px; }
+  .noti-item .ni-body { flex: 1; min-width: 0; line-height: 1.4; }
+  .noti-item .ni-title { font-size: 13.5px; font-weight: 700; color: var(--ink); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .noti-item .ni-msg { font-size: 12px; color: var(--ink-soft); margin-top: 3px; }
+  .noti-item .ni-time { font-size: 11px; color: var(--ink-soft); margin-top: 6px; font-weight: 500; opacity: 0.75; }
+  .noti-item .ni-pin {
+    display: inline-block;
+    background: linear-gradient(90deg, #F4A82E, #E89A0E);
+    color: white;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 8px;
+    margin-top: 6px;
+    box-shadow: 0 2px 4px rgba(232,154,14,0.35);
+  }
+  .noti-item.unread::after {
+    content: '';
+    position: absolute;
+    top: 14px; right: 14px;
+    width: 8px; height: 8px;
+    background: #EF4444;
+    border-radius: 50%;
+    box-shadow: 0 0 0 3px rgba(239,68,68,0.18);
+  }
+
+  /* ───── Color variants by notification kind ───── */
+  .noti-item[data-kind="danger"]   { border-left-color: #EF4444; background: linear-gradient(90deg, #FEE2E2 0%, white 35%); }
+  .noti-item[data-kind="danger"] .ni-ico   { background: linear-gradient(135deg, #F87171, #DC2626); box-shadow: 0 3px 8px rgba(220,38,38,0.35); }
+
+  .noti-item[data-kind="warn"]     { border-left-color: #F59E0B; background: linear-gradient(90deg, #FEF3C7 0%, white 35%); }
+  .noti-item[data-kind="warn"] .ni-ico     { background: linear-gradient(135deg, #FBBF24, #D97706); box-shadow: 0 3px 8px rgba(217,119,6,0.35); }
+
+  .noti-item[data-kind="success"]  { border-left-color: #10B981; background: linear-gradient(90deg, #D1FAE5 0%, white 35%); }
+  .noti-item[data-kind="success"] .ni-ico  { background: linear-gradient(135deg, #34D399, #059669); box-shadow: 0 3px 8px rgba(5,150,105,0.35); }
+
+  .noti-item[data-kind="info"]     { border-left-color: #3B82F6; background: linear-gradient(90deg, #DBEAFE 0%, white 35%); }
+  .noti-item[data-kind="info"] .ni-ico     { background: linear-gradient(135deg, #60A5FA, #2563EB); box-shadow: 0 3px 8px rgba(37,99,235,0.35); }
+
+  .noti-item[data-kind="money"]    { border-left-color: #2D7D6F; background: linear-gradient(90deg, #D1FAE5 0%, white 35%); }
+  .noti-item[data-kind="money"] .ni-ico    { background: linear-gradient(135deg, #34D399, #047857); box-shadow: 0 3px 8px rgba(4,120,87,0.40); }
+
+  .noti-item[data-kind="purple"]   { border-left-color: #A855F7; background: linear-gradient(90deg, #F3E8FF 0%, white 35%); }
+  .noti-item[data-kind="purple"] .ni-ico   { background: linear-gradient(135deg, #C084FC, #9333EA); box-shadow: 0 3px 8px rgba(147,51,234,0.35); }
+
+  .noti-empty { text-align: center; padding: 40px 20px; color: var(--ink-soft); font-size: 13px; }
+  .noti-empty::before { content: '🌿'; display: block; font-size: 36px; margin-bottom: 10px; opacity: 0.6; }
 
   /* === Avatar global fit-content + length-based sizing === */
   .bav, .pav, .detail-av, .av-small, .slot-person .av, .buyer-row .name .av, .a-member .av-small {
@@ -4653,7 +4699,7 @@ function getTerm(d) {
 }
 
 // ============== VIEW ROUTER ==============
-const APP_VERSION = 'V 4.9';
+const APP_VERSION = 'V 5.0';
 // === School config with safe fallbacks ===
 const SC = window.SCHOOL_CONFIG || {};
 const SCHOOL = {
@@ -6538,38 +6584,39 @@ function buildNotifications() {
     const created = log.createdAt instanceof Date ? log.createdAt : new Date(log.createdAt);
     const actorName = log.actorName || log.actor_name || 'ระบบ';
     const targetName = log.targetName || log.target_name || '';
-    let title = '', msg = '', ico = '📣', url = '/', show = false;
+    let title = '', msg = '', ico = '📣', url = '/', show = false, kind = 'info';
     if (log.action === 'submit_request' && teacher) {
-      title = '📋 คำขออนุมัติใหม่';
+      title = 'คำขออนุมัติใหม่';
       msg = `${actorName}: ${targetName}`;
-      ico = '📋'; url = '#admin'; show = true;
+      ico = '📋'; url = '#admin'; kind = 'info'; show = true;
     } else if ((log.action === 'approve_request' || log.action === 'reject_request')
                && log.metadata && log.metadata.requested_by) {
       const meta = log.metadata;
       if (!teacher && meta.requested_by && currentUser.name && meta.requested_by.includes(currentUser.name.replace('น้อง','').split(' ')[0])) {
-        title = log.action === 'approve_request' ? '✅ คำขอของคุณได้รับอนุมัติ' : '❌ คำขอของคุณถูกปฏิเสธ';
+        title = log.action === 'approve_request' ? 'คำขอของคุณได้รับอนุมัติ' : 'คำขอของคุณถูกปฏิเสธ';
         msg = targetName;
         ico = log.action === 'approve_request' ? '✅' : '❌';
+        kind = log.action === 'approve_request' ? 'success' : 'danger';
         url = '#stock'; show = true;
       }
     } else if (log.action === 'void_sale' && teacher) {
-      title = '🚫 บิลถูกยกเลิก';
+      title = 'บิลถูกยกเลิก';
       msg = `${targetName} โดย ${actorName}`;
-      ico = '🚫'; url = '#report'; show = true;
+      ico = '🚫'; url = '#report'; kind = 'danger'; show = true;
     } else if (log.action === 'create_sale' && teacher && log.metadata?.total >= (SCHOOL.bigSale || 100)) {
-      title = '💰 บิลใหญ่';
+      title = 'บิลใหญ่';
       msg = `${targetName} · ฿${(log.metadata.total||0).toLocaleString()}`;
-      ico = '💰'; url = '#report'; show = true;
+      ico = '💰'; url = '#report'; kind = 'money'; show = true;
     } else if (log.action === 'pay_dividend') {
-      title = '🎁 จ่ายปันผล/เฉลี่ยคืน';
+      title = 'จ่ายปันผล/เฉลี่ยคืน';
       msg = targetName;
-      ico = '🎁'; url = '#shares'; show = true;
+      ico = '🎁'; url = '#shares'; kind = 'money'; show = true;
     } else if (log.action === 'quiz_settings' && !teacher) {
-      title = '📚 มีการเปลี่ยนแปลงระบบ Quiz';
+      title = 'มีการเปลี่ยนแปลงระบบ Quiz';
       msg = targetName;
-      ico = '📚'; url = '#quiz'; show = true;
+      ico = '📚'; url = '#quiz'; kind = 'purple'; show = true;
     }
-    if (show) items.push({ id: 'a' + log.id, time: created, title, msg, ico, url });
+    if (show) items.push({ id: 'a' + log.id, time: created, title, msg, ico, url, kind });
   });
 
   // 2) สินค้าใกล้หมด (teacher) — สังเกตจาก products array
@@ -6578,13 +6625,13 @@ function buildNotifications() {
       if (p.stock <= 0) {
         items.push({
           id: 'out-' + p.id, time: new Date(), pinned: true,
-          title: '❗ สินค้าหมดสต็อก', msg: p.name, ico: '❗', url: '#stock'
+          title: 'สินค้าหมดสต็อก', msg: p.name, ico: '❗', url: '#stock', kind: 'danger'
         });
       } else if (p.stock <= (p.lowAt || 10)) {
         items.push({
           id: 'low-' + p.id, time: new Date(), pinned: true,
-          title: '⚠ สินค้าใกล้หมด', msg: `${p.name} เหลือ ${p.stock} ${p.unit||''}`,
-          ico: '⚠', url: '#stock'
+          title: 'สินค้าใกล้หมด', msg: `${p.name} เหลือ ${p.stock} ${p.unit||''}`,
+          ico: '⚠', url: '#stock', kind: 'warn'
         });
       }
     });
@@ -6646,14 +6693,17 @@ function renderNotifications() {
   }
   list.innerHTML = items.map(it => {
     const unread = !it.pinned && it.time.getTime() > lastRead;
-    const timeStr = it.pinned ? 'ยังคงค้าง' : timeAgo(it.time);
+    const kind = it.kind || 'info';
+    const timeHtml = it.pinned
+      ? `<div class="ni-pin">⏳ ยังคงค้าง</div>`
+      : `<div class="ni-time">${timeAgo(it.time)}</div>`;
     return `
-      <div class="noti-item ${unread ? 'unread' : ''}" onclick="handleNotiClick('${it.url}')">
+      <div class="noti-item ${unread ? 'unread' : ''}" data-kind="${kind}" onclick="handleNotiClick('${it.url}')">
         <div class="ni-ico">${it.ico}</div>
         <div class="ni-body">
           <div class="ni-title">${it.title}</div>
           <div class="ni-msg">${it.msg}</div>
-          <div class="ni-time">${timeStr}</div>
+          ${timeHtml}
         </div>
       </div>
     `;

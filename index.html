@@ -4548,7 +4548,7 @@ function getTerm(d) {
 }
 
 // ============== VIEW ROUTER ==============
-const APP_VERSION = 'V 4.4';
+const APP_VERSION = 'V 4.5';
 // === School config with safe fallbacks ===
 const SC = window.SCHOOL_CONFIG || {};
 const SCHOOL = {
@@ -6756,23 +6756,124 @@ async function openPushSettings() {
     `เลือกการดำเนินการ:\n` +
     `1 = ${isOn ? 'ปิด' : 'เปิด'}การแจ้งเตือน\n` +
     `2 = ทดสอบส่งแจ้งเตือนถึงตัวเอง\n` +
-    `3 = ยกเลิก`;
+    `3 = 🔍 Diagnose (วินิจฉัยปัญหา)\n` +
+    `4 = ยกเลิก`;
   const ans = prompt(msg, isOn ? '2' : '1');
   if (ans === '1') {
     if (isOn) await unsubscribePush();
     else await subscribePush();
   } else if (ans === '2') {
     if (!isOn) { showToast('เปิดการแจ้งเตือนก่อน', true); return; }
-    await sendPush({
-      audience: 'member',
-      member_id: currentUser.id,
-      title: '🔔 ทดสอบการแจ้งเตือน',
-      body: `สวัสดี ${currentUser.name} — ระบบส่งแจ้งเตือนได้!`,
-      url: '/',
-      tag: 'test'
-    });
-    showToast('ส่งการแจ้งเตือนทดสอบแล้ว');
+    try {
+      const result = await sb.functions.invoke('send-push', {
+        body: {
+          audience: 'member',
+          member_id: currentUser.id,
+          title: '🔔 ทดสอบการแจ้งเตือน',
+          body: `สวัสดี ${currentUser.name} — ระบบส่งแจ้งเตือนได้!`,
+          url: '/',
+          tag: 'test'
+        }
+      });
+      const data = result.data;
+      if (data?.error) {
+        alert(`❌ Edge Function error:\n${data.error}`);
+      } else if (data?.sent > 0) {
+        showToast(`✅ ส่งสำเร็จ (sent=${data.sent}/${data.total})`);
+      } else {
+        alert(`⚠ ส่งไม่สำเร็จ\nsent=${data?.sent || 0} expired=${data?.expired || 0}\n\nลอง 'Diagnose' (ตัวเลือก 3) เพื่อตรวจสอบ`);
+      }
+    } catch (e) {
+      alert(`❌ เรียก Edge Function ไม่ได้:\n${e.message || e}`);
+    }
+  } else if (ans === '3') {
+    await diagnosePush();
   }
+}
+
+async function diagnosePush() {
+  const ua = navigator.userAgent;
+  const isIOS = /iPad|iPhone|iPod/.test(ua);
+  const isAndroid = /Android/.test(ua);
+  const standalone = window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches;
+  const swSupported = 'serviceWorker' in navigator;
+  const pushSupported = 'PushManager' in window;
+  const notifSupported = 'Notification' in window;
+  const permission = notifSupported ? Notification.permission : 'n/a';
+
+  let swReg = null, sub = null, vapidMatch = '?';
+  try {
+    swReg = await navigator.serviceWorker.getRegistration();
+    if (swReg) sub = await swReg.pushManager.getSubscription();
+  } catch (e) {}
+
+  // Check subscription in DB
+  let dbStatus = '?';
+  if (sb && currentUser) {
+    try {
+      const { data } = await sb.from('push_subscriptions')
+        .select('id, endpoint')
+        .eq('member_id', currentUser.id);
+      dbStatus = data && data.length ? `✅ มี ${data.length} subscription` : '❌ ไม่มี';
+    } catch (e) { dbStatus = 'error: ' + e.message; }
+  }
+
+  // iOS version
+  let iosVer = '';
+  if (isIOS) {
+    const m = ua.match(/OS (\d+)_(\d+)/);
+    if (m) iosVer = `iOS ${m[1]}.${m[2]}`;
+  }
+
+  const lines = [
+    `🔍 Push Diagnostic`,
+    ``,
+    `📱 Device: ${isIOS ? 'iPhone/iPad' : isAndroid ? 'Android' : 'Desktop'}`,
+    isIOS ? `   ${iosVer} (ต้อง 16.4+)` : '',
+    `📲 PWA Mode: ${standalone ? '✅ ติดตั้งแล้ว' : '❌ เบราว์เซอร์ (iOS push ใช้ไม่ได้!)'}`,
+    ``,
+    `🔧 Browser Support:`,
+    `   Service Worker: ${swSupported ? '✅' : '❌'}`,
+    `   Push API: ${pushSupported ? '✅' : '❌'}`,
+    `   Notification: ${notifSupported ? '✅' : '❌'}`,
+    ``,
+    `🔐 Permission: ${permission === 'granted' ? '✅ Granted' : permission === 'denied' ? '❌ Denied' : '⚠ Default (ยังไม่ขอ)'}`,
+    ``,
+    `⚙️ SW Registration: ${swReg ? '✅ ลงทะเบียนแล้ว' : '❌ ไม่มี'}`,
+    `📩 Push Subscription: ${sub ? '✅ มี' : '❌ ไม่มี'}`,
+    `💾 DB Subscription: ${dbStatus}`,
+    ``,
+    `📋 VAPID Public (ใช้ subscribe):`,
+    sub && sub.options && sub.options.applicationServerKey
+      ? `   ${btoa(String.fromCharCode(...new Uint8Array(sub.options.applicationServerKey))).slice(0, 30)}...`
+      : '   (ไม่มี)',
+    `📋 VAPID Public (config):`,
+    `   ${(window.SUPABASE_CONFIG?.vapidPublicKey || '').slice(0, 30)}...`,
+  ].filter(Boolean).join('\n');
+
+  // Diagnose verdict
+  let verdict = '';
+  if (isIOS && !standalone) {
+    verdict = '\n\n🚨 ปัญหาหลัก: iOS ต้องเปิดผ่าน PWA ที่ติดตั้งจากหน้า Home ผ่าน Safari!\n\n' +
+      'วิธีแก้:\n' +
+      '1. เปิด Safari (ไม่ใช่ Chrome!)\n' +
+      '2. เข้าเว็บนี้\n' +
+      '3. กด Share (สี่เหลี่ยมลูกศรขึ้น) ตรงกลางล่าง\n' +
+      '4. เลือก "Add to Home Screen"\n' +
+      '5. เปิดจากไอคอนบนหน้า Home (ไม่ใช่ Safari)\n' +
+      '6. Login → เปิดการแจ้งเตือน';
+  } else if (permission !== 'granted') {
+    verdict = '\n\n🚨 ยังไม่ได้ permission — กดเปิดการแจ้งเตือน (ตัวเลือก 1)';
+  } else if (!sub) {
+    verdict = '\n\n🚨 ไม่มี subscription — กดปิดแล้วเปิดใหม่ (ตัวเลือก 1)';
+  } else if (dbStatus.startsWith('❌')) {
+    verdict = '\n\n🚨 ไม่มีข้อมูลใน DB — Subscribe ใหม่ (ปิด→เปิด ตัวเลือก 1)';
+  } else if (isIOS && standalone && sub) {
+    verdict = '\n\n✅ ทุกอย่างพร้อม — ถ้ายังไม่เด้ง อาจติด iOS Focus/DnD หรือ Edge Function เก่า';
+  }
+
+  alert(lines + verdict);
+  console.log(lines);
 }
 
 async function openQuizSettings() {

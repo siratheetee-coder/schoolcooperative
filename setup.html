@@ -230,17 +230,41 @@
     </div>
   </div>
 
+  <!-- Step 0: Auto-connect (แสดงเมื่อเปิดจากลิงก์/QR) -->
+  <div class="sw-step" data-step="0" style="display:none;">
+    <div class="sw-emoji">📲</div>
+    <h2>เชื่อมต่อระบบที่มีอยู่</h2>
+    <p class="sw-sub">พบการตั้งค่าโรงเรียนจากลิงก์ที่ได้รับ</p>
+    <div class="sw-summary" id="swAutoSummary"></div>
+    <div class="sw-note" style="margin-top:12px;">
+      🔒 ข้อมูลนี้จะบันทึกเฉพาะในเครื่องนี้เท่านั้น ไม่มีใครอื่นเห็น
+    </div>
+    <button class="sw-next" onclick="swAutoConnect()" style="margin-top:14px;">✅ เชื่อมต่อและเข้าใช้งาน →</button>
+    <button class="sw-skip" onclick="swGo(1)">ตั้งค่าเองแทน</button>
+  </div>
+
   <!-- Step 6: Done -->
   <div class="sw-step" data-step="6" style="display:none;">
     <div class="sw-emoji">🎉</div>
     <h2>เสร็จเรียบร้อย!</h2>
     <p class="sw-sub">ระบบพร้อมใช้งานสำหรับโรงเรียนของคุณแล้ว</p>
     <div class="sw-summary" id="swSummary"></div>
-    <div class="sw-note">
-      📱 <b>ใช้บนเครื่องอื่น (มือถือ/แท็บเล็ต)?</b><br>
-      เปิด URL ของแอป บนเครื่องนั้น → จะมีปุ่ม <b>"ตั้งค่าระบบ"</b> ให้กรอกข้อมูลเดิมอีกครั้ง ใช้เวลาไม่ถึง 1 นาที
+
+    <!-- QR Share Section -->
+    <div style="background:#F0FDF4;border-radius:14px;padding:16px;margin:12px 0;text-align:center;">
+      <div style="font-size:13px;font-weight:700;color:#064E3B;margin-bottom:10px;">
+        📱 แชร์ให้เครื่องอื่นในโรงเรียน
+      </div>
+      <div style="font-size:11px;color:#6B5D45;margin-bottom:10px;">
+        สแกน QR หรือส่งลิงก์ → เปิดบนเครื่องอื่น → กด "เชื่อมต่อ" → เข้าใช้งานได้เลย
+      </div>
+      <img id="swQrImg" src="" alt="QR Code" style="width:160px;height:160px;border-radius:10px;border:2px solid #E8D6B3;display:block;margin:0 auto 10px;">
+      <button onclick="swCopyShareLink(this)" style="font-size:12px;padding:8px 18px;border:none;background:#2D7D6F;color:white;border-radius:8px;cursor:pointer;font-family:inherit;font-weight:700;width:100%;">
+        📋 คัดลอกลิงก์แชร์
+      </button>
     </div>
-    <button class="sw-next" onclick="swFinish()">🚀 เริ่มใช้งานเลย →</button>
+
+    <button class="sw-next" onclick="swFinish()" style="margin-top:6px;">🚀 เริ่มใช้งานเลย →</button>
   </div>
 </div>
 
@@ -254,7 +278,7 @@
     document.querySelector('.sw-step[data-step="' + step + '"]').style.display = 'block';
     // progress: step 1 = 16%, step 6 = 100%
     document.getElementById('swProgress').style.width = Math.round(step / SW_TOTAL * 100) + '%';
-    if (step === SW_TOTAL) updateSummary();
+    if (step === SW_TOTAL) { updateSummary(); swGenerateQr(); }
     window.scrollTo(0, 0);
   }
 
@@ -318,21 +342,99 @@
       '☁ Supabase: ' + (cfg.supabase.url ? '✅ เชื่อมต่อแล้ว' : '⚠ ยังไม่ได้ตั้งค่า');
   }
 
-  function swFinish() {
+  function swSaveAndRedirect() {
     const cfg = swCollectConfig();
     localStorage.setItem('coopSchoolConfigOverride', JSON.stringify(cfg.school));
     if (cfg.supabase.url && cfg.supabase.anonKey) {
       localStorage.setItem('coopSupabaseConfigOverride', JSON.stringify(cfg.supabase));
     }
     localStorage.setItem('coopSetupDone', '1');
+  }
 
-    // แสดง feedback สั้นๆ ก่อน redirect
+  function swFinish() {
+    swSaveAndRedirect();
     const btn = document.querySelector('.sw-step[data-step="6"] .sw-next');
     if (btn) { btn.textContent = '✅ กำลังเข้าสู่ระบบ...'; btn.disabled = true; }
     setTimeout(() => { location.href = './index.html'; }, 800);
   }
 
+  // ============ SHARE LINK + QR ============
+  var _swSharePack = null; // เก็บ pack ที่ decode มาจาก ?cfg=
 
+  function swMakePack() {
+    const cfg = swCollectConfig();
+    return {
+      s:  cfg.school.schoolName,
+      se: cfg.school.schoolNameEn,
+      d:  cfg.school.districtOffice,
+      dv: cfg.school.developer,
+      u:  cfg.supabase.url,
+      k:  cfg.supabase.anonKey
+    };
+  }
+
+  function swPackToUrl(pack) {
+    const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(pack))));
+    const base = location.origin + location.pathname;
+    return base + '?cfg=' + encoded;
+  }
+
+  function swGenerateQr() {
+    const pack = swMakePack();
+    const url = swPackToUrl(pack);
+    const qrApi = 'https://api.qrserver.com/v1/create-qr-code/?size=160x160&margin=8&data=' + encodeURIComponent(url);
+    document.getElementById('swQrImg').src = qrApi;
+  }
+
+  function swCopyShareLink(btn) {
+    const url = swPackToUrl(swMakePack());
+    navigator.clipboard.writeText(url).then(() => {
+      btn.textContent = '✅ คัดลอกแล้ว!';
+      setTimeout(() => btn.textContent = '📋 คัดลอกลิงก์แชร์', 2000);
+    }).catch(() => {
+      prompt('คัดลอกลิงก์นี้:', url);
+    });
+  }
+
+  // ============ AUTO-CONNECT (เปิดจาก ?cfg=) ============
+  function swTryAutoConnect() {
+    try {
+      const params = new URLSearchParams(location.search);
+      const raw = params.get('cfg');
+      if (!raw) return false;
+      const pack = JSON.parse(decodeURIComponent(escape(atob(raw))));
+      if (!pack.u || !pack.k) return false;
+      _swSharePack = pack;
+
+      // แสดงสรุปบน Step 0
+      document.getElementById('swAutoSummary').innerHTML =
+        '🏫 <b>' + (pack.s || 'โรงเรียน') + '</b><br>' +
+        (pack.d ? '📍 ' + pack.d + '<br>' : '') +
+        (pack.dv ? '👨‍🏫 ' + pack.dv + '<br>' : '') +
+        '☁ Supabase: ✅ พร้อมเชื่อมต่อ';
+
+      swGo(0);
+      return true;
+    } catch(e) { return false; }
+  }
+
+  function swAutoConnect() {
+    if (!_swSharePack) return;
+    const p = _swSharePack;
+    // ใส่ค่าในฟอร์มก่อน แล้ว collectConfig
+    document.getElementById('swSchoolName').value    = p.s  || '';
+    document.getElementById('swSchoolNameEn').value  = p.se || '';
+    document.getElementById('swDistrict').value      = p.d  || '';
+    document.getElementById('swDeveloper').value     = p.dv || '';
+    document.getElementById('swSbUrl').value         = p.u  || '';
+    document.getElementById('swSbKey').value         = p.k  || '';
+    swSaveAndRedirect();
+    const btn = document.querySelector('.sw-step[data-step="0"] .sw-next');
+    if (btn) { btn.textContent = '✅ กำลังเข้าสู่ระบบ...'; btn.disabled = true; }
+    setTimeout(() => { location.href = './index.html'; }, 800);
+  }
+
+  // ============ INIT ============
   // Pre-fill จาก localStorage ถ้ามี
   try {
     const sc = JSON.parse(localStorage.getItem('coopSchoolConfigOverride') || '{}');
@@ -345,7 +447,8 @@
     if (sb.anonKey) document.getElementById('swSbKey').value = sb.anonKey;
   } catch (e) {}
 
-  swGo(1);
+  // ถ้ามี ?cfg= → auto-connect mode, ไม่งั้น wizard ปกติ
+  if (!swTryAutoConnect()) swGo(1);
 </script>
 
 </body>

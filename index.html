@@ -9560,7 +9560,7 @@ function notify(title, body, opts = {}) {
   if (notiPermission === 'granted') {
     try {
       const noti = new Notification(title, {
-        body, icon: 'icon.svg', badge: 'icon.svg',
+        body, icon: 'favicon-96x96.png', badge: 'favicon-96x96.png',
         tag: opts.tag, renotify: true, ...opts
       });
       // tap to focus

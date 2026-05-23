@@ -1,11 +1,10 @@
 // ============== Service Worker — สหกรณ์โรงเรียน ==============
-const CACHE_VERSION = 'v19';  // เปลี่ยนเลขนี้เพื่อ force ลบ cache เก่า
+const CACHE_VERSION = 'v20';  // เปลี่ยนเลขนี้เพื่อ force ลบ cache เก่า
 const CACHE = `coop-${CACHE_VERSION}`;
 const CORE_ASSETS = [
   './',
   './index.html',
   './manifest.webmanifest',
-  './icon.svg',
   './logo-no-bg.png',
   './apple-touch-icon.png',
   './web-app-manifest-192x192.png',

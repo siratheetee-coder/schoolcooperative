@@ -7324,12 +7324,36 @@ async function subscribePush() {
     if (perm !== 'granted') { showToast('คุณปฏิเสธการแจ้งเตือน', true); return false; }
 
     const reg = await navigator.serviceWorker.ready;
+    // Force unsubscribe ของเก่าก่อน — กันกรณี stale state ทำ subscribe ใหม่พัง (AbortError)
     let sub = await reg.pushManager.getSubscription();
+    if (sub) {
+      try {
+        const oldEndpoint = sub.endpoint;
+        await sub.unsubscribe();
+        // ลบจาก DB ด้วย ถ้าจะ subscribe ใหม่อยู่แล้ว
+        if (sb) await sb.from('push_subscriptions').delete().eq('endpoint', oldEndpoint).then(()=>{}, ()=>{});
+        sub = null;
+      } catch(e) { console.warn('unsubscribe old failed', e); }
+    }
     if (!sub) {
-      sub = await reg.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
-      });
+      try {
+        sub = await reg.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+        });
+      } catch (subErr) {
+        // Detailed error mapping
+        if (subErr.name === 'AbortError') {
+          throw new Error('AbortError: ' +
+            'เบราว์เซอร์ไม่สามารถลงทะเบียน push ได้\n\n' +
+            'สาเหตุที่เป็นไปได้:\n' +
+            '• Firewall/AdBlocker บล็อก FCM (fcm.googleapis.com)\n' +
+            '• Browser มี state เก่าค้าง → ลองรีสตาร์ท browser\n' +
+            '• Chrome ไม่ได้ sign-in หรือ Sync ปิด → ลอง sign-in Chrome\n' +
+            '• ลองใน Incognito / Firefox / Edge ดู');
+        }
+        throw subErr;
+      }
     }
 
     const json = sub.toJSON();
@@ -7357,7 +7381,12 @@ async function subscribePush() {
     return true;
   } catch (e) {
     console.error('subscribe push failed', e);
-    showToast('เปิดการแจ้งเตือนไม่สำเร็จ', true);
+    // ถ้าเป็น AbortError ที่เราเพิ่ม message ละเอียดไว้ → แสดง alert ให้ user อ่าน
+    if (e.message && e.message.startsWith('AbortError:')) {
+      alert('⚠ เปิดการแจ้งเตือนไม่สำเร็จ\n\n' + e.message.replace(/^AbortError:\s*/, ''));
+    } else {
+      showToast('เปิดการแจ้งเตือนไม่สำเร็จ: ' + (e.message || e.name || 'unknown'), true);
+    }
     return false;
   }
 }

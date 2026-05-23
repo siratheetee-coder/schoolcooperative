@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ตั้งค่าระบบสหกรณ์โรงเรียน · Setup Wizard</title>
+<link rel="icon" type="image/png" sizes="96x96" href="favicon-96x96.png">
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Prompt', sans-serif;
+    margin: 0; padding: 20px;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #2D7D6F 0%, #226258 100%);
+    display: flex; align-items: center; justify-content: center;
+    color: #2C1810;
+  }
+  .sw-card {
+    background: white;
+    border-radius: 24px;
+    max-width: 520px;
+    width: 100%;
+    padding: 28px 24px 22px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+  }
+  .sw-progress { height: 6px; background: #F5EAD3; border-radius: 3px; margin-bottom: 24px; overflow: hidden; }
+  .sw-progress-bar { height: 100%; background: linear-gradient(90deg, #34D399, #2D7D6F); border-radius: 3px; width: 20%; transition: width 0.3s; }
+  .sw-step { text-align: center; }
+  .sw-emoji { font-size: 56px; margin-bottom: 8px; }
+  .sw-card h2 { color: #2D7D6F; font-size: 22px; margin: 4px 0 6px; font-weight: 700; }
+  .sw-sub { color: #6B5D45; font-size: 13px; margin-bottom: 18px; }
+  .sw-checklist { background: #FFF8EE; border-radius: 14px; padding: 14px 18px; text-align: left; font-size: 14px; line-height: 1.9; margin: 16px 0; }
+  .sw-time { color: #6B5D45; font-size: 12px; margin-bottom: 12px; }
+  .sw-field { text-align: left; margin-bottom: 14px; }
+  .sw-field label { display: block; font-size: 12px; font-weight: 600; color: #2D7D6F; margin-bottom: 5px; }
+  .sw-field input, .sw-field textarea {
+    width: 100%; box-sizing: border-box;
+    border: 2px solid #E8D6B3; background: #FFFBF3;
+    padding: 11px 13px; border-radius: 10px;
+    font-family: inherit; font-size: 14px;
+    transition: border-color 0.15s;
+  }
+  .sw-field input:focus, .sw-field textarea:focus { outline: none; border-color: #2D7D6F; }
+  .sw-field textarea { resize: vertical; min-height: 60px; font-family: monospace; font-size: 11px; word-break: break-all; }
+  .sw-help { background: #DBEAFE; border-left: 4px solid #2563EB; padding: 12px 14px; border-radius: 10px; font-size: 12px; line-height: 1.7; text-align: left; margin-bottom: 16px; color: #1E3A8A; }
+  .sw-help a { color: #2563EB; font-weight: 700; }
+  .sw-warn { background: #FEE2E2; color: #991B1B; padding: 10px 14px; border-radius: 10px; font-size: 13px; margin-bottom: 12px; font-weight: 600; }
+  .sw-list { text-align: left; margin: 16px 0; font-size: 13px; line-height: 2; color: #2C1810; padding-left: 20px; }
+  .sw-list code { background: #F5EAD3; padding: 2px 8px; border-radius: 5px; font-size: 12px; color: #2D7D6F; font-weight: 700; }
+  .sw-link { display: block; background: #F5EAD3; color: #2D7D6F; padding: 10px; border-radius: 10px; text-decoration: none; font-weight: 600; font-size: 13px; margin: 6px 0; text-align: center; }
+  .sw-link:hover { background: #E8D6B3; }
+  .sw-row { display: flex; gap: 10px; margin-top: 16px; }
+  .sw-row > * { flex: 1; }
+  .sw-next, .sw-back, .sw-skip, .sw-download {
+    border: none; padding: 13px 18px; border-radius: 12px;
+    font-family: inherit; font-size: 14px; font-weight: 700;
+    cursor: pointer; transition: all 0.15s;
+    width: 100%;
+  }
+  .sw-next { background: linear-gradient(135deg, #34D399, #2D7D6F); color: white; box-shadow: 0 4px 0 #226258; }
+  .sw-next:hover { transform: translateY(-1px); }
+  .sw-back { background: #F5EAD3; color: #6B5D45; }
+  .sw-skip { background: transparent; color: #6B5D45; margin-top: 10px; text-decoration: underline; }
+  .sw-skip-inline { text-align: center; margin-top: 10px; }
+  .sw-skip-inline a { font-size: 12px; color: #6B5D45; }
+  .sw-download { background: linear-gradient(135deg, #FBBF24, #D97706); color: white; box-shadow: 0 4px 0 #B45309; }
+  .sw-summary { background: #D1FAE5; border-radius: 12px; padding: 14px 16px; text-align: left; font-size: 13px; line-height: 1.9; margin: 12px 0; color: #064E3B; }
+  .sw-note { background: #FEF3C7; border-radius: 12px; padding: 12px 14px; font-size: 12px; line-height: 1.7; text-align: left; margin: 12px 0; color: #78350F; }
+  .sw-header-bar {
+    background: rgba(255,255,255,0.15);
+    color: white;
+    padding: 8px 14px;
+    border-radius: 10px;
+    font-size: 12px;
+    margin-bottom: 14px;
+    text-align: center;
+    display: flex; justify-content: space-between; align-items: center;
+    gap: 8px;
+  }
+  .sw-header-bar a { color: white; text-decoration: underline; }
+</style>
+</head>
+<body>
+
+<div class="sw-card">
+  <div class="sw-header-bar">
+    <span>🪄 Setup Wizard</span>
+    <a href="./">← กลับไปที่แอป</a>
+  </div>
+  <div class="sw-progress"><div class="sw-progress-bar" id="swProgress"></div></div>
+
+  <!-- Step 1: Welcome -->
+  <div class="sw-step" data-step="1">
+    <div class="sw-emoji">🎉</div>
+    <h2>ยินดีต้อนรับสู่ระบบสหกรณ์โรงเรียน</h2>
+    <p class="sw-sub">ตั้งค่าครั้งเดียว ใช้ได้ตลอด · ฟรีสำหรับทุกโรงเรียน</p>
+    <div class="sw-checklist">
+      <div>✅ ระบบ POS ขายของสำหรับนักเรียน</div>
+      <div>✅ จัดการสต็อก สมาชิก หุ้น ปันผล</div>
+      <div>✅ รายงานยอดขายอัตโนมัติ</div>
+      <div>✅ ใช้งานได้บน iPhone/Android/PC</div>
+    </div>
+    <div class="sw-time">⏱ ใช้เวลา ~10 นาที</div>
+    <button class="sw-next" onclick="swGo(2)">เริ่มตั้งค่า →</button>
+    <button class="sw-skip" onclick="swSkip()">ทดลองใช้แบบ Demo ก่อน</button>
+  </div>
+
+  <!-- Step 2: School Info -->
+  <div class="sw-step" data-step="2" style="display:none;">
+    <h2>📝 ข้อมูลโรงเรียน</h2>
+    <p class="sw-sub">ใส่ชื่อโรงเรียนและสังกัด</p>
+    <div class="sw-field"><label>ชื่อโรงเรียน *</label><input id="swSchoolName" placeholder="โรงเรียน..."></div>
+    <div class="sw-field"><label>ชื่อภาษาอังกฤษ (ถ้ามี)</label><input id="swSchoolNameEn" placeholder="School Name in English"></div>
+    <div class="sw-field"><label>สังกัด (เขตพื้นที่)</label><input id="swDistrict" placeholder="สำนักงานเขตพื้นที่..."></div>
+    <div class="sw-field"><label>ชื่อครูที่ปรึกษา</label><input id="swDeveloper" placeholder="ครู..."></div>
+    <div class="sw-row">
+      <button class="sw-back" onclick="swGo(1)">← ย้อนกลับ</button>
+      <button class="sw-next" onclick="swValidate2()">ถัดไป →</button>
+    </div>
+  </div>
+
+  <!-- Step 3: Supabase -->
+  <div class="sw-step" data-step="3" style="display:none;">
+    <h2>☁ เชื่อมต่อ Cloud (Supabase)</h2>
+    <p class="sw-sub">เก็บข้อมูลปลอดภัย · ใช้ฟรีไม่จำกัด</p>
+    <div class="sw-help">
+      <b>ยังไม่มี Supabase?</b><br>
+      1. เปิด <a href="https://supabase.com" target="_blank">supabase.com</a> → Sign in with GitHub<br>
+      2. New Project (Region: Singapore, Plan: Free)<br>
+      3. หลังสร้างเสร็จ → Settings → API → คัดลอก URL + anon key
+    </div>
+    <div class="sw-field"><label>Supabase URL *</label><input id="swSbUrl" placeholder="https://xxxxx.supabase.co"></div>
+    <div class="sw-field"><label>Supabase Anon Key *</label><textarea id="swSbKey" placeholder="eyJ..." rows="3"></textarea></div>
+    <div class="sw-warn" id="swSbWarn" style="display:none;">⚠ URL หรือ Key ไม่ถูกต้อง</div>
+    <div class="sw-row">
+      <button class="sw-back" onclick="swGo(2)">← ย้อนกลับ</button>
+      <button class="sw-next" onclick="swCheckSupabase()">ตรวจสอบและถัดไป →</button>
+    </div>
+  </div>
+
+  <!-- Step 4: SQL Schema -->
+  <div class="sw-step" data-step="4" style="display:none;">
+    <h2>🗄 ตั้งค่าฐานข้อมูล</h2>
+    <p class="sw-sub">รันสคริปต์ใน Supabase เพื่อสร้างตาราง</p>
+    <ol class="sw-list">
+      <li>ไปที่ Supabase → <b>SQL Editor</b> → New query</li>
+      <li>เปิดไฟล์ <code>schema.sql</code> ใน GitHub repo</li>
+      <li>คัดลอกทั้งหมด → วางใน SQL Editor → กด Run</li>
+      <li>ทำซ้ำกับไฟล์ <code>push-schema.sql</code></li>
+    </ol>
+    <a href="https://github.com/siratheetee-coder/schoolcooperative/blob/main/schema.sql" target="_blank" class="sw-link">📄 เปิด schema.sql</a>
+    <a href="https://github.com/siratheetee-coder/schoolcooperative/blob/main/push-schema.sql" target="_blank" class="sw-link">📄 เปิด push-schema.sql</a>
+    <div class="sw-row">
+      <button class="sw-back" onclick="swGo(3)">← ย้อนกลับ</button>
+      <button class="sw-next" onclick="swGo(5)">ทำเสร็จแล้ว →</button>
+    </div>
+  </div>
+
+  <!-- Step 5: Done -->
+  <div class="sw-step" data-step="5" style="display:none;">
+    <div class="sw-emoji">🎉</div>
+    <h2>เสร็จเรียบร้อย!</h2>
+    <p class="sw-sub">ระบบพร้อมใช้งานสำหรับโรงเรียนของคุณแล้ว</p>
+    <div class="sw-summary" id="swSummary"></div>
+    <div class="sw-note">
+      💾 <b>เพื่อให้ทุกอุปกรณ์เห็นการตั้งค่าเดียวกัน:</b><br>
+      ดาวน์โหลดไฟล์ config ด้านล่าง → upload ไปที่ GitHub repo ของคุณ → Vercel จะ deploy ใหม่อัตโนมัติ
+    </div>
+    <button class="sw-download" onclick="swDownloadConfigs()">📥 ดาวน์โหลดไฟล์ Config</button>
+    <button class="sw-next" onclick="swFinish()" style="margin-top:10px;">เริ่มใช้งานในเครื่องนี้ →</button>
+  </div>
+</div>
+
+<script>
+  var swStep = 1;
+
+  function swGo(step) {
+    swStep = step;
+    document.querySelectorAll('.sw-step').forEach(el => el.style.display = 'none');
+    document.querySelector('.sw-step[data-step="' + step + '"]').style.display = 'block';
+    document.getElementById('swProgress').style.width = (step * 20) + '%';
+    if (step === 5) updateSummary();
+  }
+
+  function swSkip() {
+    location.href = './?demo=1';
+  }
+
+  function swValidate2() {
+    const name = document.getElementById('swSchoolName').value.trim();
+    if (!name) { alert('กรุณาใส่ชื่อโรงเรียน'); return; }
+    swGo(3);
+  }
+
+  function swCheckSupabase() {
+    const url = document.getElementById('swSbUrl').value.trim();
+    const key = document.getElementById('swSbKey').value.trim();
+    const warn = document.getElementById('swSbWarn');
+    if (!url.match(/^https:\/\/[a-z0-9]+\.supabase\.co\/?$/i) || !key.startsWith('eyJ')) {
+      warn.textContent = '⚠ URL หรือ Key ดูไม่ถูกต้อง — ตรวจสอบอีกครั้ง';
+      warn.style.display = 'block';
+      return;
+    }
+    warn.style.display = 'none';
+    swGo(4);
+  }
+
+  function swCollectConfig() {
+    const schoolName = document.getElementById('swSchoolName').value.trim() || 'โรงเรียน';
+    const schoolNameEn = document.getElementById('swSchoolNameEn').value.trim() || 'School';
+    const district = document.getElementById('swDistrict').value.trim() || '';
+    const developer = document.getElementById('swDeveloper').value.trim() || '';
+    const sbUrl = document.getElementById('swSbUrl').value.trim();
+    const sbKey = document.getElementById('swSbKey').value.trim();
+    return {
+      school: {
+        schoolName,
+        appTitle: 'สหกรณ์' + schoolName,
+        schoolNameEn,
+        subtitleEn: 'Digital School Cooperative System',
+        districtOffice: district,
+        ministry: 'สังกัดสำนักงานคณะกรรมการการศึกษาขั้นพื้นฐาน กระทรวงศึกษาธิการ',
+        principalTitle: 'ผู้อำนวยการ' + schoolName,
+        advisorTitle: 'ผู้จัดทำรายงาน / ครูที่ปรึกษาสหกรณ์',
+        developer,
+        logoPath: './logo-no-bg.png',
+        description: 'ระบบจัดการร้านสหกรณ์โรงเรียนสำหรับนักเรียนผู้ขาย',
+        defaultStudentPin: '1234',
+        defaultTeacherPin: '9999',
+        bigSaleThreshold: 100,
+      },
+      supabase: { url: sbUrl, anonKey: sbKey, vapidPublicKey: '' }
+    };
+  }
+
+  function updateSummary() {
+    const cfg = swCollectConfig();
+    document.getElementById('swSummary').innerHTML =
+      '🏫 <b>' + cfg.school.schoolName + '</b><br>' +
+      '📍 ' + (cfg.school.districtOffice || '<i>ไม่ระบุสังกัด</i>') + '<br>' +
+      '👨‍🏫 ' + (cfg.school.developer || '<i>ไม่ระบุครูที่ปรึกษา</i>') + '<br>' +
+      '☁ Supabase: ' + (cfg.supabase.url ? '✅ เชื่อมต่อแล้ว' : '⚠ ใช้แบบ local');
+  }
+
+  function swFinish() {
+    const cfg = swCollectConfig();
+    localStorage.setItem('coopSchoolConfigOverride', JSON.stringify(cfg.school));
+    if (cfg.supabase.url && cfg.supabase.anonKey) {
+      localStorage.setItem('coopSupabaseConfigOverride', JSON.stringify(cfg.supabase));
+    }
+    localStorage.setItem('coopSetupDone', '1');
+    location.href = './';
+  }
+
+  function swDownloadConfigs() {
+    const cfg = swCollectConfig();
+    const schoolJs = '// School Configuration — Generated by Setup Wizard\n' +
+      'window.SCHOOL_CONFIG = ' + JSON.stringify(cfg.school, null, 2) + ';\n';
+    const sbJs = '// Supabase Configuration — Generated by Setup Wizard\n' +
+      'window.SUPABASE_CONFIG = ' + JSON.stringify(cfg.supabase, null, 2) + ';\n';
+    swSaveBlob(schoolJs, 'school-config.js');
+    setTimeout(() => swSaveBlob(sbJs, 'supabase-config.js'), 300);
+  }
+
+  function swSaveBlob(content, name) {
+    const blob = new Blob([content], { type: 'text/javascript' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = name;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  }
+
+  // Pre-fill จาก localStorage ถ้ามี
+  try {
+    const sc = JSON.parse(localStorage.getItem('coopSchoolConfigOverride') || '{}');
+    if (sc.schoolName) document.getElementById('swSchoolName').value = sc.schoolName;
+    if (sc.schoolNameEn) document.getElementById('swSchoolNameEn').value = sc.schoolNameEn;
+    if (sc.districtOffice) document.getElementById('swDistrict').value = sc.districtOffice;
+    if (sc.developer) document.getElementById('swDeveloper').value = sc.developer;
+    const sb = JSON.parse(localStorage.getItem('coopSupabaseConfigOverride') || '{}');
+    if (sb.url) document.getElementById('swSbUrl').value = sb.url;
+    if (sb.anonKey) document.getElementById('swSbKey').value = sb.anonKey;
+  } catch (e) {}
+
+  swGo(1);
+</script>
+
+</body>
+</html>

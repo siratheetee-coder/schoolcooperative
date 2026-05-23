@@ -13,9 +13,10 @@
 
 หลังกดปุ่ม:
 1. Vercel จะ fork repo + deploy อัตโนมัติ (~2 นาที)
-2. เปิด URL ที่ได้ → **Setup Wizard จะเปิดขึ้นเอง**
-3. กรอกข้อมูลโรงเรียน + Supabase credentials ใน Wizard
-4. เสร็จ! ใช้งานได้เลย
+2. เปิด URL ที่ได้ + ต่อท้ายด้วย `/setup.html`  
+   เช่น: `https://your-app.vercel.app/setup.html`
+3. กรอกข้อมูลโรงเรียน + Supabase credentials ใน Wizard 5 ขั้น
+4. กดปุ่ม "เริ่มใช้งาน" → กลับไปแอปใช้งานได้เลย
 
 ---
 

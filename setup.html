@@ -104,14 +104,31 @@
     <div class="sw-emoji">🎉</div>
     <h2>ยินดีต้อนรับสู่ระบบสหกรณ์โรงเรียน</h2>
     <p class="sw-sub">ตั้งค่าครั้งเดียว ใช้ได้ตลอด · ฟรีสำหรับทุกโรงเรียน</p>
+
+    <!-- มีลิงก์เชื่อมต่อจากครูคนอื่นแล้ว? -->
+    <div style="background:#F0FDF4;border-radius:14px;padding:14px;margin:14px 0;text-align:left;border:2px dashed #34D399;">
+      <div style="font-size:13px;font-weight:700;color:#064E3B;margin-bottom:6px;">
+        🔗 มีลิงก์เชื่อมต่อจากครูคนอื่นแล้ว?
+      </div>
+      <div style="font-size:11px;color:#6B5D45;margin-bottom:8px;">
+        วางลิงก์ที่ได้รับจาก QR / คัดลอก → กดเชื่อมต่อ
+      </div>
+      <input id="swPasteLink" type="url" placeholder="https://schoolcooperative.vercel.app/setup.html?cfg=..."
+        style="width:100%;box-sizing:border-box;border:2px solid #E8D6B3;background:#FFFBF3;padding:9px 11px;border-radius:8px;font-family:monospace;font-size:11px;margin-bottom:8px;word-break:break-all;">
+      <button onclick="swPasteAndConnect(this)" style="width:100%;background:linear-gradient(135deg,#34D399,#2D7D6F);color:white;border:none;padding:10px;border-radius:8px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;">
+        ✅ เชื่อมต่อจากลิงก์
+      </button>
+      <div id="swPasteErr" style="color:#991B1B;font-size:11px;margin-top:6px;display:none;"></div>
+    </div>
+
     <div class="sw-checklist">
       <div>✅ ระบบ POS ขายของสำหรับนักเรียน</div>
       <div>✅ จัดการสต็อก สมาชิก หุ้น ปันผล</div>
       <div>✅ รายงานยอดขายอัตโนมัติ</div>
       <div>✅ ใช้งานได้บน iPhone/Android/PC</div>
     </div>
-    <div class="sw-time">⏱ ใช้เวลา ~15 นาที · ฟรีตลอด</div>
-    <button class="sw-next" onclick="swGo(2)">เริ่มตั้งค่า →</button>
+    <div class="sw-time">⏱ ตั้งค่าใหม่ ใช้เวลา ~15 นาที</div>
+    <button class="sw-next" onclick="swGo(2)">ตั้งค่าโรงเรียนใหม่ →</button>
     <button class="sw-skip" onclick="swSkip()">ทดลองใช้แบบ Demo ก่อน</button>
   </div>
 
@@ -400,6 +417,37 @@
     // แสดง URL ใต้ QR ด้วย เผื่อ scan ไม่ติด
     const linkDiv = document.getElementById('swShareLinkText');
     if (linkDiv) linkDiv.textContent = url;
+  }
+
+  function swPasteAndConnect(btn) {
+    const input = document.getElementById('swPasteLink');
+    const err = document.getElementById('swPasteErr');
+    let raw = (input.value || '').trim();
+    if (!raw) { err.textContent = '⚠ กรุณาวางลิงก์ที่ได้รับ'; err.style.display = 'block'; return; }
+    // ดึง cfg ออกจากลิงก์
+    let cfg = '';
+    try {
+      const m = raw.match(/[?&]cfg=([^&#]+)/);
+      if (m) cfg = m[1];
+    } catch(e) {}
+    if (!cfg) { err.textContent = '⚠ ไม่พบ cfg ในลิงก์ — ลองคัดลอกใหม่'; err.style.display = 'block'; return; }
+    try {
+      let b64 = cfg.replace(/-/g, '+').replace(/_/g, '/');
+      while (b64.length % 4) b64 += '=';
+      const pack = JSON.parse(decodeURIComponent(escape(atob(b64))));
+      if (!pack.u || !pack.k) throw new Error('missing url/key');
+      _swSharePack = pack;
+      document.getElementById('swAutoSummary').innerHTML =
+        '🏫 <b>' + (pack.s || 'โรงเรียน') + '</b><br>' +
+        (pack.d ? '📍 ' + pack.d + '<br>' : '') +
+        (pack.dv ? '👨‍🏫 ' + pack.dv + '<br>' : '') +
+        '☁ Supabase: ✅ พร้อมเชื่อมต่อ';
+      err.style.display = 'none';
+      swGo(0);
+    } catch(e) {
+      err.textContent = '⚠ ลิงก์ไม่ถูกต้อง — ลองตรวจสอบอีกครั้ง';
+      err.style.display = 'block';
+    }
   }
 
   function swCopyShareLink(btn) {

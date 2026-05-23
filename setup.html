@@ -589,8 +589,27 @@
     if (sb.anonKey) document.getElementById('swSbKey').value = sb.anonKey;
   } catch (e) {}
 
-  // ถ้ามี ?cfg= → auto-connect mode, ไม่งั้น wizard ปกติ
-  if (!swTryAutoConnect()) swGo(1);
+  // Routing logic — ตามลำดับความสำคัญ
+  // ?cfg=...  → auto-connect (จาก QR/link)
+  // ?new=1   → ตั้งค่าโรงเรียนใหม่ ข้าม welcome ไป Step 2 (school info)
+  // ?scan=1  → เปิด QR scanner ทันที (สำหรับโรงเรียนที่มีระบบอยู่แล้ว)
+  // อื่นๆ    → Step 1 (welcome)
+  (function() {
+    if (swTryAutoConnect()) return;
+    const params = new URLSearchParams(location.search);
+    if (params.has('new')) { swGo(2); return; }
+    if (params.has('scan')) {
+      swGo(1);
+      // รอให้ html5-qrcode โหลดเสร็จ แล้วเปิด scanner อัตโนมัติ
+      const tryStart = () => {
+        if (typeof Html5Qrcode !== 'undefined') swStartScan();
+        else setTimeout(tryStart, 200);
+      };
+      setTimeout(tryStart, 300);
+      return;
+    }
+    swGo(1);
+  })();
 </script>
 
 </body>

@@ -25,7 +25,7 @@
     box-shadow: 0 20px 50px rgba(0,0,0,0.3);
   }
   .sw-progress { height: 6px; background: #F5EAD3; border-radius: 3px; margin-bottom: 24px; overflow: hidden; }
-  .sw-progress-bar { height: 100%; background: linear-gradient(90deg, #34D399, #2D7D6F); border-radius: 3px; width: 20%; transition: width 0.3s; }
+  .sw-progress-bar { height: 100%; background: linear-gradient(90deg, #34D399, #2D7D6F); border-radius: 3px; width: 16%; transition: width 0.3s; }
   .sw-step { text-align: center; }
   .sw-emoji { font-size: 56px; margin-bottom: 8px; }
   .sw-card h2 { color: #2D7D6F; font-size: 22px; margin: 4px 0 6px; font-weight: 700; }
@@ -43,13 +43,19 @@
   }
   .sw-field input:focus, .sw-field textarea:focus { outline: none; border-color: #2D7D6F; }
   .sw-field textarea { resize: vertical; min-height: 60px; font-family: monospace; font-size: 11px; word-break: break-all; }
-  .sw-help { background: #DBEAFE; border-left: 4px solid #2563EB; padding: 12px 14px; border-radius: 10px; font-size: 12px; line-height: 1.7; text-align: left; margin-bottom: 16px; color: #1E3A8A; }
+  .sw-help { background: #DBEAFE; border-left: 4px solid #2563EB; padding: 12px 14px; border-radius: 10px; font-size: 12px; line-height: 1.8; text-align: left; margin-bottom: 16px; color: #1E3A8A; }
   .sw-help a { color: #2563EB; font-weight: 700; }
+  .sw-steps-box { background: #F0FDF4; border-radius: 14px; padding: 14px 18px; text-align: left; font-size: 13px; line-height: 2; margin: 12px 0; color: #064E3B; }
+  .sw-steps-box .step-row { display: flex; align-items: flex-start; gap: 10px; }
+  .sw-steps-box .step-num { background: #2D7D6F; color: white; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0; margin-top: 3px; }
   .sw-warn { background: #FEE2E2; color: #991B1B; padding: 10px 14px; border-radius: 10px; font-size: 13px; margin-bottom: 12px; font-weight: 600; }
   .sw-list { text-align: left; margin: 16px 0; font-size: 13px; line-height: 2; color: #2C1810; padding-left: 20px; }
   .sw-list code { background: #F5EAD3; padding: 2px 8px; border-radius: 5px; font-size: 12px; color: #2D7D6F; font-weight: 700; }
   .sw-link { display: block; background: #F5EAD3; color: #2D7D6F; padding: 10px; border-radius: 10px; text-decoration: none; font-weight: 600; font-size: 13px; margin: 6px 0; text-align: center; }
   .sw-link:hover { background: #E8D6B3; }
+  .sw-gh-btn { display: flex; align-items: center; justify-content: center; gap: 10px; background: #24292F; color: white; padding: 13px 18px; border-radius: 12px; text-decoration: none; font-size: 15px; font-weight: 700; margin: 14px 0 8px; }
+  .sw-gh-btn:hover { background: #1a1f24; }
+  .sw-gh-btn svg { flex-shrink: 0; }
   .sw-row { display: flex; gap: 10px; margin-top: 16px; }
   .sw-row > * { flex: 1; }
   .sw-next, .sw-back, .sw-skip, .sw-download {
@@ -60,10 +66,9 @@
   }
   .sw-next { background: linear-gradient(135deg, #34D399, #2D7D6F); color: white; box-shadow: 0 4px 0 #226258; }
   .sw-next:hover { transform: translateY(-1px); }
+  .sw-next:disabled { opacity: 0.7; cursor: default; transform: none; }
   .sw-back { background: #F5EAD3; color: #6B5D45; }
-  .sw-skip { background: transparent; color: #6B5D45; margin-top: 10px; text-decoration: underline; }
-  .sw-skip-inline { text-align: center; margin-top: 10px; }
-  .sw-skip-inline a { font-size: 12px; color: #6B5D45; }
+  .sw-skip { background: transparent; color: #6B5D45; margin-top: 10px; text-decoration: underline; border: none; cursor: pointer; font-family: inherit; font-size: 13px; }
   .sw-download { background: linear-gradient(135deg, #FBBF24, #D97706); color: white; box-shadow: 0 4px 0 #B45309; }
   .sw-summary { background: #D1FAE5; border-radius: 12px; padding: 14px 16px; text-align: left; font-size: 13px; line-height: 1.9; margin: 12px 0; color: #064E3B; }
   .sw-note { background: #FEF3C7; border-radius: 12px; padding: 12px 14px; font-size: 12px; line-height: 1.7; text-align: left; margin: 12px 0; color: #78350F; }
@@ -79,6 +84,10 @@
     gap: 8px;
   }
   .sw-header-bar a { color: white; text-decoration: underline; }
+  .sw-step-label { font-size: 11px; color: #6B5D45; margin-bottom: 4px; font-weight: 600; letter-spacing: 0.5px; }
+  .sw-img-guide { border-radius: 10px; overflow: hidden; border: 2px solid #E8D6B3; margin: 10px 0; }
+  .sw-img-guide img { width: 100%; display: block; }
+  .code-inline { background: #EFF6FF; color: #1D4ED8; padding: 1px 6px; border-radius: 4px; font-family: monospace; font-size: 11px; }
 </style>
 </head>
 <body>
@@ -86,7 +95,7 @@
 <div class="sw-card">
   <div class="sw-header-bar">
     <span>🪄 Setup Wizard</span>
-    <a href="./">← กลับไปที่แอป</a>
+    <a href="./index.html">← กลับไปที่แอป</a>
   </div>
   <div class="sw-progress"><div class="sw-progress-bar" id="swProgress"></div></div>
 
@@ -101,13 +110,14 @@
       <div>✅ รายงานยอดขายอัตโนมัติ</div>
       <div>✅ ใช้งานได้บน iPhone/Android/PC</div>
     </div>
-    <div class="sw-time">⏱ ใช้เวลา ~10 นาที</div>
+    <div class="sw-time">⏱ ใช้เวลา ~15 นาที · ฟรีตลอด</div>
     <button class="sw-next" onclick="swGo(2)">เริ่มตั้งค่า →</button>
     <button class="sw-skip" onclick="swSkip()">ทดลองใช้แบบ Demo ก่อน</button>
   </div>
 
   <!-- Step 2: School Info -->
   <div class="sw-step" data-step="2" style="display:none;">
+    <div class="sw-step-label">ขั้นที่ 1 จาก 5 · ข้อมูลโรงเรียน</div>
     <h2>📝 ข้อมูลโรงเรียน</h2>
     <p class="sw-sub">ใส่ชื่อโรงเรียนและสังกัด</p>
     <div class="sw-field"><label>ชื่อโรงเรียน *</label><input id="swSchoolName" placeholder="โรงเรียน..."></div>
@@ -120,71 +130,136 @@
     </div>
   </div>
 
-  <!-- Step 3: Supabase -->
+  <!-- Step 3: GitHub -->
   <div class="sw-step" data-step="3" style="display:none;">
+    <div class="sw-step-label">ขั้นที่ 2 จาก 5 · สมัคร GitHub</div>
+    <h2>🐙 สมัคร GitHub (ฟรี)</h2>
+    <p class="sw-sub">ใช้สำหรับ Login เข้า Supabase และเก็บโค้ดแอป</p>
+
+    <div class="sw-steps-box">
+      <div class="step-row">
+        <div class="step-num">1</div>
+        <div>เปิด <a href="https://github.com/signup" target="_blank" style="color:#2D7D6F;font-weight:700;">github.com/signup</a></div>
+      </div>
+      <div class="step-row">
+        <div class="step-num">2</div>
+        <div>กรอก <b>Email</b> → ตั้ง <b>Password</b> → ตั้ง <b>Username</b><br>
+          <span style="font-size:11px;color:#6B5D45;">แนะนำ: ชื่อโรงเรียนภาษาอังกฤษ เช่น <span class="code-inline">baanhinlad-school</span></span>
+        </div>
+      </div>
+      <div class="step-row">
+        <div class="step-num">3</div>
+        <div>กด <b>Create account</b> → ยืนยัน Email ที่รับได้</div>
+      </div>
+      <div class="step-row">
+        <div class="step-num">4</div>
+        <div>เสร็จแล้ว! ใช้บัญชีนี้ Login เข้า Supabase ในขั้นต่อไป</div>
+      </div>
+    </div>
+
+    <a href="https://github.com/signup" target="_blank" class="sw-gh-btn">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="white"><path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0 1 12 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/></svg>
+      สมัคร GitHub ฟรี
+    </a>
+
+    <div style="text-align:center;font-size:12px;color:#6B5D45;margin-top:4px;">
+      มีบัญชีแล้ว? ข้ามขั้นนี้ได้เลย
+    </div>
+
+    <div class="sw-row" style="margin-top:14px;">
+      <button class="sw-back" onclick="swGo(2)">← ย้อนกลับ</button>
+      <button class="sw-next" onclick="swGo(4)">มีบัญชีแล้ว / สมัครแล้ว →</button>
+    </div>
+  </div>
+
+  <!-- Step 4: Supabase -->
+  <div class="sw-step" data-step="4" style="display:none;">
+    <div class="sw-step-label">ขั้นที่ 3 จาก 5 · เชื่อมต่อ Cloud</div>
     <h2>☁ เชื่อมต่อ Cloud (Supabase)</h2>
     <p class="sw-sub">เก็บข้อมูลปลอดภัย · ใช้ฟรีไม่จำกัด</p>
+
     <div class="sw-help">
-      <b>ยังไม่มี Supabase?</b><br>
-      1. เปิด <a href="https://supabase.com" target="_blank">supabase.com</a> → Sign in with GitHub<br>
-      2. New Project (Region: Singapore, Plan: Free)<br>
-      3. หลังสร้างเสร็จ → Settings → API → คัดลอก URL + anon key
+      <b>🚀 สร้าง Supabase Project (ถ้ายังไม่มี):</b><br>
+      1. เปิด <a href="https://supabase.com" target="_blank">supabase.com</a> → กด <b>Start your project</b><br>
+      2. Sign in ด้วย <b>GitHub</b> (บัญชีที่สมัครในขั้นที่แล้ว)<br>
+      3. กด <b>New project</b> → ตั้งชื่อ → ตั้ง Database Password → Region: <b>Southeast Asia (Singapore)</b> → กด <b>Create new project</b><br>
+      4. รอ <b>1–2 นาที</b> ให้ระบบเตรียมพร้อม<br>
+      <br>
+      <b>🔗 หา Supabase URL:</b><br>
+      Dashboard → กดปุ่ม <b>Connect</b> (ด้านบน) → เลื่อนดูหัวข้อ <b>App Frameworks</b><br>
+      &nbsp;&nbsp;→ คัดลอกเฉพาะส่วน <span class="code-inline">https://xxxxx.supabase.co</span><br>
+      <br>
+      <b>🔑 หา Anon Key:</b><br>
+      Dashboard → <b>Project Settings</b> → <b>API Keys</b><br>
+      &nbsp;&nbsp;→ หัวข้อ <b>Legacy API Keys</b> → คัดลอก <b>anon</b> key (ขึ้นต้นด้วย eyJ...)
     </div>
-    <div class="sw-field"><label>Supabase URL *</label><input id="swSbUrl" placeholder="https://xxxxx.supabase.co"></div>
-    <div class="sw-field"><label>Supabase Anon Key *</label><textarea id="swSbKey" placeholder="eyJ..." rows="3"></textarea></div>
-    <div class="sw-warn" id="swSbWarn" style="display:none;">⚠ URL หรือ Key ไม่ถูกต้อง</div>
+
+    <div class="sw-field">
+      <label>Supabase URL *</label>
+      <input id="swSbUrl" placeholder="https://xxxxx.supabase.co"
+        oninput="this.value=this.value.replace(/^.*?(https:\/\/)/,'$1').trim()">
+    </div>
+    <div class="sw-field">
+      <label>Supabase Anon Key *</label>
+      <textarea id="swSbKey" placeholder="eyJ..." rows="3"></textarea>
+    </div>
+    <div class="sw-warn" id="swSbWarn" style="display:none;">⚠ URL หรือ Key ดูไม่ถูกต้อง — ตรวจสอบอีกครั้ง</div>
     <div class="sw-row">
-      <button class="sw-back" onclick="swGo(2)">← ย้อนกลับ</button>
+      <button class="sw-back" onclick="swGo(3)">← ย้อนกลับ</button>
       <button class="sw-next" onclick="swCheckSupabase()">ตรวจสอบและถัดไป →</button>
     </div>
   </div>
 
-  <!-- Step 4: SQL Schema -->
-  <div class="sw-step" data-step="4" style="display:none;">
+  <!-- Step 5: SQL Schema -->
+  <div class="sw-step" data-step="5" style="display:none;">
+    <div class="sw-step-label">ขั้นที่ 4 จาก 5 · สร้างฐานข้อมูล</div>
     <h2>🗄 ตั้งค่าฐานข้อมูล</h2>
     <p class="sw-sub">รันสคริปต์ใน Supabase เพื่อสร้างตาราง</p>
     <ol class="sw-list">
-      <li>ไปที่ Supabase → <b>SQL Editor</b> → New query</li>
-      <li>เปิดไฟล์ <code>schema.sql</code> ใน GitHub repo</li>
-      <li>คัดลอกทั้งหมด → วางใน SQL Editor → กด Run</li>
-      <li>ทำซ้ำกับไฟล์ <code>push-schema.sql</code></li>
+      <li>ไปที่ Supabase Dashboard → <b>SQL Editor</b> → กด <b>New query</b></li>
+      <li>กดปุ่มด้านล่างเพื่อเปิดไฟล์ → คัดลอกโค้ดทั้งหมด</li>
+      <li>วางในช่อง SQL Editor → กด <b>Run</b></li>
+      <li><b>ทำซ้ำทั้ง 3 ไฟล์</b> ตามลำดับ</li>
     </ol>
-    <a href="https://github.com/siratheetee-coder/schoolcooperative/blob/main/schema.sql" target="_blank" class="sw-link">📄 เปิด schema.sql</a>
-    <a href="https://github.com/siratheetee-coder/schoolcooperative/blob/main/push-schema.sql" target="_blank" class="sw-link">📄 เปิด push-schema.sql</a>
+    <a href="https://github.com/siratheetee-coder/schoolcooperative/blob/main/sql/schema.sql" target="_blank" class="sw-link">📄 1. schema.sql <span style="font-size:11px;opacity:0.7">(ตารางหลัก)</span></a>
+    <a href="https://github.com/siratheetee-coder/schoolcooperative/blob/main/sql/push-schema.sql" target="_blank" class="sw-link">📄 2. push-schema.sql <span style="font-size:11px;opacity:0.7">(การแจ้งเตือน)</span></a>
+    <a href="https://github.com/siratheetee-coder/schoolcooperative/blob/main/sql/quiz-schema.sql" target="_blank" class="sw-link">📄 3. quiz-schema.sql <span style="font-size:11px;opacity:0.7">(แบบทดสอบ)</span></a>
     <div class="sw-row">
-      <button class="sw-back" onclick="swGo(3)">← ย้อนกลับ</button>
-      <button class="sw-next" onclick="swGo(5)">ทำเสร็จแล้ว →</button>
+      <button class="sw-back" onclick="swGo(4)">← ย้อนกลับ</button>
+      <button class="sw-next" onclick="swGo(6)">ทำเสร็จแล้ว →</button>
     </div>
   </div>
 
-  <!-- Step 5: Done -->
-  <div class="sw-step" data-step="5" style="display:none;">
+  <!-- Step 6: Done -->
+  <div class="sw-step" data-step="6" style="display:none;">
     <div class="sw-emoji">🎉</div>
     <h2>เสร็จเรียบร้อย!</h2>
     <p class="sw-sub">ระบบพร้อมใช้งานสำหรับโรงเรียนของคุณแล้ว</p>
     <div class="sw-summary" id="swSummary"></div>
     <div class="sw-note">
-      💾 <b>เพื่อให้ทุกอุปกรณ์เห็นการตั้งค่าเดียวกัน:</b><br>
-      ดาวน์โหลดไฟล์ config ด้านล่าง → upload ไปที่ GitHub repo ของคุณ → Vercel จะ deploy ใหม่อัตโนมัติ
+      📱 <b>ใช้บนเครื่องอื่น (มือถือ/แท็บเล็ต)?</b><br>
+      เปิด URL ของแอป บนเครื่องนั้น → จะมีปุ่ม <b>"ตั้งค่าระบบ"</b> ให้กรอกข้อมูลเดิมอีกครั้ง ใช้เวลาไม่ถึง 1 นาที
     </div>
-    <button class="sw-download" onclick="swDownloadConfigs()">📥 ดาวน์โหลดไฟล์ Config</button>
-    <button class="sw-next" onclick="swFinish()" style="margin-top:10px;">เริ่มใช้งานในเครื่องนี้ →</button>
+    <button class="sw-next" onclick="swFinish()">🚀 เริ่มใช้งานเลย →</button>
   </div>
 </div>
 
 <script>
   var swStep = 1;
+  var SW_TOTAL = 6;  // รวม welcome
 
   function swGo(step) {
     swStep = step;
     document.querySelectorAll('.sw-step').forEach(el => el.style.display = 'none');
     document.querySelector('.sw-step[data-step="' + step + '"]').style.display = 'block';
-    document.getElementById('swProgress').style.width = (step * 20) + '%';
-    if (step === 5) updateSummary();
+    // progress: step 1 = 16%, step 6 = 100%
+    document.getElementById('swProgress').style.width = Math.round(step / SW_TOTAL * 100) + '%';
+    if (step === SW_TOTAL) updateSummary();
+    window.scrollTo(0, 0);
   }
 
   function swSkip() {
-    location.href = './?demo=1';
+    location.href = './index.html?demo=1';
   }
 
   function swValidate2() {
@@ -203,7 +278,7 @@
       return;
     }
     warn.style.display = 'none';
-    swGo(4);
+    swGo(5);
   }
 
   function swCollectConfig() {
@@ -240,7 +315,7 @@
       '🏫 <b>' + cfg.school.schoolName + '</b><br>' +
       '📍 ' + (cfg.school.districtOffice || '<i>ไม่ระบุสังกัด</i>') + '<br>' +
       '👨‍🏫 ' + (cfg.school.developer || '<i>ไม่ระบุครูที่ปรึกษา</i>') + '<br>' +
-      '☁ Supabase: ' + (cfg.supabase.url ? '✅ เชื่อมต่อแล้ว' : '⚠ ใช้แบบ local');
+      '☁ Supabase: ' + (cfg.supabase.url ? '✅ เชื่อมต่อแล้ว' : '⚠ ยังไม่ได้ตั้งค่า');
   }
 
   function swFinish() {
@@ -250,27 +325,13 @@
       localStorage.setItem('coopSupabaseConfigOverride', JSON.stringify(cfg.supabase));
     }
     localStorage.setItem('coopSetupDone', '1');
-    location.href = './';
+
+    // แสดง feedback สั้นๆ ก่อน redirect
+    const btn = document.querySelector('.sw-step[data-step="6"] .sw-next');
+    if (btn) { btn.textContent = '✅ กำลังเข้าสู่ระบบ...'; btn.disabled = true; }
+    setTimeout(() => { location.href = './index.html'; }, 800);
   }
 
-  function swDownloadConfigs() {
-    const cfg = swCollectConfig();
-    const schoolJs = '// School Configuration — Generated by Setup Wizard\n' +
-      'window.SCHOOL_CONFIG = ' + JSON.stringify(cfg.school, null, 2) + ';\n';
-    const sbJs = '// Supabase Configuration — Generated by Setup Wizard\n' +
-      'window.SUPABASE_CONFIG = ' + JSON.stringify(cfg.supabase, null, 2) + ';\n';
-    swSaveBlob(schoolJs, 'school-config.js');
-    setTimeout(() => swSaveBlob(sbJs, 'supabase-config.js'), 300);
-  }
-
-  function swSaveBlob(content, name) {
-    const blob = new Blob([content], { type: 'text/javascript' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = name;
-    a.click();
-    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
-  }
 
   // Pre-fill จาก localStorage ถ้ามี
   try {

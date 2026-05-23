@@ -9336,7 +9336,7 @@ function startRealtime() {
   realtimeChannels.push(reqChannel);
 
   // === AUDIT LOGS (live notifications) ===
-  const auditChannel = sb.channel('coop-audit')
+  const auditChannel = sb.channel('coop-audit-noti')
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'audit_logs' }, payload => {
       const a = payload.new;
       if (auditLogs.find(x => x.id === a.id)) return;
@@ -9421,7 +9421,7 @@ function startRealtime() {
 
   // === AUDIT LOGS (live for teachers) ===
   if (isTeacher()) {
-    const auditChannel = sb.channel('coop-audit')
+    const auditChannel = sb.channel('coop-audit-admin')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'audit_logs' }, payload => {
         const a = payload.new;
         if (auditLogs.find(x => x.id === a.id)) return;

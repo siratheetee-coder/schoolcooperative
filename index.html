@@ -63,9 +63,18 @@
       if (localStorage.getItem('coopDirectAccess')) return;
 
       const params = new URLSearchParams(location.search);
-      if (params.has('school') || params.has('direct')) {
+      // ?direct=1 → ข้าม landing เลย (เปิดให้ตัวเองหรือ debug)
+      if (params.has('direct')) {
         localStorage.setItem('coopDirectAccess', '1');
         return;
+      }
+      // ?school=baanhinlad → ต้องผ่าน PIN gate ก่อน (เช็ค flag)
+      if (params.get('school') === 'baanhinlad') {
+        if (localStorage.getItem('coopBaanhinladAuth') === '1') {
+          localStorage.setItem('coopDirectAccess', '1');
+          return;
+        }
+        // ไม่มี PIN flag → แสดง landing แม้จะมี query param
       }
       window.__SHOW_LANDING__ = true;
     } catch (e) { /* localStorage blocked → skip landing */ }
@@ -3733,7 +3742,22 @@
   function ldGoScan()        { location.href = './setup.html?scan=1'; }
   function ldGoDemo()        { location.href = './?demo=1'; }
   function ldGoBaanhinlad()  {
-    try { localStorage.setItem('coopDirectAccess', '1'); } catch(e) {}
+    // ถ้าเคยใส่ PIN ผ่านแล้ว → ไปเลย
+    try {
+      if (localStorage.getItem('coopBaanhinladAuth') === '1') {
+        localStorage.setItem('coopDirectAccess', '1');
+        location.href = './?school=baanhinlad';
+        return;
+      }
+    } catch(e) {}
+    const BAANHINLAD_PIN = 'hinlad1044410004';
+    const pin = prompt('ใส่ PIN สำหรับครูโรงเรียนบ้านหินลาด:');
+    if (pin === null) return;
+    if (pin !== BAANHINLAD_PIN) { alert('❌ PIN ไม่ถูกต้อง'); return; }
+    try {
+      localStorage.setItem('coopBaanhinladAuth', '1');
+      localStorage.setItem('coopDirectAccess', '1');
+    } catch(e) {}
     location.href = './?school=baanhinlad';
   }
 </script>
@@ -3831,13 +3855,12 @@
   function _addDevicePack() {
     const sc = window.SCHOOL_CONFIG || {};
     const sb = window.SUPABASE_CONFIG || {};
+    // เก็บแค่ minimum — ลด QR density เพื่อให้สแกนง่ายขึ้น
+    // ข้อมูลอื่น (se, d, dv) มาจาก fetch ใน Supabase หรือ user กรอกเองทีหลังได้
     return {
-      s:  sc.schoolName,
-      se: sc.schoolNameEn,
-      d:  sc.districtOffice,
-      dv: sc.developer,
-      u:  sb.url,
-      k:  sb.anonKey
+      s: sc.schoolName,
+      u: sb.url,
+      k: sb.anonKey
     };
   }
   function _addDevicePackToUrl(pack) {

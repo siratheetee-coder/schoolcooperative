@@ -156,7 +156,7 @@
     <div class="sw-field"><label>สังกัด (เขตพื้นที่)</label><input id="swDistrict" placeholder="สำนักงานเขตพื้นที่..."></div>
     <div class="sw-field"><label>ชื่อครูที่ปรึกษา</label><input id="swDeveloper" placeholder="ครู..."></div>
     <div class="sw-row">
-      <button class="sw-back" onclick="swGo(1)">← ย้อนกลับ</button>
+      <button class="sw-back" onclick="swBackFromStep2()">← ย้อนกลับ</button>
       <button class="sw-next" onclick="swValidate2()">ถัดไป →</button>
     </div>
   </div>
@@ -324,6 +324,13 @@
     swGo(3);
   }
 
+  // ย้อนกลับจาก Step 2 — ถ้ามาจาก landing (?new=1) กลับไป landing
+  function swBackFromStep2() {
+    const params = new URLSearchParams(location.search);
+    if (params.has('new')) location.href = './index.html';
+    else swGo(1);
+  }
+
   function swCheckSupabase() {
     const url = document.getElementById('swSbUrl').value.trim();
     const key = document.getElementById('swSbKey').value.trim();
@@ -395,13 +402,11 @@
 
   function swMakePack() {
     const cfg = swCollectConfig();
+    // เก็บแค่ minimum — ลด QR density
     return {
-      s:  cfg.school.schoolName,
-      se: cfg.school.schoolNameEn,
-      d:  cfg.school.districtOffice,
-      dv: cfg.school.developer,
-      u:  cfg.supabase.url,
-      k:  cfg.supabase.anonKey
+      s: cfg.school.schoolName,
+      u: cfg.supabase.url,
+      k: cfg.supabase.anonKey
     };
   }
 
@@ -450,16 +455,15 @@
     _swScanner = new Html5Qrcode('swScannerEl', /* verbose */ false);
 
     const config = {
-      fps: 15,
-      // ไม่ใส่ qrbox → สแกนทั้งเฟรม (รองรับ QR หนาแน่น)
+      fps: 25,
       aspectRatio: 1.0,
-      // ขอ video resolution สูงเพื่อจับ QR ที่ละเอียดได้
       videoConstraints: {
         facingMode: 'environment',
-        width:  { ideal: 1920 },
-        height: { ideal: 1080 }
+        width:  { ideal: 1920, min: 1280 },
+        height: { ideal: 1080, min: 720 },
+        // โฟกัสต่อเนื่อง — ช่วยให้ scan QR เล็กๆ ติดเร็วขึ้น
+        advanced: [{ focusMode: 'continuous' }]
       },
-      // ใช้ BarcodeDetector ของ browser ก่อน (เร็วกว่า) ตามด้วย jsQR fallback
       experimentalFeatures: { useBarCodeDetectorIfSupported: true }
     };
 
@@ -474,7 +478,7 @@
       },
       (errMsg) => { /* ignore scan-frame errors */ }
     ).then(() => {
-      status.textContent = '🔍 เล็งไปที่ QR แล้วรอ 1-2 วินาที';
+      status.textContent = '🔍 เล็งให้ QR เต็มเฟรม · ห่าง 15-25 ซม. · มีแสงพอ';
     }).catch(err => {
       status.textContent = '❌ เปิดกล้องไม่ได้: ' + (err.message || err);
       console.error('Camera error:', err);
@@ -592,22 +596,12 @@
   // Routing logic — ตามลำดับความสำคัญ
   // ?cfg=...  → auto-connect (จาก QR/link)
   // ?new=1   → ตั้งค่าโรงเรียนใหม่ ข้าม welcome ไป Step 2 (school info)
-  // ?scan=1  → เปิด QR scanner ทันที (สำหรับโรงเรียนที่มีระบบอยู่แล้ว)
+  // ?scan=1  → ไป Step 1 (Welcome) — มีปุ่มสแกน + paste ให้กดเอง (ไม่ auto-open กล้อง)
   // อื่นๆ    → Step 1 (welcome)
   (function() {
     if (swTryAutoConnect()) return;
     const params = new URLSearchParams(location.search);
     if (params.has('new')) { swGo(2); return; }
-    if (params.has('scan')) {
-      swGo(1);
-      // รอให้ html5-qrcode โหลดเสร็จ แล้วเปิด scanner อัตโนมัติ
-      const tryStart = () => {
-        if (typeof Html5Qrcode !== 'undefined') swStartScan();
-        else setTimeout(tryStart, 200);
-      };
-      setTimeout(tryStart, 300);
-      return;
-    }
     swGo(1);
   })();
 </script>

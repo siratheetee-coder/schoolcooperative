@@ -53,12 +53,23 @@
     return out;
   }
   if (!window.DEMO_MODE) {
-    try {
-      const overrideSchool = localStorage.getItem('coopSchoolConfigOverride');
-      if (overrideSchool) window.SCHOOL_CONFIG = _mergeTruthy(window.SCHOOL_CONFIG || {}, JSON.parse(overrideSchool));
-      const overrideSb = localStorage.getItem('coopSupabaseConfigOverride');
-      if (overrideSb) window.SUPABASE_CONFIG = _mergeTruthy(window.SUPABASE_CONFIG || {}, JSON.parse(overrideSb));
-    } catch (e) { /* ignore corrupt overrides */ }
+    // ถ้าเป็น baan-hin-lad direct mode (กด PIN เข้ามา) → ไม่ใช้ override เลย
+    // override เก่าจาก setup wizard ทดลองอาจทำให้ URL/key ผิดทับ baan-hin-lad ของจริง
+    const isBaanhinladDirect = (function() {
+      try {
+        if (localStorage.getItem('coopBaanhinladAuth') === '1') return true;
+        const params = new URLSearchParams(location.search);
+        return params.get('school') === 'baanhinlad';
+      } catch(e) { return false; }
+    })();
+    if (!isBaanhinladDirect) {
+      try {
+        const overrideSchool = localStorage.getItem('coopSchoolConfigOverride');
+        if (overrideSchool) window.SCHOOL_CONFIG = _mergeTruthy(window.SCHOOL_CONFIG || {}, JSON.parse(overrideSchool));
+        const overrideSb = localStorage.getItem('coopSupabaseConfigOverride');
+        if (overrideSb) window.SUPABASE_CONFIG = _mergeTruthy(window.SUPABASE_CONFIG || {}, JSON.parse(overrideSb));
+      } catch (e) { /* ignore corrupt overrides */ }
+    }
   }
 </script>
 <script>

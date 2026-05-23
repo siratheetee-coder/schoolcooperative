@@ -52,6 +52,25 @@
     } catch (e) { /* ignore corrupt overrides */ }
   }
 </script>
+<script>
+  // Landing page detection — ผู้เยี่ยมชมใหม่เห็น landing แทน login ของโรงเรียนหลัก
+  (function() {
+    if (window.DEMO_MODE) return;
+    try {
+      if (localStorage.getItem('coopUser')) return;
+      if (localStorage.getItem('coopSetupDone')) return;
+      if (localStorage.getItem('coopSchoolConfigOverride')) return;
+      if (localStorage.getItem('coopDirectAccess')) return;
+
+      const params = new URLSearchParams(location.search);
+      if (params.has('school') || params.has('direct')) {
+        localStorage.setItem('coopDirectAccess', '1');
+        return;
+      }
+      window.__SHOW_LANDING__ = true;
+    } catch (e) { /* localStorage blocked → skip landing */ }
+  })();
+</script>
 <style>
   /* ============== PALETTE ============== */
   :root {
@@ -3561,6 +3580,163 @@
 </style>
 </head>
 <body>
+
+<!-- ============== LANDING SCREEN (ผู้เยี่ยมชมใหม่) ============== -->
+<style>
+  body.landing-mode > *:not(#landingScreen) { display: none !important; }
+  #landingScreen {
+    position: fixed; inset: 0; z-index: 10000;
+    background: linear-gradient(135deg, #2D7D6F 0%, #226258 100%);
+    display: none; align-items: center; justify-content: center;
+    padding: 20px;
+    font-family: 'Prompt', sans-serif;
+    overflow-y: auto;
+  }
+  #landingScreen .ld-card {
+    background: white;
+    border-radius: 24px;
+    max-width: 480px;
+    width: 100%;
+    padding: 32px 26px 24px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+    text-align: center;
+    color: #2C1810;
+  }
+  #landingScreen .ld-logo {
+    width: 84px; height: 84px;
+    margin: 0 auto 12px;
+    display: block;
+  }
+  #landingScreen h1 {
+    color: #2D7D6F;
+    font-size: 22px;
+    font-weight: 800;
+    margin: 6px 0 6px;
+  }
+  #landingScreen .ld-sub {
+    color: #6B5D45;
+    font-size: 13px;
+    margin-bottom: 22px;
+    line-height: 1.6;
+  }
+  #landingScreen .ld-btn {
+    width: 100%; box-sizing: border-box;
+    border: none;
+    padding: 15px 16px;
+    border-radius: 14px;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    margin-bottom: 10px;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: transform 0.1s;
+  }
+  #landingScreen .ld-btn:hover { transform: translateY(-1px); }
+  #landingScreen .ld-btn .ico { font-size: 22px; flex-shrink: 0; }
+  #landingScreen .ld-btn .body { flex: 1; }
+  #landingScreen .ld-btn .title { font-size: 14px; font-weight: 700; }
+  #landingScreen .ld-btn .desc  { font-size: 11px; font-weight: 400; opacity: 0.85; margin-top: 2px; }
+  #landingScreen .ld-btn .arrow { font-size: 18px; opacity: 0.7; }
+  #landingScreen .ld-btn-primary {
+    background: linear-gradient(135deg, #34D399, #2D7D6F);
+    color: white;
+    box-shadow: 0 4px 0 #226258;
+    padding: 18px 16px;
+  }
+  #landingScreen .ld-btn-secondary {
+    background: #F5EAD3;
+    color: #2D7D6F;
+  }
+  #landingScreen .ld-btn-tertiary {
+    background: #FFF8EE;
+    color: #6B5D45;
+    border: 2px dashed #E8D6B3;
+  }
+  #landingScreen .ld-divider {
+    margin: 18px 0 10px;
+    border-top: 1px solid #E8D6B3;
+    position: relative;
+  }
+  #landingScreen .ld-footer-link {
+    font-size: 12px;
+    color: #6B5D45;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  #landingScreen .ld-footer-link u { color: #2D7D6F; font-weight: 600; }
+  #landingScreen .ld-badges {
+    margin-top: 14px;
+    font-size: 10px;
+    color: #6B5D45;
+    line-height: 1.6;
+  }
+</style>
+
+<div id="landingScreen">
+  <div class="ld-card">
+    <img src="./logo-no-bg.png" alt="logo" class="ld-logo">
+    <h1>ระบบสหกรณ์โรงเรียนดิจิทัล</h1>
+    <div class="ld-sub">
+      POS ขายของ · จัดการสต็อก · ปันผล · รายงาน<br>
+      <b style="color:#2D7D6F;">ฟรี · ใช้งานได้ทุกอุปกรณ์ · Open Source</b>
+    </div>
+
+    <button class="ld-btn ld-btn-primary" onclick="ldGoSetup()">
+      <span class="ico">🚀</span>
+      <span class="body">
+        <div class="title">ตั้งค่าโรงเรียนใหม่</div>
+        <div class="desc">เริ่มต้นใช้ระบบสำหรับโรงเรียนของคุณ</div>
+      </span>
+      <span class="arrow">→</span>
+    </button>
+
+    <button class="ld-btn ld-btn-secondary" onclick="ldGoScan()">
+      <span class="ico">📷</span>
+      <span class="body">
+        <div class="title">มี QR / ลิงก์จากครูคนอื่น?</div>
+        <div class="desc">สแกน QR หรือวางลิงก์ที่ได้รับ</div>
+      </span>
+      <span class="arrow">→</span>
+    </button>
+
+    <button class="ld-btn ld-btn-tertiary" onclick="ldGoDemo()">
+      <span class="ico">🎭</span>
+      <span class="body">
+        <div class="title">ลองใช้แบบ Demo</div>
+        <div class="desc">ทดลองโดยไม่ต้องสมัครอะไรเลย</div>
+      </span>
+      <span class="arrow">→</span>
+    </button>
+
+    <div class="ld-divider"></div>
+    <a class="ld-footer-link" onclick="ldGoBaanhinlad()">
+      เป็นครูโรงเรียนบ้านหินลาด? <u>คลิกเข้าระบบที่นี่</u>
+    </a>
+    <div class="ld-badges">
+      สร้างด้วย ❤ โดย ครูสิรธีร์ ตีเมืองซ้าย · โรงเรียนบ้านหินลาด
+    </div>
+  </div>
+</div>
+
+<script>
+  // เปิด landing ถ้าตรวจพบผู้เยี่ยมชมใหม่
+  if (window.__SHOW_LANDING__) {
+    document.body.classList.add('landing-mode');
+    document.getElementById('landingScreen').style.display = 'flex';
+  }
+
+  function ldGoSetup()       { location.href = './setup.html'; }
+  function ldGoScan()        { location.href = './setup.html'; }
+  function ldGoDemo()        { location.href = './?demo=1'; }
+  function ldGoBaanhinlad()  {
+    try { localStorage.setItem('coopDirectAccess', '1'); } catch(e) {}
+    location.href = './?school=baanhinlad';
+  }
+</script>
 
 <!-- ============== NOTIFICATION BANNER ============== -->
 <div class="noti-banner" id="notiBanner">
@@ -10053,8 +10229,9 @@ function quitQuiz() {
   else renderQuizSelectScreen();
 }
 
-// Initial cloud load (if configured)
+// Initial cloud load (if configured) — ข้ามถ้ากำลังโชว์ landing
 (async () => {
+  if (window.__SHOW_LANDING__) return;
   showCloudStatus();
   if (sb) {
     await loadFromCloud();

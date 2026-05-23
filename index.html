@@ -43,12 +43,21 @@
 <script>
   // localStorage override — ทำงานหลังโหลด config files แล้ว
   // ผู้ใช้ตั้งค่าผ่าน Setup Wizard → เก็บใน localStorage → override config เดิม
+  // เฉพาะ field ที่มีค่าจริง (truthy) — ป้องกัน '' ไปทับ VAPID/etc จาก supabase-config.js
+  function _mergeTruthy(base, override) {
+    const out = Object.assign({}, base);
+    for (const k in override) {
+      const v = override[k];
+      if (v !== '' && v !== null && v !== undefined) out[k] = v;
+    }
+    return out;
+  }
   if (!window.DEMO_MODE) {
     try {
       const overrideSchool = localStorage.getItem('coopSchoolConfigOverride');
-      if (overrideSchool) window.SCHOOL_CONFIG = Object.assign({}, window.SCHOOL_CONFIG || {}, JSON.parse(overrideSchool));
+      if (overrideSchool) window.SCHOOL_CONFIG = _mergeTruthy(window.SCHOOL_CONFIG || {}, JSON.parse(overrideSchool));
       const overrideSb = localStorage.getItem('coopSupabaseConfigOverride');
-      if (overrideSb) window.SUPABASE_CONFIG = Object.assign({}, window.SUPABASE_CONFIG || {}, JSON.parse(overrideSb));
+      if (overrideSb) window.SUPABASE_CONFIG = _mergeTruthy(window.SUPABASE_CONFIG || {}, JSON.parse(overrideSb));
     } catch (e) { /* ignore corrupt overrides */ }
   }
 </script>

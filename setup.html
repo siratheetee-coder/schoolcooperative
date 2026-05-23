@@ -368,7 +368,8 @@
         defaultTeacherPin: '9999',
         bigSaleThreshold: 100,
       },
-      supabase: { url: sbUrl, anonKey: sbKey, vapidPublicKey: '' }
+      // ไม่ใส่ vapidPublicKey ถ้ายังไม่มี — ป้องกัน '' ทับค่าใน supabase-config.js
+      supabase: { url: sbUrl, anonKey: sbKey }
     };
   }
 

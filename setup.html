@@ -6,6 +6,7 @@
 <title>ตั้งค่าระบบสหกรณ์โรงเรียน · Setup Wizard</title>
 <link rel="icon" type="image/png" sizes="96x96" href="favicon-96x96.png">
 <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/html5-qrcode" defer></script>
 <style>
   * { box-sizing: border-box; }
   body {
@@ -92,6 +93,18 @@
 </head>
 <body>
 
+<!-- QR Scanner Overlay -->
+<div id="swScannerOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:9999;flex-direction:column;align-items:center;justify-content:center;padding:20px;">
+  <div style="color:white;font-size:16px;font-weight:700;margin-bottom:12px;text-align:center;">
+    📷 เล็งกล้องไปที่ QR Code
+  </div>
+  <div id="swScannerEl" style="width:100%;max-width:360px;border-radius:14px;overflow:hidden;background:black;"></div>
+  <div id="swScannerStatus" style="color:#FFC857;font-size:13px;margin-top:12px;text-align:center;min-height:18px;"></div>
+  <button onclick="swStopScan()" style="margin-top:16px;background:white;color:#222;border:none;padding:11px 28px;border-radius:10px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;">
+    ✕ ปิดกล้อง
+  </button>
+</div>
+
 <div class="sw-card">
   <div class="sw-header-bar">
     <span>🪄 Setup Wizard</span>
@@ -107,16 +120,17 @@
 
     <!-- มีลิงก์เชื่อมต่อจากครูคนอื่นแล้ว? -->
     <div style="background:#F0FDF4;border-radius:14px;padding:14px;margin:14px 0;text-align:left;border:2px dashed #34D399;">
-      <div style="font-size:13px;font-weight:700;color:#064E3B;margin-bottom:6px;">
-        🔗 มีลิงก์เชื่อมต่อจากครูคนอื่นแล้ว?
+      <div style="font-size:13px;font-weight:700;color:#064E3B;margin-bottom:8px;">
+        🔗 มีลิงก์/QR จากครูคนอื่นแล้ว?
       </div>
-      <div style="font-size:11px;color:#6B5D45;margin-bottom:8px;">
-        วางลิงก์ที่ได้รับจาก QR / คัดลอก → กดเชื่อมต่อ
-      </div>
-      <input id="swPasteLink" type="url" placeholder="https://schoolcooperative.vercel.app/setup.html?cfg=..."
+      <button onclick="swStartScan()" style="width:100%;background:linear-gradient(135deg,#34D399,#2D7D6F);color:white;border:none;padding:13px;border-radius:10px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:8px;">
+        <span style="font-size:18px;">📷</span> สแกน QR Code
+      </button>
+      <div style="font-size:11px;color:#6B5D45;margin-bottom:6px;text-align:center;">— หรือ —</div>
+      <input id="swPasteLink" type="url" placeholder="วางลิงก์ที่ได้รับ"
         style="width:100%;box-sizing:border-box;border:2px solid #E8D6B3;background:#FFFBF3;padding:9px 11px;border-radius:8px;font-family:monospace;font-size:11px;margin-bottom:8px;word-break:break-all;">
-      <button onclick="swPasteAndConnect(this)" style="width:100%;background:linear-gradient(135deg,#34D399,#2D7D6F);color:white;border:none;padding:10px;border-radius:8px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;">
-        ✅ เชื่อมต่อจากลิงก์
+      <button onclick="swPasteAndConnect(this)" style="width:100%;background:#F5EAD3;color:#2D7D6F;border:none;padding:9px;border-radius:8px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;">
+        เชื่อมต่อจากลิงก์
       </button>
       <div id="swPasteErr" style="color:#991B1B;font-size:11px;margin-top:6px;display:none;"></div>
     </div>
@@ -417,6 +431,50 @@
     // แสดง URL ใต้ QR ด้วย เผื่อ scan ไม่ติด
     const linkDiv = document.getElementById('swShareLinkText');
     if (linkDiv) linkDiv.textContent = url;
+  }
+
+  // ============ QR SCANNER ============
+  var _swScanner = null;
+
+  function swStartScan() {
+    if (typeof Html5Qrcode === 'undefined') {
+      alert('กำลังโหลด QR scanner — กรุณาลองอีกครั้งใน 2 วินาที');
+      return;
+    }
+    const overlay = document.getElementById('swScannerOverlay');
+    const status = document.getElementById('swScannerStatus');
+    overlay.style.display = 'flex';
+    status.textContent = 'กำลังเปิดกล้อง...';
+
+    if (_swScanner) { try { _swScanner.stop(); } catch(e) {} _swScanner = null; }
+    _swScanner = new Html5Qrcode('swScannerEl');
+    _swScanner.start(
+      { facingMode: 'environment' },
+      { fps: 10, qrbox: { width: 250, height: 250 } },
+      (decodedText) => {
+        status.textContent = '✅ พบ QR แล้ว — กำลังเชื่อมต่อ...';
+        swStopScan();
+        document.getElementById('swPasteLink').value = decodedText;
+        setTimeout(() => swPasteAndConnect(), 200);
+      },
+      (errMsg) => { /* ignore scan-frame errors */ }
+    ).catch(err => {
+      status.textContent = '❌ เปิดกล้องไม่ได้: ' + (err.message || err);
+      console.error('Camera error:', err);
+    });
+  }
+
+  function swStopScan() {
+    const overlay = document.getElementById('swScannerOverlay');
+    if (_swScanner) {
+      _swScanner.stop().catch(()=>{}).finally(() => {
+        try { _swScanner.clear(); } catch(e) {}
+        _swScanner = null;
+        overlay.style.display = 'none';
+      });
+    } else {
+      overlay.style.display = 'none';
+    }
   }
 
   function swPasteAndConnect(btn) {

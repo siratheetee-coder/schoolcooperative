@@ -7092,7 +7092,7 @@ if (window.DEMO_MODE) {
 }
 
 // ============== SETUP WIZARD ==============
-let swStep = 1;
+var swStep = 1;  // var ไม่ใช่ let — เพื่อให้ hoist ก่อน showSetupWizard() ถูกเรียก
 function showSetupWizard() {
   document.getElementById('setupWizard').style.display = 'flex';
   document.getElementById('loginScreen').classList.add('hidden');

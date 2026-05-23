@@ -70,6 +70,27 @@
         if (overrideSb) window.SUPABASE_CONFIG = _mergeTruthy(window.SUPABASE_CONFIG || {}, JSON.parse(overrideSb));
       } catch (e) { /* ignore corrupt overrides */ }
     }
+
+    // Safety net: ถ้า config โหลดมาแล้ว URL = baan-hin-lad → ใส่ VAPID fallback ให้ ในกรณี cache stale
+    // VAPID public key เป็นค่าสาธารณะ — ไม่ใช่ secret
+    const _BAANHINLAD_VAPID = 'BLOekTSLxGegh0WcTuHro3N6KOjrIBonyD3pAFRB1apfyNlPa_ChLsb0Hcx7siD1RsfM2cF5axYOXOoxobaVi7g';
+    if (window.SUPABASE_CONFIG && window.SUPABASE_CONFIG.url && window.SUPABASE_CONFIG.url.indexOf('znbtmgbcbdnrbtmxgnhj') >= 0) {
+      if (!window.SUPABASE_CONFIG.vapidPublicKey) {
+        window.SUPABASE_CONFIG.vapidPublicKey = _BAANHINLAD_VAPID;
+        console.log('🔧 Applied fallback VAPID for baan-hin-lad');
+      }
+    }
+    // Debug log — ดู config สุดท้ายใน console
+    try {
+      console.log('[CONFIG]', {
+        supabaseUrl: window.SUPABASE_CONFIG?.url?.slice(0, 40),
+        anonKeyPrefix: window.SUPABASE_CONFIG?.anonKey?.slice(0, 20),
+        hasVapid: !!window.SUPABASE_CONFIG?.vapidPublicKey,
+        vapidPrefix: window.SUPABASE_CONFIG?.vapidPublicKey?.slice(0, 20),
+        hasOverride: !!localStorage.getItem('coopSupabaseConfigOverride'),
+        baanhinladAuth: localStorage.getItem('coopBaanhinladAuth')
+      });
+    } catch(e) {}
   }
 </script>
 <script>

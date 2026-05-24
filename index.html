@@ -2137,6 +2137,7 @@
     display: inline-block;
   }
   .login-action-toggle.open .lat-arrow { transform: rotate(180deg); }
+  .login-action-toggle:hover { background: linear-gradient(135deg, var(--cream-300), #DBC89A); border-left-color: var(--green-500); }
   .login-action-toggle:active { transform: scale(0.98); box-shadow: var(--shadow-inset); }
 
   .login-action-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
@@ -2168,6 +2169,8 @@
     color: #7A5020;
     border: 2px dashed var(--cream-300);
   }
+  .lac-device:hover { background: linear-gradient(145deg, #C8EDE8, #A8DDD6); color: #134840; }
+  .lac-setup:hover  { background: linear-gradient(145deg, #FDECD1, #FAD9A8); color: #5C3810; }
   .login-action-card:active { transform: scale(0.94); box-shadow: var(--shadow-inset); }
 
   /* ============== TOAST ============== */
@@ -4068,7 +4071,7 @@
     const pack = _addDevicePack();
     const warn = document.getElementById('addDeviceWarn');
     if (!pack.u || !pack.k) {
-      warn.textContent = '⚠ ยังไม่ได้ตั้งค่า Supabase — ตั้งค่าระบบก่อนใช้ฟีเจอร์นี้';
+      warn.textContent = '⚠ ยังไม่ได้ตั้งค่าฐานข้อมูล — ตั้งค่าระบบก่อนใช้ฟีเจอร์นี้';
       warn.style.display = 'block';
       document.getElementById('addDeviceQrImg').style.display = 'none';
       document.getElementById('addDeviceLinkText').textContent = '';
@@ -5687,7 +5690,7 @@ let selectedImageUrl = null;
 async function uploadProductImage(event) {
   const file = event.target.files[0];
   if (!file) return;
-  if (!sb) { showToast('ต้องเชื่อม Supabase ก่อน', true); return; }
+  if (!sb) { showToast('ต้องเชื่อมต่อฐานข้อมูลก่อน', true); return; }
   if (file.size > 5 * 1024 * 1024) { showToast('ไฟล์ใหญ่เกิน 5MB', true); return; }
 
   const btnText = document.getElementById('uploadBtnText');
@@ -9147,7 +9150,7 @@ function checkImportConfirm() {
 
 async function executeImport() {
   if (!isTeacher() || !importData) return;
-  if (!sb) { showToast('ต้องเชื่อม Supabase', true); return; }
+  if (!sb) { showToast('ต้องเชื่อมต่อฐานข้อมูลก่อน', true); return; }
   if (document.getElementById('impConfirmText').value.trim() !== 'RESTORE') return;
 
   const btn = document.getElementById('impConfirmBtn');
@@ -10584,11 +10587,11 @@ function quitQuiz() {
   const setSkelStatus = (msg) => { if (skelStatus) skelStatus.textContent = msg; };
   try {
     if (sb) {
-      setSkelStatus('กำลังเชื่อม Supabase...');
+      setSkelStatus('กำลังเชื่อมต่อฐานข้อมูล...');
       await loadFromCloud();
       setSkelStatus('กำลังโหลดการตั้งค่า...');
       await loadAppSettings();
-      showToast('🟢 เชื่อม Supabase สำเร็จ');
+      showToast('🟢 เชื่อมต่อฐานข้อมูลแล้ว');
       // start realtime if user already logged in
       if (currentUser) {
         startRealtime();

@@ -161,8 +161,8 @@
 
 <div class="ps-wrap">
   <div class="ps-header">
-    <h1>🔔 ตั้งค่าแจ้งเตือน Push</h1>
-    <div class="sub">ใช้เวลาประมาณ 15 นาที</div>
+    <h1>🔔 ตั้งค่าแจ้งเตือนเด้ง</h1>
+    <div class="sub">5 ขั้นตอน · ใช้เวลาประมาณ 15 นาที · ไม่ต้องเขียนโค้ดเอง</div>
     <div class="ps-progress"><div class="ps-progress-fill" id="psProgress"></div></div>
   </div>
 
@@ -171,29 +171,29 @@
     <!-- ========== STEP 1: Intro ========== -->
     <div class="ps-step" data-step="1">
       <div class="ps-step-label">ขั้นตอนที่ 1 จาก 5</div>
-      <h2 class="ps-step-title">การแจ้งเตือน Push คืออะไร?</h2>
+      <h2 class="ps-step-title">เปิดแจ้งเตือนเด้งทำไม?</h2>
       <div class="ps-emoji-big">🔔</div>
-      <p class="ps-step-sub">เมื่อตั้งค่าเสร็จ ระบบจะส่งแจ้งเตือนไปที่มือถือ/PC ของครู-นักเรียน เมื่อ:</p>
+      <p class="ps-step-sub">ถ้าตั้งค่านี้เสร็จ — เวลามีเหตุการณ์ในร้าน ครูจะได้รับ <strong>การแจ้งเตือนเด้งขึ้นที่มือถือ/คอม</strong> ทันที (แม้ปิดแอปอยู่ก็เด้ง) เช่น:</p>
       <ul class="ps-list">
-        <li>💰 มียอดขายใหม่</li>
-        <li>📤 มีคำขออนุมัติจากนักเรียน</li>
-        <li>📦 สต็อกสินค้าใกล้หมด</li>
-        <li>📅 ครบกำหนดเวร</li>
+        <li>💰 นักเรียนขายของได้</li>
+        <li>📤 นักเรียนส่งคำขออนุมัติ</li>
+        <li>📦 สินค้าในสต็อกใกล้หมด</li>
+        <li>📅 ถึงเวรของตัวเอง</li>
       </ul>
 
       <div class="ps-info">
-        <strong>สิ่งที่ต้องเตรียม:</strong><br>
-        ✓ บัญชี Supabase (ที่ตั้งค่าไว้แล้ว)<br>
-        ✓ คอมพิวเตอร์ + เบราว์เซอร์<br>
-        ✗ <em>ไม่ต้อง</em>ลง Node.js หรือ CLI ใดๆ
+        <strong>✅ ใช้แค่นี้ก็พอ:</strong><br>
+        • บัญชี Supabase ที่ตั้งค่าไว้แล้ว (ตอนติดตั้งระบบ)<br>
+        • คอม/มือถือ + เบราว์เซอร์ Chrome หรือ Safari<br><br>
+        <strong>❌ ไม่ต้อง:</strong> ลงโปรแกรมเพิ่ม / เขียนโค้ดเอง / รู้เรื่อง coding
       </div>
 
       <div class="ps-warn">
-        ⚠ ถ้ายังไม่ได้ตั้งค่าฐานข้อมูล (Supabase) — กลับไปทำให้เสร็จก่อน
+        ⚠ ถ้ายังไม่ได้ตั้งค่าฐานข้อมูล (Supabase) — กลับไปทำหน้าตั้งค่าหลักให้เสร็จก่อน
       </div>
 
       <div class="ps-row">
-        <a href="./index.html" class="ps-btn ps-btn-ghost" style="text-decoration:none;text-align:center;line-height:1.2;">⏭ ข้ามไปก่อน</a>
+        <a href="./index.html" class="ps-btn ps-btn-ghost" style="text-decoration:none;text-align:center;line-height:1.2;">⏭ ไว้ตั้งทีหลัง</a>
         <button class="ps-btn ps-btn-primary" onclick="psGo(2)">เริ่มเลย →</button>
       </div>
     </div>
@@ -201,28 +201,30 @@
     <!-- ========== STEP 2: Generate VAPID ========== -->
     <div class="ps-step" data-step="2" style="display:none;">
       <div class="ps-step-label">ขั้นตอนที่ 2 จาก 5</div>
-      <h2 class="ps-step-title">สร้างกุญแจ VAPID</h2>
-      <p class="ps-step-sub">VAPID Keys คือกุญแจคู่ที่ใช้ระบุตัวตนของแอป — กดปุ่มเดียวระบบสร้างให้ในเบราว์เซอร์</p>
+      <h2 class="ps-step-title">สร้าง "กุญแจ" ของระบบ</h2>
+      <p class="ps-step-sub">การส่งแจ้งเตือนต้องมี <strong>"กุญแจ" 2 ชิ้น</strong> เพื่อยืนยันว่าเป็นเรา ไม่ใช่คนอื่นแอบส่ง — กดปุ่มด้านล่าง ระบบจะสร้างให้ทันที <em>ไม่ต้องใช้โปรแกรมอะไรเพิ่ม</em></p>
 
-      <button class="ps-btn-big" id="vapidGenBtn" onclick="generateVapid()">⚡ สร้าง VAPID Keys ตอนนี้</button>
+      <button class="ps-btn-big" id="vapidGenBtn" onclick="generateVapid()">⚡ กดสร้างกุญแจ</button>
 
       <div id="vapidResult" style="display:none;">
-        <div class="ps-success">✅ สร้างสำเร็จ! เก็บไว้ใช้ขั้นถัดไป</div>
+        <div class="ps-success">✅ สร้างเสร็จแล้ว! เก็บไว้เอาไปใช้ในขั้นถัดไป</div>
         <div class="ps-field-row">
-          <span class="label">Public Key:</span>
+          <span class="label">🔓 กุญแจสาธารณะ:</span>
           <span class="val" id="vapidPubDisplay">—</span>
           <button onclick="copyText('vapidPubDisplay', this)">📋</button>
         </div>
         <div class="ps-field-row">
-          <span class="label">Private Key:</span>
+          <span class="label">🔒 กุญแจส่วนตัว:</span>
           <span class="val" id="vapidPrivDisplay">—</span>
           <button onclick="copyText('vapidPrivDisplay', this)">📋</button>
         </div>
         <div class="ps-warn">
-          🔒 Private Key ต้องเก็บเป็นความลับ — อย่าแชร์ให้คนอื่น<br>
-          💾 กดปุ่ม "บันทึกไฟล์สำรอง" เผื่อรีเฟรชหน้านี้แล้วหาย
+          <strong>⚠ สำคัญมาก:</strong><br>
+          • <strong>กุญแจส่วนตัว</strong> ห้ามแชร์ให้ใครเด็ดขาด (เหมือนรหัสผ่าน)<br>
+          • <strong>อย่าปิดหน้านี้</strong> จนกว่าจะตั้งค่าครบ 5 ขั้น<br>
+          • ถ้าปิด/refresh กุญแจจะหาย ต้องสร้างใหม่ → <strong>กดบันทึกไฟล์สำรองไว้ก่อน</strong>
         </div>
-        <button class="ps-btn ps-btn-ghost" style="width:100%;margin-top:6px;" onclick="downloadVapidBackup()">💾 บันทึกไฟล์สำรอง</button>
+        <button class="ps-btn ps-btn-ghost" style="width:100%;margin-top:6px;" onclick="downloadVapidBackup()">💾 บันทึกไฟล์สำรองไว้ในเครื่อง</button>
       </div>
 
       <div class="ps-row">
@@ -234,99 +236,130 @@
     <!-- ========== STEP 3: Deploy Edge Function ========== -->
     <div class="ps-step" data-step="3" style="display:none;">
       <div class="ps-step-label">ขั้นตอนที่ 3 จาก 5</div>
-      <h2 class="ps-step-title">Deploy Edge Function</h2>
-      <p class="ps-step-sub">Edge Function = โค้ดส่ง Push ที่อยู่บน Supabase — copy โค้ดไปวางใน Dashboard</p>
+      <h2 class="ps-step-title">ติดตั้ง "โปรแกรมส่งแจ้งเตือน"</h2>
+      <p class="ps-step-sub">เอา <strong>โค้ดเล็กๆ ชิ้นเดียว</strong> ไปวางบนเว็บ Supabase เพื่อให้มันส่งแจ้งเตือนแทนเรา — แค่ copy/paste ไม่ต้องเขียนเอง</p>
+
+      <div class="ps-info" style="text-align:center;">
+        📋 <strong>ทำตามนี้ทีละข้อ</strong> (ใช้เวลาประมาณ 5-8 นาที)
+      </div>
 
       <div class="ps-mini-step">
-        <span class="n">1</span> เปิด Supabase Dashboard:
-        <a href="https://supabase.com/dashboard/projects" target="_blank" class="ps-link" style="display:block;margin-top:6px;">🌐 เปิด Supabase Dashboard</a>
+        <span class="n">1</span> <strong>เปิดเว็บ Supabase</strong> (จะเปิดในแท็บใหม่):
+        <a href="https://supabase.com/dashboard/projects" target="_blank" class="ps-link" style="display:block;margin-top:6px;">🌐 คลิกเปิด Supabase</a>
       </div>
       <div class="ps-mini-step">
-        <span class="n">2</span> เลือก project ของคุณ → ไปที่เมนู <code>Edge Functions</code> ทางซ้าย
+        <span class="n">2</span> <strong>คลิกเลือกโปรเจคต์</strong>ของโรงเรียนเรา (ที่ตั้งไว้ตอนติดตั้งระบบ)
       </div>
       <div class="ps-mini-step">
-        <span class="n">3</span> กดปุ่ม <code>Deploy a new function</code> → ตั้งชื่อว่า <code>send-push</code> → ติ๊ก ✓ <strong>Verify JWT with legacy secret</strong> ออก (uncheck)
+        <span class="n">3</span> ที่ <strong>เมนูซ้ายมือ</strong> → หาคำว่า <code>Edge Functions</code> (รูปไฟ้สายฟ้า ⚡) → คลิก
       </div>
       <div class="ps-mini-step">
-        <span class="n">4</span> ลบโค้ด default ออก → คัดลอกโค้ดด้านล่างวางทั้งหมด → กดปุ่ม <code>Deploy function</code>
+        <span class="n">4</span> คลิกปุ่มเขียว <code>Deploy a new function</code><br>
+        → ช่อง "Name" พิมพ์ว่า: <code>send-push</code> (ตัวเล็กทั้งหมด มีขีดกลาง)<br>
+        → ช่อง "Verify JWT" <strong>ติ๊กออก ❌</strong> (ไม่เลือก)
+      </div>
+      <div class="ps-mini-step">
+        <span class="n">5</span> <strong>ลบโค้ดที่มีอยู่ทิ้ง</strong> (กด Ctrl+A แล้ว Delete) → <strong>กดปุ่มด้านล่างเพื่อ copy โค้ด</strong> → กลับไป Supabase paste (Ctrl+V) → กดปุ่ม <code>Deploy function</code>
       </div>
 
-      <button class="ps-btn ps-btn-primary" style="width:100%;margin-bottom:8px;" onclick="copyFunctionCode(this)">📋 คัดลอกโค้ด Edge Function</button>
+      <button class="ps-btn ps-btn-primary" style="width:100%;margin-bottom:8px;" onclick="copyFunctionCode(this)">📋 คัดลอกโค้ด (กดแล้วไปวางใน Supabase)</button>
 
       <details>
-        <summary style="cursor:pointer;font-size:12px;color:#6B5D45;margin:8px 0;">👀 ดูโค้ด (กดเพื่อขยาย)</summary>
+        <summary style="cursor:pointer;font-size:12px;color:#6B5D45;margin:8px 0;">🔍 อยากดูโค้ดก่อน? คลิกที่นี่</summary>
         <div class="ps-code-box" id="functionCodeBox"></div>
       </details>
 
+      <div class="ps-warn">
+        ⏳ <strong>รอจนกว่าจะขึ้นข้อความ "Deployed successfully"</strong> ก่อนกดปุ่มถัดไป<br>
+        (ปกติใช้เวลาประมาณ 30 วินาที — 1 นาที)
+      </div>
+
       <div class="ps-row">
         <button class="ps-btn ps-btn-ghost" onclick="psGo(2)">← ย้อน</button>
-        <button class="ps-btn ps-btn-primary" onclick="psGo(4)">Deploy แล้ว →</button>
+        <button class="ps-btn ps-btn-primary" onclick="psGo(4)">✅ ติดตั้งเสร็จแล้ว →</button>
       </div>
     </div>
 
     <!-- ========== STEP 4: Set Env Vars ========== -->
     <div class="ps-step" data-step="4" style="display:none;">
       <div class="ps-step-label">ขั้นตอนที่ 4 จาก 5</div>
-      <h2 class="ps-step-title">ตั้งค่า Environment Variables</h2>
-      <p class="ps-step-sub">ใส่ VAPID Keys ที่สร้างไว้ใน Supabase เพื่อให้ Edge Function ใช้ส่ง Push</p>
+      <h2 class="ps-step-title">ใส่ "กุญแจ" ให้โปรแกรม</h2>
+      <p class="ps-step-sub">เอา <strong>กุญแจ 2 ชิ้น</strong> ที่สร้างจากขั้นที่ 2 → ไปบอกโปรแกรมว่าใช้กุญแจไหน (ตอนนี้โปรแกรมยังไม่รู้)</p>
+
+      <div class="ps-info" style="text-align:center;">
+        🔑 <strong>ต้องเพิ่ม 3 บรรทัด</strong> ใน Supabase
+      </div>
 
       <div class="ps-mini-step">
-        <span class="n">1</span> ใน Supabase Dashboard → <code>Edge Functions</code> → <code>send-push</code> → tab <code>Secrets</code>
+        <span class="n">1</span> ที่หน้า Supabase ที่เพิ่ง deploy → คลิกที่ชื่อ <code>send-push</code> → ดูที่แท็บด้านบน หา <code>Secrets</code> → คลิก
       </div>
       <div class="ps-mini-step">
-        <span class="n">2</span> กด <code>+ Add new secret</code> ทีละตัว ใส่ 3 ตัวด้านล่าง:
+        <span class="n">2</span> คลิกปุ่ม <code>+ Add new secret</code> <strong>ทีละบรรทัด</strong> ตามรายการด้านล่าง<br>
+        (Name = ชื่อข้างซ้าย, Value = กดปุ่ม 📋 แล้วไปวาง)
       </div>
 
       <div class="ps-field-row">
-        <span class="label">VAPID_PUBLIC_KEY:</span>
+        <span class="label">บรรทัดที่ 1<br><code style="font-size:10px;">VAPID_PUBLIC_KEY</code></span>
         <span class="val" id="envPubKey">—</span>
         <button onclick="copyText('envPubKey', this)">📋</button>
       </div>
       <div class="ps-field-row">
-        <span class="label">VAPID_PRIVATE_KEY:</span>
+        <span class="label">บรรทัดที่ 2<br><code style="font-size:10px;">VAPID_PRIVATE_KEY</code></span>
         <span class="val" id="envPrivKey">—</span>
         <button onclick="copyText('envPrivKey', this)">📋</button>
       </div>
       <div class="ps-field-row">
-        <span class="label">VAPID_SUBJECT:</span>
+        <span class="label">บรรทัดที่ 3<br><code style="font-size:10px;">VAPID_SUBJECT</code></span>
         <span class="val" id="envSubject">mailto:admin@school.ac.th</span>
         <button onclick="copyText('envSubject', this)">📋</button>
       </div>
 
       <div class="ps-info">
-        💡 <strong>VAPID_SUBJECT</strong> เป็นอีเมลผู้ดูแล — ใส่อีเมลจริงของครู (เปลี่ยน <code>admin@school.ac.th</code> เป็นของจริง)
+        💡 <strong>บรรทัดที่ 3 (VAPID_SUBJECT):</strong> ใส่ <strong>อีเมลของครูผู้ดูแล</strong> โดยขึ้นต้นด้วย <code>mailto:</code><br>
+        ตัวอย่าง: <code>mailto:somchai@gmail.com</code>
       </div>
 
       <div class="ps-warn">
-        ⏳ หลังเพิ่ม Secrets เสร็จ — รอประมาณ 30 วินาทีให้ Function รีเฟรช ก่อนทดสอบ
+        ⏳ <strong>ใส่ครบ 3 บรรทัดแล้ว</strong> → รอประมาณ 30 วินาที ก่อนกดถัดไป<br>
+        (Supabase ต้องอัปเดตให้โปรแกรมรู้จักกุญแจใหม่ก่อน)
       </div>
 
       <div class="ps-row">
         <button class="ps-btn ps-btn-ghost" onclick="psGo(3)">← ย้อน</button>
-        <button class="ps-btn ps-btn-primary" onclick="psGo(5)">ตั้งเสร็จแล้ว →</button>
+        <button class="ps-btn ps-btn-primary" onclick="psGo(5)">✅ ใส่ครบแล้ว →</button>
       </div>
     </div>
 
     <!-- ========== STEP 5: Test & Save ========== -->
     <div class="ps-step" data-step="5" style="display:none;">
-      <div class="ps-step-label">ขั้นตอนที่ 5 จาก 5</div>
-      <h2 class="ps-step-title">ทดสอบ & เปิดใช้งาน</h2>
-      <p class="ps-step-sub">ส่ง Push ทดสอบไปยังเครื่องนี้ — ถ้าได้รับ = ตั้งค่าเสร็จสมบูรณ์</p>
+      <div class="ps-step-label">ขั้นตอนที่ 5 จาก 5 (สุดท้าย)</div>
+      <h2 class="ps-step-title">ลองส่งแจ้งเตือนดูจริงๆ</h2>
+      <p class="ps-step-sub">เช็คว่าทุกอย่างที่ทำมาใช้งานได้จริง — กดปุ่มแล้วระบบจะส่งแจ้งเตือนทดสอบมาที่เครื่องนี้</p>
 
       <div class="ps-mini-step">
-        <span class="n">1</span> ระบบจะขออนุญาตส่ง Notification → กด <strong>"อนุญาต"</strong>
+        <span class="n">1</span> กดปุ่ม "ทดสอบ" ด้านล่าง
       </div>
       <div class="ps-mini-step">
-        <span class="n">2</span> ระบบจะส่ง Push test → รอประมาณ 5 วินาที
+        <span class="n">2</span> เบราว์เซอร์จะเด้งกล่องถาม "ต้องการรับแจ้งเตือนจากเว็บนี้ไหม?" → กด <strong>"อนุญาต / Allow"</strong>
+      </div>
+      <div class="ps-mini-step">
+        <span class="n">3</span> รอ 5-10 วินาที → ต้องเห็น <strong>"🎉 ทดสอบสำเร็จ!"</strong> เด้งขึ้นมาที่หน้าจอ
       </div>
 
-      <button class="ps-btn-big" id="testPushBtn" onclick="testPush()">🚀 ทดสอบส่ง Push</button>
+      <button class="ps-btn-big" id="testPushBtn" onclick="testPush()">🚀 กดทดสอบส่งแจ้งเตือน</button>
 
       <div id="testStatus"></div>
 
+      <div class="ps-info" style="font-size:11px;">
+        <strong>ถ้าไม่เห็นแจ้งเตือนเด้งขึ้นมา</strong> ตรวจสอบว่า:<br>
+        • เครื่องไม่ได้อยู่ในโหมด "ห้ามรบกวน" (Do Not Disturb)<br>
+        • ไม่ได้ปิดเสียง notification ของเบราว์เซอร์<br>
+        • บน iPhone ต้องติดตั้งแอปก่อน (Add to Home Screen)
+      </div>
+
       <div class="ps-row">
         <button class="ps-btn ps-btn-ghost" onclick="psGo(4)">← ย้อน</button>
-        <button class="ps-btn ps-btn-primary" id="finishBtn" onclick="finishSetup()" disabled>เสร็จ — ไปแอป →</button>
+        <button class="ps-btn ps-btn-primary" id="finishBtn" onclick="finishSetup()" disabled>เสร็จ — ไปใช้งาน →</button>
       </div>
     </div>
 
@@ -556,8 +589,8 @@ Deno.serve(async (req) => {
 
     const cfg = getSupabaseConfig();
     if (!cfg) {
-      statusEl.innerHTML = '<div class="ps-error">❌ ไม่พบ Supabase config — ต้องตั้งค่าระบบหลักก่อน</div>';
-      btn.disabled = false; btn.textContent = '🚀 ทดสอบส่ง Push';
+      statusEl.innerHTML = '<div class="ps-error">❌ ยังไม่ได้ตั้งค่าระบบหลัก<br>กรุณากลับไปทำหน้า Setup (ติดตั้งฐานข้อมูล) ให้เสร็จก่อน แล้วค่อยกลับมาที่นี่</div>';
+      btn.disabled = false; btn.textContent = '🚀 กดทดสอบส่งแจ้งเตือน';
       return;
     }
     if (!vapidKeys) {
@@ -566,30 +599,30 @@ Deno.serve(async (req) => {
         vapidKeys = JSON.parse(sessionStorage.getItem('psVapidKeys'));
       } catch(e) {}
       if (!vapidKeys) {
-        statusEl.innerHTML = '<div class="ps-error">❌ ไม่พบ VAPID Keys — กลับไปขั้นที่ 2</div>';
-        btn.disabled = false; btn.textContent = '🚀 ทดสอบส่ง Push';
+        statusEl.innerHTML = '<div class="ps-error">❌ หากุญแจไม่เจอ<br>กรุณากดปุ่ม "← ย้อน" กลับไปขั้นที่ 2 แล้วสร้างกุญแจใหม่</div>';
+        btn.disabled = false; btn.textContent = '🚀 กดทดสอบส่งแจ้งเตือน';
         return;
       }
     }
 
     try {
       // 1. ขอ permission
-      statusEl.innerHTML = '<div class="ps-info">📬 ขออนุญาตส่ง Notification...</div>';
+      statusEl.innerHTML = '<div class="ps-info">📬 กำลังขออนุญาตจากเบราว์เซอร์... (ดูที่กล่องเด้งด้านบน)</div>';
       const perm = await Notification.requestPermission();
       if (perm !== 'granted') {
-        statusEl.innerHTML = '<div class="ps-error">❌ ไม่ได้รับอนุญาต — เปิด Settings → Notifications → อนุญาตเว็บนี้</div>';
-        btn.disabled = false; btn.textContent = '🚀 ทดสอบส่ง Push';
+        statusEl.innerHTML = '<div class="ps-error">❌ ไม่ได้รับอนุญาตให้ส่งแจ้งเตือน<br><br>วิธีแก้: คลิกที่ไอคอน 🔒 ข้างที่อยู่เว็บด้านบน → หา "Notifications" → เปลี่ยนเป็น "Allow / อนุญาต" → refresh หน้าและกดปุ่มทดสอบใหม่</div>';
+        btn.disabled = false; btn.textContent = '🚀 กดทดสอบส่งแจ้งเตือน';
         return;
       }
 
       // 2. Register service worker (ใช้ sw.js หลัก)
-      statusEl.innerHTML = '<div class="ps-info">⚙ ลงทะเบียน Service Worker...</div>';
+      statusEl.innerHTML = '<div class="ps-info">⚙ กำลังเตรียมระบบ...</div>';
       let reg = await navigator.serviceWorker.getRegistration('./');
       if (!reg) reg = await navigator.serviceWorker.register('./sw.js');
       await navigator.serviceWorker.ready;
 
       // 3. Subscribe to push
-      statusEl.innerHTML = '<div class="ps-info">🔑 สร้าง Push Subscription...</div>';
+      statusEl.innerHTML = '<div class="ps-info">🔑 กำลังเชื่อมต่อกับเครื่องนี้...</div>';
       let sub = await reg.pushManager.getSubscription();
       if (sub) await sub.unsubscribe();
       sub = await reg.pushManager.subscribe({
@@ -599,7 +632,7 @@ Deno.serve(async (req) => {
       const subJson = sub.toJSON();
 
       // 4. Save subscription ไป DB (ใช้ supabase client)
-      statusEl.innerHTML = '<div class="ps-info">💾 บันทึก Subscription ใน Supabase...</div>';
+      statusEl.innerHTML = '<div class="ps-info">💾 กำลังบันทึกข้อมูลในฐานข้อมูล...</div>';
       const sbClient = supabase.createClient(cfg.url, cfg.anonKey);
       const { error: insertErr } = await sbClient.from('push_subscriptions').upsert({
         endpoint: subJson.endpoint,
@@ -611,13 +644,13 @@ Deno.serve(async (req) => {
       }, { onConflict: 'endpoint' });
 
       if (insertErr) {
-        statusEl.innerHTML = `<div class="ps-error">❌ บันทึกไม่สำเร็จ:<br>${insertErr.message}<br><br>⚠ ตรวจสอบว่ารัน <code>push-schema.sql</code> แล้วหรือยัง</div>`;
-        btn.disabled = false; btn.textContent = '🚀 ทดสอบส่ง Push';
+        statusEl.innerHTML = `<div class="ps-error">❌ บันทึกข้อมูลไม่ได้<br><br><strong>สาเหตุที่เป็นไปได้:</strong><br>• ยังไม่ได้สร้างตาราง push_subscriptions ในฐานข้อมูล<br><br><strong>วิธีแก้:</strong> เปิด <a href="https://github.com/siratheetee-coder/schoolcooperative/blob/main/sql/push-schema.sql" target="_blank" style="color:#fff;text-decoration:underline;">ไฟล์ push-schema.sql</a> → copy โค้ดทั้งหมด → ไปที่ Supabase → SQL Editor → paste → Run<br><br><em>ข้อความ error: ${insertErr.message}</em></div>`;
+        btn.disabled = false; btn.textContent = '🚀 กดทดสอบส่งแจ้งเตือน';
         return;
       }
 
       // 5. เรียก Edge Function ให้ส่ง test push
-      statusEl.innerHTML = '<div class="ps-info">📤 เรียก Edge Function ส่ง Push...</div>';
+      statusEl.innerHTML = '<div class="ps-info">📤 กำลังส่งแจ้งเตือนทดสอบ...</div>';
       const resp = await fetch(`${cfg.url}/functions/v1/send-push`, {
         method: 'POST',
         headers: {
@@ -635,8 +668,8 @@ Deno.serve(async (req) => {
       const result = await resp.json();
 
       if (!resp.ok || result.error) {
-        statusEl.innerHTML = `<div class="ps-error">❌ Edge Function ตอบ error:<br><code>${result.error || resp.statusText}</code><br><br>⚠ ตรวจสอบ: VAPID Keys ใส่ถูกต้อง / Function deploy เสร็จ / รอ 30 วินาทีหลัง deploy</div>`;
-        btn.disabled = false; btn.textContent = '🚀 ทดสอบส่ง Push';
+        statusEl.innerHTML = `<div class="ps-error">❌ ส่งแจ้งเตือนไม่ได้<br><br><strong>สาเหตุที่เป็นไปได้:</strong><br>• ใส่กุญแจ (Secrets) ไม่ครบ/ผิด ในขั้นที่ 4<br>• โปรแกรม Deploy ยังไม่เสร็จ — ลองรอ 30 วินาที แล้วกดทดสอบใหม่<br>• ชื่อ function ไม่ใช่ <code>send-push</code> เป๊ะๆ<br><br><em>รายละเอียด: ${result.error || resp.statusText}</em></div>`;
+        btn.disabled = false; btn.textContent = '🚀 กดทดสอบส่งแจ้งเตือน';
         return;
       }
 
@@ -646,19 +679,19 @@ Deno.serve(async (req) => {
 
       statusEl.innerHTML = `
         <div class="ps-success">
-          ✅ <strong>สำเร็จ!</strong> Push ถูกส่งแล้ว (${result.sent}/${result.total})<br>
-          ดูที่ notification ของเครื่อง — ถ้าไม่เห็น เช็คว่าไม่ได้ปิดเสียง/ไม่ได้อยู่ใน Do Not Disturb
+          🎉 <strong>สำเร็จ!</strong> แจ้งเตือนถูกส่งแล้ว (${result.sent}/${result.total} เครื่อง)<br>
+          📱 ดูที่หน้าจอตอนนี้ — ควรเห็นกล่องแจ้งเตือน "🎉 ทดสอบสำเร็จ!" เด้งขึ้นมา
         </div>
         <div class="ps-info">
-          💾 บันทึก VAPID Public Key ลงระบบเรียบร้อย — ใช้งานได้เลย
+          💾 บันทึกการตั้งค่าเรียบร้อย — กดปุ่ม "เสร็จ" ด้านล่างเพื่อเข้าใช้งาน
         </div>
       `;
       document.getElementById('finishBtn').disabled = false;
       btn.style.display = 'none';
     } catch (e) {
-      statusEl.innerHTML = `<div class="ps-error">❌ Error: ${e.message}<br><br>กรุณาตรวจสอบ Console (F12) เพื่อดูรายละเอียด</div>`;
+      statusEl.innerHTML = `<div class="ps-error">❌ เกิดข้อผิดพลาด<br><em>${e.message}</em><br><br>กรุณาลองใหม่ หรือถ่ายรูปข้อความนี้ส่งให้ผู้พัฒนา</div>`;
       console.error(e);
-      btn.disabled = false; btn.textContent = '🚀 ทดสอบส่ง Push';
+      btn.disabled = false; btn.textContent = '🚀 กดทดสอบส่งแจ้งเตือน';
     }
   }
 

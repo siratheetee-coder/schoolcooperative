@@ -7800,7 +7800,7 @@ async function openPushSettings() {
   // เช็คก่อนว่า VAPID ตั้งค่าหรือยัง
   const hasVapid = !!(window.SUPABASE_CONFIG && window.SUPABASE_CONFIG.vapidPublicKey);
   if (!hasVapid) {
-    if (confirm('🔔 ยังไม่ได้ตั้งค่าการแจ้งเตือน Push\n\nต้องการตั้งค่าตอนนี้หรือไม่?\n(ใช้เวลาประมาณ 15 นาที — มี wizard ช่วย step-by-step)')) {
+    if (confirm('🔔 ยังไม่ได้ตั้งแจ้งเตือนเด้ง\n\nต้องการตั้งค่าตอนนี้ไหม?\n\n• ใช้เวลาประมาณ 15 นาที\n• มี wizard พาทำทีละขั้นตอน\n• ไม่ต้องเขียนโค้ดเอง')) {
       location.href = './push-setup.html';
     }
     return;

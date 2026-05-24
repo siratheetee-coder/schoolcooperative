@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ตั้งค่าแจ้งเตือน — สหกรณ์โรงเรียน</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" sizes="96x96" href="favicon-96x96.png">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    margin: 0; font-family: 'Prompt', system-ui, sans-serif;
+    background: radial-gradient(circle at 20% 0%, #FFF4E0 0%, #FFF8EE 40%, #F5EAD3 100%);
+    min-height: 100vh; color: #2C1810; padding: 14px;
+  }
+  .ps-wrap { max-width: 540px; margin: 0 auto; }
+  .ps-header {
+    background: linear-gradient(135deg, #2D7D6F, #226258);
+    color: white; padding: 18px 22px; border-radius: 18px 18px 0 0;
+    text-align: center;
+  }
+  .ps-header h1 { margin: 0; font-size: 18px; font-weight: 700; }
+  .ps-header .sub { font-size: 12px; opacity: 0.85; margin-top: 4px; }
+  .ps-progress { background: rgba(255,255,255,0.18); height: 6px; border-radius: 3px; margin-top: 12px; overflow: hidden; }
+  .ps-progress-fill { background: #FFC857; height: 100%; transition: width 0.3s; width: 20%; border-radius: 3px; }
+
+  .ps-card {
+    background: #FFFBF3; border-radius: 0 0 18px 18px;
+    padding: 24px 22px 28px; box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+  }
+  .ps-step-label { font-size: 11px; color: #6B5D45; font-weight: 600; letter-spacing: 0.5px; margin-bottom: 4px; }
+  .ps-step-title { font-size: 22px; font-weight: 800; color: #2D7D6F; margin: 0 0 8px; }
+  .ps-step-sub { font-size: 13px; color: #6B5D45; line-height: 1.7; margin: 0 0 18px; }
+
+  .ps-info {
+    background: #F0FDF4; border-left: 4px solid #34D399;
+    padding: 12px 16px; border-radius: 10px;
+    font-size: 13px; line-height: 1.7; color: #064E3B; margin: 12px 0;
+  }
+  .ps-warn {
+    background: #FEF3C7; border-left: 4px solid #F59E0B;
+    padding: 12px 16px; border-radius: 10px;
+    font-size: 12px; line-height: 1.6; color: #92400E; margin: 12px 0;
+  }
+  .ps-error {
+    background: #FEE2E2; border-left: 4px solid #DC2626;
+    padding: 12px 16px; border-radius: 10px;
+    font-size: 13px; color: #991B1B; margin: 12px 0;
+  }
+  .ps-success {
+    background: #D1FAE5; border-left: 4px solid #10B981;
+    padding: 12px 16px; border-radius: 10px;
+    font-size: 13px; color: #064E3B; margin: 12px 0; font-weight: 600;
+  }
+
+  .ps-list {
+    text-align: left; padding-left: 18px; margin: 14px 0;
+    font-size: 13px; line-height: 1.9; color: #2C1810;
+  }
+  .ps-list code {
+    background: #F5EAD3; color: #2D7D6F; padding: 1px 6px;
+    border-radius: 4px; font-size: 12px; font-weight: 700;
+  }
+
+  .ps-row { display: flex; gap: 10px; margin-top: 18px; }
+  .ps-btn {
+    flex: 1; padding: 13px; border: none; border-radius: 12px;
+    font-family: inherit; font-size: 14px; font-weight: 700; cursor: pointer;
+    transition: all 0.15s;
+  }
+  .ps-btn-primary {
+    background: linear-gradient(135deg, #46A697, #2D7D6F);
+    color: white; box-shadow: 0 3px 0 #174740;
+  }
+  .ps-btn-primary:hover { filter: brightness(1.08); }
+  .ps-btn-primary:active { transform: translateY(2px); box-shadow: 0 1px 0 #174740; }
+  .ps-btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+  .ps-btn-ghost {
+    background: #FFF8EE; color: #6B5D45; border: 2px solid #E8D6B3;
+  }
+  .ps-btn-ghost:hover { background: #F5EAD3; }
+  .ps-btn-big {
+    width: 100%; padding: 18px;
+    background: linear-gradient(135deg, #FFC857, #E89A0E);
+    color: white; border: none; border-radius: 14px;
+    font-family: inherit; font-size: 16px; font-weight: 800; cursor: pointer;
+    box-shadow: 0 4px 0 #B27508; transition: all 0.15s;
+    margin: 14px 0;
+  }
+  .ps-btn-big:active { transform: translateY(3px); box-shadow: 0 1px 0 #B27508; }
+  .ps-btn-big:disabled { opacity: 0.6; cursor: not-allowed; }
+
+  .ps-code-box {
+    background: #1E293B; color: #94E2D5; padding: 14px;
+    border-radius: 10px; font-family: 'Courier New', monospace;
+    font-size: 11px; line-height: 1.6; white-space: pre-wrap; word-break: break-all;
+    text-align: left; max-height: 240px; overflow-y: auto; position: relative;
+    margin: 10px 0;
+  }
+  .ps-copy-btn {
+    position: absolute; top: 8px; right: 8px;
+    background: #2D7D6F; color: white; border: none;
+    padding: 6px 12px; border-radius: 6px; cursor: pointer;
+    font-family: inherit; font-size: 11px; font-weight: 700;
+  }
+  .ps-copy-btn:hover { background: #46A697; }
+
+  .ps-key-display {
+    background: #F8FAFC; border: 2px dashed #94A3B8; padding: 12px;
+    border-radius: 10px; font-family: monospace; font-size: 11px;
+    word-break: break-all; color: #334155; text-align: left;
+    margin: 8px 0;
+  }
+  .ps-field-row {
+    display: flex; align-items: center; gap: 8px; margin: 10px 0;
+    background: #FFFBF3; padding: 10px 14px; border-radius: 10px;
+    border: 1px solid #E8D6B3;
+  }
+  .ps-field-row .label { font-size: 12px; font-weight: 700; color: #6B5D45; min-width: 110px; }
+  .ps-field-row .val { flex: 1; font-family: monospace; font-size: 11px; color: #2C1810; word-break: break-all; }
+  .ps-field-row button {
+    background: #2D7D6F; color: white; border: none;
+    padding: 6px 10px; border-radius: 6px; cursor: pointer;
+    font-family: inherit; font-size: 11px; font-weight: 700;
+  }
+
+  .ps-link {
+    display: inline-block; background: #2563EB; color: white;
+    padding: 12px 20px; border-radius: 10px; text-decoration: none;
+    font-weight: 700; font-size: 13px; margin: 8px 0;
+  }
+  .ps-link:hover { background: #1D4ED8; }
+
+  .ps-mini-step {
+    background: white; border-radius: 12px; padding: 12px 14px;
+    margin: 8px 0; border-left: 4px solid #2D7D6F;
+    font-size: 12px; line-height: 1.7;
+  }
+  .ps-mini-step .n {
+    display: inline-block; background: #2D7D6F; color: white;
+    width: 22px; height: 22px; border-radius: 50%;
+    line-height: 22px; text-align: center;
+    font-size: 11px; font-weight: 700; margin-right: 6px;
+  }
+
+  .ps-emoji-big { font-size: 56px; text-align: center; margin: 8px 0; }
+  .ps-spinner {
+    display: inline-block; width: 18px; height: 18px;
+    border: 3px solid #fff; border-top-color: transparent;
+    border-radius: 50%; animation: spin 0.8s linear infinite;
+    vertical-align: middle; margin-right: 8px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<div class="ps-wrap">
+  <div class="ps-header">
+    <h1>🔔 ตั้งค่าแจ้งเตือน Push</h1>
+    <div class="sub">ใช้เวลาประมาณ 15 นาที</div>
+    <div class="ps-progress"><div class="ps-progress-fill" id="psProgress"></div></div>
+  </div>
+
+  <div class="ps-card">
+
+    <!-- ========== STEP 1: Intro ========== -->
+    <div class="ps-step" data-step="1">
+      <div class="ps-step-label">ขั้นตอนที่ 1 จาก 5</div>
+      <h2 class="ps-step-title">การแจ้งเตือน Push คืออะไร?</h2>
+      <div class="ps-emoji-big">🔔</div>
+      <p class="ps-step-sub">เมื่อตั้งค่าเสร็จ ระบบจะส่งแจ้งเตือนไปที่มือถือ/PC ของครู-นักเรียน เมื่อ:</p>
+      <ul class="ps-list">
+        <li>💰 มียอดขายใหม่</li>
+        <li>📤 มีคำขออนุมัติจากนักเรียน</li>
+        <li>📦 สต็อกสินค้าใกล้หมด</li>
+        <li>📅 ครบกำหนดเวร</li>
+      </ul>
+
+      <div class="ps-info">
+        <strong>สิ่งที่ต้องเตรียม:</strong><br>
+        ✓ บัญชี Supabase (ที่ตั้งค่าไว้แล้ว)<br>
+        ✓ คอมพิวเตอร์ + เบราว์เซอร์<br>
+        ✗ <em>ไม่ต้อง</em>ลง Node.js หรือ CLI ใดๆ
+      </div>
+
+      <div class="ps-warn">
+        ⚠ ถ้ายังไม่ได้ตั้งค่าฐานข้อมูล (Supabase) — กลับไปทำให้เสร็จก่อน
+      </div>
+
+      <div class="ps-row">
+        <a href="./index.html" class="ps-btn ps-btn-ghost" style="text-decoration:none;text-align:center;line-height:1.2;">⏭ ข้ามไปก่อน</a>
+        <button class="ps-btn ps-btn-primary" onclick="psGo(2)">เริ่มเลย →</button>
+      </div>
+    </div>
+
+    <!-- ========== STEP 2: Generate VAPID ========== -->
+    <div class="ps-step" data-step="2" style="display:none;">
+      <div class="ps-step-label">ขั้นตอนที่ 2 จาก 5</div>
+      <h2 class="ps-step-title">สร้างกุญแจ VAPID</h2>
+      <p class="ps-step-sub">VAPID Keys คือกุญแจคู่ที่ใช้ระบุตัวตนของแอป — กดปุ่มเดียวระบบสร้างให้ในเบราว์เซอร์</p>
+
+      <button class="ps-btn-big" id="vapidGenBtn" onclick="generateVapid()">⚡ สร้าง VAPID Keys ตอนนี้</button>
+
+      <div id="vapidResult" style="display:none;">
+        <div class="ps-success">✅ สร้างสำเร็จ! เก็บไว้ใช้ขั้นถัดไป</div>
+        <div class="ps-field-row">
+          <span class="label">Public Key:</span>
+          <span class="val" id="vapidPubDisplay">—</span>
+          <button onclick="copyText('vapidPubDisplay', this)">📋</button>
+        </div>
+        <div class="ps-field-row">
+          <span class="label">Private Key:</span>
+          <span class="val" id="vapidPrivDisplay">—</span>
+          <button onclick="copyText('vapidPrivDisplay', this)">📋</button>
+        </div>
+        <div class="ps-warn">
+          🔒 Private Key ต้องเก็บเป็นความลับ — อย่าแชร์ให้คนอื่น<br>
+          💾 กดปุ่ม "บันทึกไฟล์สำรอง" เผื่อรีเฟรชหน้านี้แล้วหาย
+        </div>
+        <button class="ps-btn ps-btn-ghost" style="width:100%;margin-top:6px;" onclick="downloadVapidBackup()">💾 บันทึกไฟล์สำรอง</button>
+      </div>
+
+      <div class="ps-row">
+        <button class="ps-btn ps-btn-ghost" onclick="psGo(1)">← ย้อน</button>
+        <button class="ps-btn ps-btn-primary" id="vapidNextBtn" onclick="psGo(3)" disabled>ถัดไป →</button>
+      </div>
+    </div>
+
+    <!-- ========== STEP 3: Deploy Edge Function ========== -->
+    <div class="ps-step" data-step="3" style="display:none;">
+      <div class="ps-step-label">ขั้นตอนที่ 3 จาก 5</div>
+      <h2 class="ps-step-title">Deploy Edge Function</h2>
+      <p class="ps-step-sub">Edge Function = โค้ดส่ง Push ที่อยู่บน Supabase — copy โค้ดไปวางใน Dashboard</p>
+
+      <div class="ps-mini-step">
+        <span class="n">1</span> เปิด Supabase Dashboard:
+        <a href="https://supabase.com/dashboard/projects" target="_blank" class="ps-link" style="display:block;margin-top:6px;">🌐 เปิด Supabase Dashboard</a>
+      </div>
+      <div class="ps-mini-step">
+        <span class="n">2</span> เลือก project ของคุณ → ไปที่เมนู <code>Edge Functions</code> ทางซ้าย
+      </div>
+      <div class="ps-mini-step">
+        <span class="n">3</span> กดปุ่ม <code>Deploy a new function</code> → ตั้งชื่อว่า <code>send-push</code> → ติ๊ก ✓ <strong>Verify JWT with legacy secret</strong> ออก (uncheck)
+      </div>
+      <div class="ps-mini-step">
+        <span class="n">4</span> ลบโค้ด default ออก → คัดลอกโค้ดด้านล่างวางทั้งหมด → กดปุ่ม <code>Deploy function</code>
+      </div>
+
+      <button class="ps-btn ps-btn-primary" style="width:100%;margin-bottom:8px;" onclick="copyFunctionCode(this)">📋 คัดลอกโค้ด Edge Function</button>
+
+      <details>
+        <summary style="cursor:pointer;font-size:12px;color:#6B5D45;margin:8px 0;">👀 ดูโค้ด (กดเพื่อขยาย)</summary>
+        <div class="ps-code-box" id="functionCodeBox"></div>
+      </details>
+
+      <div class="ps-row">
+        <button class="ps-btn ps-btn-ghost" onclick="psGo(2)">← ย้อน</button>
+        <button class="ps-btn ps-btn-primary" onclick="psGo(4)">Deploy แล้ว →</button>
+      </div>
+    </div>
+
+    <!-- ========== STEP 4: Set Env Vars ========== -->
+    <div class="ps-step" data-step="4" style="display:none;">
+      <div class="ps-step-label">ขั้นตอนที่ 4 จาก 5</div>
+      <h2 class="ps-step-title">ตั้งค่า Environment Variables</h2>
+      <p class="ps-step-sub">ใส่ VAPID Keys ที่สร้างไว้ใน Supabase เพื่อให้ Edge Function ใช้ส่ง Push</p>
+
+      <div class="ps-mini-step">
+        <span class="n">1</span> ใน Supabase Dashboard → <code>Edge Functions</code> → <code>send-push</code> → tab <code>Secrets</code>
+      </div>
+      <div class="ps-mini-step">
+        <span class="n">2</span> กด <code>+ Add new secret</code> ทีละตัว ใส่ 3 ตัวด้านล่าง:
+      </div>
+
+      <div class="ps-field-row">
+        <span class="label">VAPID_PUBLIC_KEY:</span>
+        <span class="val" id="envPubKey">—</span>
+        <button onclick="copyText('envPubKey', this)">📋</button>
+      </div>
+      <div class="ps-field-row">
+        <span class="label">VAPID_PRIVATE_KEY:</span>
+        <span class="val" id="envPrivKey">—</span>
+        <button onclick="copyText('envPrivKey', this)">📋</button>
+      </div>
+      <div class="ps-field-row">
+        <span class="label">VAPID_SUBJECT:</span>
+        <span class="val" id="envSubject">mailto:admin@school.ac.th</span>
+        <button onclick="copyText('envSubject', this)">📋</button>
+      </div>
+
+      <div class="ps-info">
+        💡 <strong>VAPID_SUBJECT</strong> เป็นอีเมลผู้ดูแล — ใส่อีเมลจริงของครู (เปลี่ยน <code>admin@school.ac.th</code> เป็นของจริง)
+      </div>
+
+      <div class="ps-warn">
+        ⏳ หลังเพิ่ม Secrets เสร็จ — รอประมาณ 30 วินาทีให้ Function รีเฟรช ก่อนทดสอบ
+      </div>
+
+      <div class="ps-row">
+        <button class="ps-btn ps-btn-ghost" onclick="psGo(3)">← ย้อน</button>
+        <button class="ps-btn ps-btn-primary" onclick="psGo(5)">ตั้งเสร็จแล้ว →</button>
+      </div>
+    </div>
+
+    <!-- ========== STEP 5: Test & Save ========== -->
+    <div class="ps-step" data-step="5" style="display:none;">
+      <div class="ps-step-label">ขั้นตอนที่ 5 จาก 5</div>
+      <h2 class="ps-step-title">ทดสอบ & เปิดใช้งาน</h2>
+      <p class="ps-step-sub">ส่ง Push ทดสอบไปยังเครื่องนี้ — ถ้าได้รับ = ตั้งค่าเสร็จสมบูรณ์</p>
+
+      <div class="ps-mini-step">
+        <span class="n">1</span> ระบบจะขออนุญาตส่ง Notification → กด <strong>"อนุญาต"</strong>
+      </div>
+      <div class="ps-mini-step">
+        <span class="n">2</span> ระบบจะส่ง Push test → รอประมาณ 5 วินาที
+      </div>
+
+      <button class="ps-btn-big" id="testPushBtn" onclick="testPush()">🚀 ทดสอบส่ง Push</button>
+
+      <div id="testStatus"></div>
+
+      <div class="ps-row">
+        <button class="ps-btn ps-btn-ghost" onclick="psGo(4)">← ย้อน</button>
+        <button class="ps-btn ps-btn-primary" id="finishBtn" onclick="finishSetup()" disabled>เสร็จ — ไปแอป →</button>
+      </div>
+    </div>
+
+  </div>
+
+  <div style="text-align:center;font-size:11px;color:#6B5D45;margin-top:14px;">
+    มีปัญหา? <a href="https://github.com/siratheetee-coder/schoolcooperative/issues" target="_blank" style="color:#2D7D6F;">แจ้งใน GitHub</a>
+  </div>
+</div>
+
+<script>
+  let psStep = 1;
+  let vapidKeys = null;
+
+  // ============== Step navigation ==============
+  function psGo(step) {
+    psStep = step;
+    document.querySelectorAll('.ps-step').forEach(el => el.style.display = 'none');
+    document.querySelector('.ps-step[data-step="' + step + '"]').style.display = 'block';
+    document.getElementById('psProgress').style.width = (step / 5 * 100) + '%';
+    window.scrollTo(0, 0);
+  }
+
+  // ============== Step 2: VAPID generation ==============
+  function base64UrlEncode(buffer) {
+    return btoa(String.fromCharCode(...new Uint8Array(buffer)))
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=/g, '');
+  }
+
+  async function generateVapid() {
+    const btn = document.getElementById('vapidGenBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="ps-spinner"></span> กำลังสร้าง...';
+
+    try {
+      // P-256 ECDSA key pair (สำหรับ Web Push VAPID)
+      const keyPair = await crypto.subtle.generateKey(
+        { name: 'ECDSA', namedCurve: 'P-256' },
+        true,
+        ['sign', 'verify']
+      );
+
+      const publicRaw = await crypto.subtle.exportKey('raw', keyPair.publicKey);
+      const privateJwk = await crypto.subtle.exportKey('jwk', keyPair.privateKey);
+
+      vapidKeys = {
+        publicKey: base64UrlEncode(publicRaw),
+        privateKey: privateJwk.d  // already URL-safe base64
+      };
+
+      document.getElementById('vapidPubDisplay').textContent = vapidKeys.publicKey;
+      document.getElementById('vapidPrivDisplay').textContent = vapidKeys.privateKey;
+      document.getElementById('envPubKey').textContent = vapidKeys.publicKey;
+      document.getElementById('envPrivKey').textContent = vapidKeys.privateKey;
+      document.getElementById('vapidResult').style.display = 'block';
+      document.getElementById('vapidNextBtn').disabled = false;
+
+      btn.style.display = 'none';
+      // save to sessionStorage (will be cleared when tab closes)
+      try { sessionStorage.setItem('psVapidKeys', JSON.stringify(vapidKeys)); } catch(e) {}
+    } catch (e) {
+      btn.disabled = false;
+      btn.textContent = '⚡ สร้าง VAPID Keys ตอนนี้';
+      alert('สร้างไม่สำเร็จ: ' + e.message);
+    }
+  }
+
+  function copyText(elId, btn) {
+    const txt = document.getElementById(elId).textContent;
+    navigator.clipboard.writeText(txt).then(() => {
+      const orig = btn.textContent;
+      btn.textContent = '✓';
+      setTimeout(() => btn.textContent = orig, 1500);
+    });
+  }
+
+  function downloadVapidBackup() {
+    if (!vapidKeys) return;
+    const txt = `VAPID Keys — สหกรณ์โรงเรียน
+สร้างเมื่อ: ${new Date().toLocaleString('th-TH')}
+
+VAPID_PUBLIC_KEY:
+${vapidKeys.publicKey}
+
+VAPID_PRIVATE_KEY:
+${vapidKeys.privateKey}
+
+VAPID_SUBJECT:
+mailto:admin@school.ac.th
+
+⚠ Private Key ห้ามแชร์! เก็บไว้เป็นความลับ
+`;
+    const blob = new Blob([txt], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `vapid-keys-${Date.now()}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  // ============== Step 3: Edge Function code ==============
+  const EDGE_FUNCTION_CODE = `// Supabase Edge Function: send-push
+// Auto-generated by School Cooperative Setup
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import webpush from "https://esm.sh/web-push@3.6.7";
+
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+const SUPABASE_SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const VAPID_PUBLIC = Deno.env.get("VAPID_PUBLIC_KEY")!;
+const VAPID_PRIVATE = Deno.env.get("VAPID_PRIVATE_KEY")!;
+const VAPID_SUBJECT = Deno.env.get("VAPID_SUBJECT") || "mailto:admin@school.ac.th";
+
+webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC, VAPID_PRIVATE);
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+};
+
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  if (req.method !== "POST") return new Response("Method not allowed", { status: 405, headers: corsHeaders });
+
+  try {
+    const body = await req.json();
+    const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE);
+
+    let q = sb.from("push_subscriptions").select("*");
+    if (body.audience === "teachers") q = q.eq("role", "teacher");
+    else if (body.audience === "students") q = q.eq("role", "student");
+    else if (body.audience === "member") {
+      if (!body.member_id) throw new Error("member_id required");
+      q = q.eq("member_id", body.member_id);
+    }
+    if (body.exclude_member_id) q = q.neq("member_id", body.exclude_member_id);
+
+    const { data: subs, error } = await q;
+    if (error) throw error;
+    if (!subs || !subs.length) {
+      return new Response(JSON.stringify({ sent: 0, total: 0 }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const payload = JSON.stringify({
+      title: body.title,
+      body: body.body,
+      url: body.url || "/",
+      tag: body.tag || "coop",
+      icon: body.icon || "/logo-no-bg.png",
+    });
+
+    const pushOptions = {
+      TTL: 86400,
+      urgency: 'high',
+      headers: { 'Topic': body.tag || 'coop' },
+    };
+    const results = await Promise.allSettled(subs.map((s) =>
+      webpush.sendNotification(
+        { endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } },
+        payload, pushOptions
+      )
+    ));
+
+    const sent = results.filter((r) => r.status === "fulfilled").length;
+    const failed = [];
+    results.forEach((r, i) => {
+      if (r.status === "rejected") {
+        const reason = r.reason;
+        if (reason?.statusCode === 410 || reason?.statusCode === 404) {
+          failed.push(subs[i].id);
+        }
+      }
+    });
+    if (failed.length) await sb.from("push_subscriptions").delete().in("id", failed);
+
+    return new Response(JSON.stringify({ sent, total: subs.length, expired: failed.length }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  } catch (e) {
+    console.error(e);
+    return new Response(JSON.stringify({ error: String(e) }), {
+      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+});`;
+
+  document.getElementById('functionCodeBox').textContent = EDGE_FUNCTION_CODE;
+
+  function copyFunctionCode(btn) {
+    navigator.clipboard.writeText(EDGE_FUNCTION_CODE).then(() => {
+      const orig = btn.textContent;
+      btn.textContent = '✅ คัดลอกแล้ว — ไปวางใน Supabase';
+      setTimeout(() => btn.textContent = orig, 3000);
+    });
+  }
+
+  // ============== Step 5: Test push ==============
+  function getSupabaseConfig() {
+    try {
+      const sb = JSON.parse(localStorage.getItem('coopSupabaseConfigOverride') || '{}');
+      if (sb.url && sb.anonKey) return sb;
+    } catch(e) {}
+    // fallback: read from query string ?u=...&k=...
+    const p = new URLSearchParams(location.search);
+    if (p.has('u') && p.has('k')) return { url: p.get('u'), anonKey: p.get('k') };
+    return null;
+  }
+
+  function urlBase64ToUint8Array(base64String) {
+    const padding = '='.repeat((4 - base64String.length % 4) % 4);
+    const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+    const rawData = atob(base64);
+    return Uint8Array.from([...rawData].map(c => c.charCodeAt(0)));
+  }
+
+  async function testPush() {
+    const statusEl = document.getElementById('testStatus');
+    const btn = document.getElementById('testPushBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="ps-spinner"></span> กำลังทดสอบ...';
+    statusEl.innerHTML = '';
+
+    const cfg = getSupabaseConfig();
+    if (!cfg) {
+      statusEl.innerHTML = '<div class="ps-error">❌ ไม่พบ Supabase config — ต้องตั้งค่าระบบหลักก่อน</div>';
+      btn.disabled = false; btn.textContent = '🚀 ทดสอบส่ง Push';
+      return;
+    }
+    if (!vapidKeys) {
+      // ลองโหลดจาก sessionStorage
+      try {
+        vapidKeys = JSON.parse(sessionStorage.getItem('psVapidKeys'));
+      } catch(e) {}
+      if (!vapidKeys) {
+        statusEl.innerHTML = '<div class="ps-error">❌ ไม่พบ VAPID Keys — กลับไปขั้นที่ 2</div>';
+        btn.disabled = false; btn.textContent = '🚀 ทดสอบส่ง Push';
+        return;
+      }
+    }
+
+    try {
+      // 1. ขอ permission
+      statusEl.innerHTML = '<div class="ps-info">📬 ขออนุญาตส่ง Notification...</div>';
+      const perm = await Notification.requestPermission();
+      if (perm !== 'granted') {
+        statusEl.innerHTML = '<div class="ps-error">❌ ไม่ได้รับอนุญาต — เปิด Settings → Notifications → อนุญาตเว็บนี้</div>';
+        btn.disabled = false; btn.textContent = '🚀 ทดสอบส่ง Push';
+        return;
+      }
+
+      // 2. Register service worker (ใช้ sw.js หลัก)
+      statusEl.innerHTML = '<div class="ps-info">⚙ ลงทะเบียน Service Worker...</div>';
+      let reg = await navigator.serviceWorker.getRegistration('./');
+      if (!reg) reg = await navigator.serviceWorker.register('./sw.js');
+      await navigator.serviceWorker.ready;
+
+      // 3. Subscribe to push
+      statusEl.innerHTML = '<div class="ps-info">🔑 สร้าง Push Subscription...</div>';
+      let sub = await reg.pushManager.getSubscription();
+      if (sub) await sub.unsubscribe();
+      sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(vapidKeys.publicKey)
+      });
+      const subJson = sub.toJSON();
+
+      // 4. Save subscription ไป DB (ใช้ supabase client)
+      statusEl.innerHTML = '<div class="ps-info">💾 บันทึก Subscription ใน Supabase...</div>';
+      const sbClient = supabase.createClient(cfg.url, cfg.anonKey);
+      const { error: insertErr } = await sbClient.from('push_subscriptions').upsert({
+        endpoint: subJson.endpoint,
+        p256dh: subJson.keys.p256dh,
+        auth: subJson.keys.auth,
+        member_name: 'Test Setup',
+        role: 'teacher',
+        user_agent: navigator.userAgent
+      }, { onConflict: 'endpoint' });
+
+      if (insertErr) {
+        statusEl.innerHTML = `<div class="ps-error">❌ บันทึกไม่สำเร็จ:<br>${insertErr.message}<br><br>⚠ ตรวจสอบว่ารัน <code>push-schema.sql</code> แล้วหรือยัง</div>`;
+        btn.disabled = false; btn.textContent = '🚀 ทดสอบส่ง Push';
+        return;
+      }
+
+      // 5. เรียก Edge Function ให้ส่ง test push
+      statusEl.innerHTML = '<div class="ps-info">📤 เรียก Edge Function ส่ง Push...</div>';
+      const resp = await fetch(`${cfg.url}/functions/v1/send-push`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${cfg.anonKey}`,
+          'apikey': cfg.anonKey
+        },
+        body: JSON.stringify({
+          audience: 'teachers',
+          title: '🎉 ทดสอบสำเร็จ!',
+          body: 'การแจ้งเตือน Push พร้อมใช้งานแล้ว',
+          tag: 'test-setup'
+        })
+      });
+      const result = await resp.json();
+
+      if (!resp.ok || result.error) {
+        statusEl.innerHTML = `<div class="ps-error">❌ Edge Function ตอบ error:<br><code>${result.error || resp.statusText}</code><br><br>⚠ ตรวจสอบ: VAPID Keys ใส่ถูกต้อง / Function deploy เสร็จ / รอ 30 วินาทีหลัง deploy</div>`;
+        btn.disabled = false; btn.textContent = '🚀 ทดสอบส่ง Push';
+        return;
+      }
+
+      // 6. สำเร็จ — save VAPID public key ใน config
+      const newSb = { ...cfg, vapidPublicKey: vapidKeys.publicKey };
+      localStorage.setItem('coopSupabaseConfigOverride', JSON.stringify(newSb));
+
+      statusEl.innerHTML = `
+        <div class="ps-success">
+          ✅ <strong>สำเร็จ!</strong> Push ถูกส่งแล้ว (${result.sent}/${result.total})<br>
+          ดูที่ notification ของเครื่อง — ถ้าไม่เห็น เช็คว่าไม่ได้ปิดเสียง/ไม่ได้อยู่ใน Do Not Disturb
+        </div>
+        <div class="ps-info">
+          💾 บันทึก VAPID Public Key ลงระบบเรียบร้อย — ใช้งานได้เลย
+        </div>
+      `;
+      document.getElementById('finishBtn').disabled = false;
+      btn.style.display = 'none';
+    } catch (e) {
+      statusEl.innerHTML = `<div class="ps-error">❌ Error: ${e.message}<br><br>กรุณาตรวจสอบ Console (F12) เพื่อดูรายละเอียด</div>`;
+      console.error(e);
+      btn.disabled = false; btn.textContent = '🚀 ทดสอบส่ง Push';
+    }
+  }
+
+  function finishSetup() {
+    location.href = './index.html';
+  }
+
+  // ============== Restore VAPID from session if returning ==============
+  try {
+    const saved = JSON.parse(sessionStorage.getItem('psVapidKeys'));
+    if (saved && saved.publicKey && saved.privateKey) {
+      vapidKeys = saved;
+      document.getElementById('vapidPubDisplay').textContent = saved.publicKey;
+      document.getElementById('vapidPrivDisplay').textContent = saved.privateKey;
+      document.getElementById('envPubKey').textContent = saved.publicKey;
+      document.getElementById('envPrivKey').textContent = saved.privateKey;
+      document.getElementById('vapidResult').style.display = 'block';
+      document.getElementById('vapidNextBtn').disabled = false;
+      document.getElementById('vapidGenBtn').style.display = 'none';
+    }
+  } catch(e) {}
+</script>
+</body>
+</html>

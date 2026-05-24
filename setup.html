@@ -296,7 +296,22 @@
       </button>
     </div>
 
-    <button class="sw-next" onclick="swFinish()" style="margin-top:6px;">🚀 เริ่มใช้งานเลย →</button>
+    <!-- Push Notification option -->
+    <div style="background:#FEF3C7;border-radius:14px;padding:16px;margin:12px 0;text-align:center;border:2px dashed #F59E0B;">
+      <div style="font-size:32px;margin-bottom:6px;">🔔</div>
+      <div style="font-size:14px;font-weight:800;color:#92400E;margin-bottom:4px;">
+        ต้องการแจ้งเตือน Push?
+      </div>
+      <div style="font-size:11px;color:#78350F;line-height:1.6;margin-bottom:12px;">
+        ส่งแจ้งเตือนเมื่อมียอดขาย / คำขออนุมัติ / สต็อกใกล้หมด<br>
+        <em>ใช้เวลาตั้งค่าประมาณ 15 นาที — ข้ามก่อนแล้วตั้งทีหลังได้</em>
+      </div>
+      <button onclick="swGoPushSetup()" style="width:100%;background:linear-gradient(135deg,#F59E0B,#D97706);color:white;border:none;padding:11px;border-radius:10px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 3px 0 #B45309;">
+        ⚡ ตั้งค่า Push (~15 นาที)
+      </button>
+    </div>
+
+    <button class="sw-next" onclick="swFinish()" style="margin-top:6px;">⏭ ข้ามก่อน — เริ่มใช้งานเลย →</button>
   </div>
 </div>
 
@@ -396,6 +411,12 @@
     const btn = document.querySelector('.sw-step[data-step="6"] .sw-next');
     if (btn) { btn.textContent = '✅ กำลังเข้าสู่ระบบ...'; btn.disabled = true; }
     setTimeout(() => { location.href = './index.html'; }, 800);
+  }
+
+  // ไป push-setup.html — save config ก่อน เพื่อให้ push-setup อ่านได้
+  function swGoPushSetup() {
+    swSaveAndRedirect();
+    location.href = './push-setup.html';
   }
 
   // ============ SHARE LINK + QR ============

@@ -7797,8 +7797,16 @@ if ('serviceWorker' in navigator) {
 }
 
 async function openPushSettings() {
+  // เช็คก่อนว่า VAPID ตั้งค่าหรือยัง
+  const hasVapid = !!(window.SUPABASE_CONFIG && window.SUPABASE_CONFIG.vapidPublicKey);
+  if (!hasVapid) {
+    if (confirm('🔔 ยังไม่ได้ตั้งค่าการแจ้งเตือน Push\n\nต้องการตั้งค่าตอนนี้หรือไม่?\n(ใช้เวลาประมาณ 15 นาที — มี wizard ช่วย step-by-step)')) {
+      location.href = './push-setup.html';
+    }
+    return;
+  }
   if (!PUSH_ENABLED) {
-    alert('⚠ เบราว์เซอร์นี้ไม่รองรับ Push Notification\n\nต้องการ:\n• Chrome/Edge/Firefox (Android, Windows, Mac)\n• Safari iOS 16.4+ (ต้องติดตั้งเป็น PWA)\n\nหรือยังไม่ได้ตั้งค่า VAPID_PUBLIC_KEY ใน supabase-config.js');
+    alert('⚠ เบราว์เซอร์นี้ไม่รองรับ Push Notification\n\nต้องการ:\n• Chrome/Edge/Firefox (Android, Windows, Mac)\n• Safari iOS 16.4+ (ต้องติดตั้งเป็น PWA)');
     return;
   }
   const sub = await getPushSubscription();
@@ -8002,7 +8010,10 @@ async function resetPatronageStart() {
 // อัปเดตป้าย "สถานะ Push" บนปุ่ม admin
 async function refreshPushStatusLabel() {
   const el = document.getElementById('pushStatusLabel');
-  if (!el || !PUSH_ENABLED) return;
+  if (!el) return;
+  const hasVapid = !!(window.SUPABASE_CONFIG && window.SUPABASE_CONFIG.vapidPublicKey);
+  if (!hasVapid) { el.textContent = '⚠ ยังไม่ตั้งค่า'; return; }
+  if (!PUSH_ENABLED) return;
   const sub = await getPushSubscription();
   const isOn = !!sub && Notification.permission === 'granted';
   el.textContent = isOn ? '✅ เปิดอยู่' : '⭕ ปิด';

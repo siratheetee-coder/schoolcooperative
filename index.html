@@ -4369,7 +4369,7 @@
       <div class="quiz-review" id="qrReview"></div>
 
       <div class="quiz-result-actions">
-        <button class="qr-btn-secondary" onclick="quitQuiz()">← กลับหน้าหลัก</button>
+        <button class="qr-btn-secondary" onclick="showQuizHome()">← กลับหน้าหลัก</button>
         <button class="qr-btn-primary" onclick="retryQuiz()">🔄 ทำใหม่</button>
       </div>
     </div>
@@ -10564,6 +10564,9 @@ async function saveQuizAttempt(score, total, duration) {
       duration_sec: duration
     });
     quizUserCompletions[`${quizState.level}:${quizState.topic}:${quizState.phase}`] = true;
+    // refresh ประวัติ + leaderboard ทันทีหลัง save สำเร็จ
+    renderQuizMyHistory();
+    renderQuizLeaderboard();
   } catch (e) { console.error('saveQuizAttempt failed', e); }
 }
 

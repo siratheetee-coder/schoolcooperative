@@ -4021,6 +4021,130 @@
   </div>
 </div>
 
+<!-- ============== ACCOUNT MODAL ============== -->
+<style>
+  .acc-modal-bg {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.55); z-index: 9100;
+    align-items: flex-end; justify-content: center;
+    padding: 0;
+  }
+  .acc-modal-bg.show { display: flex; }
+  .acc-sheet {
+    background: var(--cream-50);
+    border-radius: 28px 28px 0 0;
+    width: 100%; max-width: 480px;
+    padding: 10px 22px 34px;
+    max-height: 90vh; overflow-y: auto;
+    animation: slideUp 0.25s ease;
+  }
+  @keyframes slideUp {
+    from { transform: translateY(100%); opacity: 0; }
+    to   { transform: translateY(0);    opacity: 1; }
+  }
+  .acc-handle {
+    width: 40px; height: 4px;
+    background: var(--cream-300); border-radius: 2px;
+    margin: 10px auto 18px;
+  }
+  .acc-header {
+    display: flex; align-items: center; gap: 14px;
+    background: linear-gradient(135deg, var(--green-500), var(--green-600));
+    border-radius: 18px; padding: 14px 16px; margin-bottom: 20px;
+  }
+  .acc-av {
+    width: 50px; height: 50px; border-radius: 15px;
+    display: grid; place-items: center;
+    color: white; font-weight: 800; font-size: 18px;
+    background: rgba(255,255,255,0.25);
+    box-shadow: inset 1px 1px 2px rgba(255,255,255,0.3);
+    flex-shrink: 0;
+  }
+  .acc-info { flex: 1; color: white; }
+  .acc-info .acc-name { font-weight: 800; font-size: 16px; line-height: 1.2; }
+  .acc-info .acc-meta { font-size: 12px; opacity: 0.8; margin-top: 2px; }
+  .acc-role-badge {
+    background: rgba(255,255,255,0.22); color: white;
+    font-size: 11px; font-weight: 700; padding: 3px 10px;
+    border-radius: 20px; white-space: nowrap;
+  }
+
+  .acc-section-head {
+    font-size: 12px; font-weight: 700;
+    color: var(--ink-soft); letter-spacing: 0.5px;
+    text-transform: uppercase; margin: 0 0 10px 4px;
+  }
+  .acc-pin-form {
+    background: white; border-radius: 16px;
+    padding: 14px 16px; margin-bottom: 16px;
+    box-shadow: var(--shadow-sm);
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .acc-pin-field { display: flex; flex-direction: column; gap: 4px; }
+  .acc-pin-field label { font-size: 12px; font-weight: 600; color: var(--ink-soft); }
+  .acc-pin-field input {
+    padding: 10px 14px; border-radius: 10px;
+    border: 2px solid var(--cream-300); font-family: inherit;
+    font-size: 20px; letter-spacing: 6px; text-align: center;
+    background: var(--cream-100); outline: none; width: 100%;
+    transition: border-color 0.15s;
+  }
+  .acc-pin-field input:focus { border-color: var(--green-400); }
+  .acc-save-btn {
+    width: 100%; padding: 12px;
+    background: linear-gradient(135deg, var(--green-400), var(--green-500));
+    color: white; border: none; border-radius: 12px;
+    font-family: inherit; font-size: 14px; font-weight: 700;
+    cursor: pointer; transition: all 0.15s;
+    box-shadow: 0 3px 0 var(--green-700);
+  }
+  .acc-save-btn:hover { filter: brightness(1.06); }
+  .acc-save-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--green-700); }
+  .acc-logout-btn {
+    width: 100%; padding: 13px;
+    background: white; color: var(--red-500);
+    border: 2px solid var(--red-400); border-radius: 14px;
+    font-family: inherit; font-size: 14px; font-weight: 700;
+    cursor: pointer; transition: all 0.15s;
+  }
+  .acc-logout-btn:hover { background: #FFF0EE; }
+  .acc-logout-btn:active { transform: scale(0.98); }
+</style>
+
+<div class="acc-modal-bg" id="accountModal" onclick="if(event.target===this)closeAccountModal()">
+  <div class="acc-sheet">
+    <div class="acc-handle"></div>
+
+    <div class="acc-header">
+      <div class="acc-av" id="accAv"></div>
+      <div class="acc-info">
+        <div class="acc-name" id="accName">—</div>
+        <div class="acc-meta">รหัส <span id="accCode">—</span> · ชั้น <span id="accClass">—</span></div>
+      </div>
+      <div class="acc-role-badge" id="accRoleBadge">—</div>
+    </div>
+
+    <div class="acc-section-head">🔑 เปลี่ยน PIN</div>
+    <div class="acc-pin-form">
+      <div class="acc-pin-field">
+        <label>PIN เดิม</label>
+        <input type="password" id="accOldPin" inputmode="numeric" maxlength="4" placeholder="••••" autocomplete="off" />
+      </div>
+      <div class="acc-pin-field">
+        <label>PIN ใหม่ (4 หลัก)</label>
+        <input type="password" id="accNewPin" inputmode="numeric" maxlength="4" placeholder="••••" autocomplete="off" />
+      </div>
+      <div class="acc-pin-field">
+        <label>ยืนยัน PIN ใหม่</label>
+        <input type="password" id="accConfirmPin" inputmode="numeric" maxlength="4" placeholder="••••" autocomplete="off" onkeydown="if(event.key==='Enter')changePin()" />
+      </div>
+      <button class="acc-save-btn" onclick="changePin()">💾 บันทึก PIN ใหม่</button>
+    </div>
+
+    <button class="acc-logout-btn" onclick="accLogout()">🚪 ออกจากระบบ</button>
+  </div>
+</div>
+
 <!-- ============== ADD DEVICE MODAL ============== -->
 <div id="addDeviceModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9000;align-items:center;justify-content:center;padding:20px;">
   <div style="background:white;border-radius:20px;max-width:420px;width:100%;padding:24px 22px;text-align:center;font-family:'Prompt',sans-serif;color:#2C1810;max-height:90vh;overflow-y:auto;">
@@ -4126,7 +4250,7 @@
         </button>
       </div>
     </div>
-    <div class="seller-card" onclick="logout()" title="แตะเพื่อออกจากระบบ">
+    <div class="seller-card" onclick="showAccountModal()" title="ตั้งค่าบัญชี / ออกจากระบบ">
       <div class="avatar" id="userAvatar">น</div>
       <div class="seller-info">
         <div class="label">ผู้ขายในเวรนี้</div>
@@ -4833,6 +4957,7 @@
     <div class="actions">
       <button class="btn btn-ghost" onclick="closeMemberModal()">ยกเลิก</button>
       <button class="btn btn-danger" id="mDeleteBtn" onclick="deleteMember()" style="display:none;">ลบ</button>
+      <button class="btn" id="mResetPinBtn" onclick="resetMemberPin()" style="display:none;background:var(--cream-200);color:var(--ink-soft);border:none;cursor:pointer;">🔑 รีเซ็ต PIN</button>
       <button class="btn btn-primary" onclick="saveMember()">บันทึก</button>
     </div>
   </div>
@@ -7265,7 +7390,8 @@ function doLogin() {
   if (!code) { showToast('กรุณาใส่รหัสนักเรียน', true); return; }
   const m = members.find(x => x.code === code);
   if (!m) { showToast('ไม่พบรหัสนักเรียน', true); return; }
-  const expectedPin = m.role === 'teacher' ? SCHOOL.teacherPin : SCHOOL.studentPin;
+  // ใช้ PIN รายคน ถ้ามี — ไม่มี fallback เป็น PIN กลุ่ม
+  const expectedPin = m.pin || (m.role === 'teacher' ? SCHOOL.teacherPin : SCHOOL.studentPin);
   if (pin !== expectedPin) { showToast('PIN ไม่ถูกต้อง', true); return; }
   setUser(m);
   showToast(`ยินดีต้อนรับ ${m.name}!`);
@@ -7281,6 +7407,71 @@ function quickLogin(id) {
   document.getElementById('loginPin').value = '';
   document.getElementById('loginPin').focus();
   showToast(`📝 เลือก ${m.name} — กรุณาใส่ PIN`);
+}
+
+// ============== ACCOUNT MODAL ==============
+function showAccountModal() {
+  if (!currentUser) return;
+  const m = currentUser;
+  // fill header
+  const av = document.getElementById('accAv');
+  av.textContent = m.avatar;
+  av.className = `acc-av av-${m.color}`;
+  document.getElementById('accName').textContent = m.name;
+  document.getElementById('accCode').textContent = m.code;
+  document.getElementById('accClass').textContent = m.class || '—';
+  document.getElementById('accRoleBadge').textContent = m.role === 'teacher' ? '👨‍🏫 ครู' : '👨‍🎓 นักเรียน';
+  // clear PIN fields
+  ['accOldPin','accNewPin','accConfirmPin'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('accountModal').classList.add('show');
+  setTimeout(() => document.getElementById('accOldPin').focus(), 300);
+}
+function closeAccountModal() { document.getElementById('accountModal').classList.remove('show'); }
+
+async function changePin() {
+  if (!currentUser) return;
+  const oldPin     = document.getElementById('accOldPin').value;
+  const newPin     = document.getElementById('accNewPin').value;
+  const confirmPin = document.getElementById('accConfirmPin').value;
+  // ตรวจ PIN เดิม
+  const expectedPin = currentUser.pin || (currentUser.role === 'teacher' ? SCHOOL.teacherPin : SCHOOL.studentPin);
+  if (oldPin !== expectedPin) { showToast('PIN เดิมไม่ถูกต้อง', true); return; }
+  if (!/^\d{4}$/.test(newPin))   { showToast('PIN ใหม่ต้องเป็นตัวเลข 4 หลัก', true); return; }
+  if (newPin !== confirmPin)     { showToast('PIN ใหม่ไม่ตรงกัน', true); return; }
+  if (newPin === oldPin)         { showToast('PIN ใหม่ต้องไม่ซ้ำ PIN เดิม', true); return; }
+
+  if (sb) {
+    try {
+      await sb.from('members').update({ pin: newPin }).eq('id', currentUser.id);
+    } catch (e) { showToast('บันทึกไม่สำเร็จ', true); console.error(e); return; }
+  }
+  // อัปเดต local
+  currentUser.pin = newPin;
+  const localM = members.find(x => x.id === currentUser.id);
+  if (localM) localM.pin = newPin;
+  ['accOldPin','accNewPin','accConfirmPin'].forEach(id => document.getElementById(id).value = '');
+  showToast('✅ เปลี่ยน PIN สำเร็จ');
+}
+
+async function resetMemberPin() {
+  if (!isTeacher() || !editingMemberId) return;
+  const m = members.find(x => x.id === editingMemberId);
+  if (!m) return;
+  const defaultPin = m.role === 'teacher' ? SCHOOL.teacherPin : SCHOOL.studentPin;
+  if (!confirm(`รีเซ็ต PIN ของ ${m.name} กลับเป็น "${defaultPin}"?`)) return;
+  if (sb) {
+    try {
+      await sb.from('members').update({ pin: defaultPin }).eq('id', editingMemberId);
+    } catch (e) { showToast('รีเซ็ตไม่สำเร็จ', true); return; }
+  }
+  m.pin = defaultPin;
+  showToast(`🔑 รีเซ็ต PIN ของ ${m.name} แล้ว`);
+  closeMemberModal();
+}
+
+function accLogout() {
+  closeAccountModal();
+  logout();
 }
 
 function logout() {
@@ -7852,7 +8043,8 @@ async function loadFromCloud() {
       mems.forEach(m => members.push({
         id: m.id, code: m.code, name: m.name, class: m.class,
         avatar: m.avatar || m.name.charAt(2), color: m.color || 1,
-        role: m.role || 'student'
+        role: m.role || 'student',
+        pin: m.pin || null
       }));
     }
     // sales (with items, last 365 days) — include void fields
@@ -9637,6 +9829,7 @@ function openMemberModal(id = null) {
     selectedColor = m.color || 1;
     selectRole(m.role || 'student');
     document.getElementById('mDeleteBtn').style.display = m.id === currentUser?.id ? 'none' : 'block';
+    document.getElementById('mResetPinBtn').style.display = m.id === currentUser?.id ? 'none' : 'block';
   } else {
     document.getElementById('memberModalTitle').textContent = 'เพิ่มสมาชิกใหม่';
     document.getElementById('mCode').value = '';
@@ -9646,6 +9839,7 @@ function openMemberModal(id = null) {
     selectedColor = 1;
     selectRole('student');
     document.getElementById('mDeleteBtn').style.display = 'none';
+    document.getElementById('mResetPinBtn').style.display = 'none';
   }
   renderColorGrid();
   document.getElementById('memberModal').classList.add('show');

@@ -1921,6 +1921,62 @@
     font-size: 16px;
   }
 
+  /* ============== PUSH SETUP BANNER ============== */
+  .push-banner {
+    position: fixed;
+    top: 14px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-150%);
+    width: calc(100% - 32px);
+    max-width: 398px;
+    background: linear-gradient(135deg, #FFB07A, #E8804D);
+    color: white;
+    padding: 12px 16px;
+    border-radius: 18px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 6px 0 #B23E32, 0 12px 24px rgba(0,0,0,0.35);
+    z-index: 499;
+    transition: transform 0.4s cubic-bezier(0.2,0.9,0.3,1.3);
+  }
+  .push-banner.show { transform: translateX(-50%) translateY(0); }
+  /* ถ้า install banner แสดงด้วย ให้ push banner เลื่อนลงมาอยู่ใต้ */
+  .install-banner.show ~ .push-banner.show { transform: translateX(-50%) translateY(74px); }
+  .push-banner .ico {
+    width: 36px; height: 36px;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.25);
+    color: white;
+    display: grid; place-items: center;
+    font-size: 18px;
+    flex-shrink: 0;
+    box-shadow: inset 1px 1px 2px rgba(255,255,255,0.3);
+  }
+  .push-banner .txt { flex: 1; line-height: 1.2; }
+  .push-banner .txt .t { font-weight: 800; font-size: 13px; }
+  .push-banner .txt .s { font-size: 11px; opacity: 0.92; }
+  .push-banner button {
+    border: none;
+    background: white;
+    color: #B23E32;
+    padding: 8px 14px;
+    border-radius: 12px;
+    font-family: inherit;
+    font-weight: 700;
+    font-size: 12px;
+    cursor: pointer;
+    box-shadow: 0 3px 0 rgba(0,0,0,0.18);
+  }
+  .push-banner button:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(0,0,0,0.18); }
+  .push-banner .close {
+    background: transparent;
+    color: white;
+    box-shadow: none;
+    padding: 6px;
+    font-size: 16px;
+  }
+
   /* Safe area (iOS notch / Android navigation) */
   @supports (padding: env(safe-area-inset-top)) {
     .header { padding-top: calc(18px + env(safe-area-inset-top)); }
@@ -3968,6 +4024,17 @@
   </div>
   <button onclick="installApp()">ติดตั้ง</button>
   <button class="close" onclick="dismissInstall()">✕</button>
+</div>
+
+<!-- ============== PUSH SETUP BANNER ============== -->
+<div class="push-banner" id="pushBanner">
+  <div class="ico">🔔</div>
+  <div class="txt">
+    <div class="t">ยังไม่ได้ตั้งแจ้งเตือนเด้ง</div>
+    <div class="s">ใช้เวลา ~15 นาที · มี wizard ช่วย</div>
+  </div>
+  <button onclick="openPushSetupPage()">ตั้งเลย</button>
+  <button class="close" onclick="dismissPushBanner()">✕</button>
 </div>
 
 <!-- ============== DEMO MODE BANNER ============== -->
@@ -10226,6 +10293,7 @@ setUser = function(m) {
   if (sb) startRealtime();
   maybeShowNotiBanner();
   maybePromptPush();
+  maybeShowPushBanner();
   updateNotiBadge();
 };
 
@@ -10907,6 +10975,29 @@ function installApp() {
 function dismissInstall() {
   document.getElementById('installBanner').classList.remove('show');
   localStorage.setItem('installDismissed', '1');
+}
+
+// ============== PUSH SETUP BANNER ==============
+// แสดง banner เมื่อ: login แล้ว + เป็นครู + ยังไม่ตั้งค่า VAPID + ยังไม่กดปิด
+function maybeShowPushBanner() {
+  if (!currentUser || !isTeacher()) return;
+  if (localStorage.getItem('pushBannerDismissed') === '1') return;
+  const hasVapid = !!(window.SUPABASE_CONFIG && window.SUPABASE_CONFIG.vapidPublicKey);
+  if (hasVapid) return;  // ตั้งค่าแล้ว ไม่ต้องโชว์
+  // รอ 2 วินาทีหลัง login ให้ UI โหลดเสร็จก่อน
+  setTimeout(() => {
+    const el = document.getElementById('pushBanner');
+    if (el) el.classList.add('show');
+  }, 2000);
+}
+
+function dismissPushBanner() {
+  document.getElementById('pushBanner').classList.remove('show');
+  localStorage.setItem('pushBannerDismissed', '1');
+}
+
+function openPushSetupPage() {
+  location.href = './push-setup.html';
 }
 
 window.addEventListener('appinstalled', () => {

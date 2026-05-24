@@ -6808,43 +6808,30 @@ function closeReport() {
 }
 
 async function downloadAsPdf() {
-  const btn = document.getElementById('btnDlPdf');
-  const bar = document.querySelector('.action-bar');
-  btn.disabled = true;
-  btn.textContent = '⏳ กำลังสร้าง PDF...';
+  // ใช้ browser print-to-PDF — ฟอนต์ไทยสมบูรณ์, ไฟล์เล็ก, รองรับทุก browser
+  // ตั้งชื่อไฟล์ผ่าน document.title — browser จะใช้เป็นชื่อ default ตอน Save as PDF
+  const originalTitle = document.title;
+  document.title = '${filename}';
 
-  // ซ่อน action-bar ชั่วคราวเพื่อไม่ให้ติดมาใน PDF
-  bar.style.display = 'none';
-
-  try {
-    if (typeof html2pdf === 'undefined') {
-      alert('Library ยังโหลดไม่เสร็จ — รอ 2 วินาทีแล้วลองใหม่');
-      return;
-    }
-    // รอให้ font โหลดเสร็จก่อน capture (สำคัญสำหรับฟอนต์ไทย)
-    if (document.fonts && document.fonts.ready) {
-      await document.fonts.ready;
-    }
-    await new Promise(r => setTimeout(r, 300));
-    const opt = {
-      margin: [10, 8, 10, 8],
-      filename: \`\${filename}.pdf\`,
-      image: { type: 'jpeg', quality: 0.96 },
-      html2canvas: { scale: 2, useCORS: true, letterRendering: true, logging: false, windowWidth: document.body.scrollWidth },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true },
-      pagebreak: { mode: ['css', 'legacy'], avoid: '.signatures, tr, .footer' }
-    };
-    // capture เฉพาะ content (ไม่รวม action-bar)
-    const content = document.body;
-    await html2pdf().from(content).set(opt).save();
-  } catch (e) {
-    alert('สร้าง PDF ไม่สำเร็จ: ' + e.message + '\\n\\nลองใช้ปุ่ม "พิมพ์" แทน');
-    console.error(e);
-  } finally {
-    bar.style.display = 'flex';
-    btn.disabled = false;
-    btn.textContent = '📥 ดาวน์โหลด PDF';
+  // รอให้ฟอนต์โหลดเสร็จ
+  if (document.fonts && document.fonts.ready) {
+    try { await document.fonts.ready; } catch(e) {}
   }
+
+  // แจ้ง user ว่าควรเลือก "Save as PDF" ใน print dialog
+  const hint = document.createElement('div');
+  hint.style.cssText = 'position:fixed;top:16px;left:50%;transform:translateX(-50%);background:#2D7D6F;color:#fff;padding:12px 20px;border-radius:12px;font-weight:700;z-index:99999;box-shadow:0 4px 20px rgba(0,0,0,.2);max-width:90%;text-align:center;font-size:14px;';
+  hint.innerHTML = '💡 เลือกปลายทาง <b>"Save as PDF"</b> หรือ <b>"บันทึกเป็น PDF"</b> แล้วกดบันทึก';
+  document.body.appendChild(hint);
+
+  setTimeout(() => {
+    window.print();
+    // คืน title หลัง print เสร็จ
+    setTimeout(() => {
+      document.title = originalTitle;
+      hint.remove();
+    }, 1000);
+  }, 400);
 }
 // auto print เดิม ถอดออก ให้ user เลือกเอง
 <\/script>

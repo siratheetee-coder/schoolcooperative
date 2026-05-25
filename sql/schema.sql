@@ -25,10 +25,32 @@ exception when others then null;
 end $$;
 alter table products add column if not exists category text default 'other';
 alter table products add column if not exists image_url text;
--- บาร์โค้ดสินค้า (ใช้กับเครื่องยิงบาร์โค้ด USB)
+-- บาร์โค้ดสินค้า (เวอร์ชันเก่า — เก็บไว้เพื่อ backward compat แต่ไม่ใช้แล้ว)
 alter table products add column if not exists barcode text;
-create unique index if not exists products_barcode_uniq
-  on products(barcode) where barcode is not null;
+
+-- ตารางใหม่: รองรับหลาย barcode ต่อ 1 product (เช่น รสต่างกันแต่ stock เดียว)
+create table if not exists product_barcodes (
+  barcode text primary key,
+  product_id bigint not null references products(id) on delete cascade,
+  created_at timestamptz default now()
+);
+create index if not exists product_barcodes_product_id_idx
+  on product_barcodes(product_id);
+
+-- ย้ายข้อมูลจาก products.barcode เดิม → ตารางใหม่ (รันได้หลายครั้งปลอดภัย)
+do $$
+begin
+  insert into product_barcodes (barcode, product_id)
+  select barcode, id from products
+  where barcode is not null and barcode != ''
+  on conflict (barcode) do nothing;
+exception when others then null;
+end $$;
+
+-- RLS สำหรับตารางใหม่ — ใช้ public access แบบเดียวกับ products
+alter table product_barcodes enable row level security;
+drop policy if exists "barcodes_all" on product_barcodes;
+create policy "barcodes_all" on product_barcodes for all using (true) with check (true);
 
 -- อัปเดต constraint category ให้รองรับ 'icecream'
 do $$

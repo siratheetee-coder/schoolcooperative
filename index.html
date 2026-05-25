@@ -4877,8 +4877,12 @@
     </div>
 
     <div class="field">
-      <label>บาร์โค้ด <span style="color:var(--ink-soft);font-weight:400;font-size:12px;">— 📷 สแกนเพื่อกรอก (ไม่บังคับ)</span></label>
-      <input type="text" id="pBarcode" placeholder="สแกนหรือพิมพ์ เช่น 8851234567890" autocomplete="off" />
+      <label>บาร์โค้ด <span style="color:var(--ink-soft);font-weight:400;font-size:12px;">— 📷 มีได้หลายตัว (เช่น รสต่างกันแต่ stock เดียว)</span></label>
+      <div id="pBarcodeList" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;min-height:4px;"></div>
+      <div style="display:flex;gap:6px;align-items:stretch;">
+        <input type="text" id="pBarcode" placeholder="สแกน / พิมพ์ → กด Enter เพื่อเพิ่ม" autocomplete="off" style="flex:1;" onkeydown="if(event.key==='Enter'){event.preventDefault();event.stopPropagation();addBarcodeToList();}" />
+        <button type="button" onclick="addBarcodeToList()" style="background:var(--green-500);color:white;border:none;border-radius:10px;padding:0 16px;font-weight:700;cursor:pointer;font-family:inherit;">+ เพิ่ม</button>
+      </div>
     </div>
 
     <div class="field">
@@ -5949,7 +5953,9 @@ function openProductModal(id = null) {
     selectedImageUrl = p.imageUrl || null;
     document.getElementById('productTitle').textContent = 'แก้ไขสินค้า';
     document.getElementById('pName').value = p.name;
-    document.getElementById('pBarcode').value = p.barcode || '';
+    document.getElementById('pBarcode').value = '';
+    currentEditBarcodes = [...(p.barcodes || [])];
+    renderBarcodeList();
     document.getElementById('pPrice').value = p.price;
     document.getElementById('pCost').value = p.cost || 0;
     document.getElementById('pStock').value = '';
@@ -5962,6 +5968,8 @@ function openProductModal(id = null) {
     document.getElementById('productTitle').textContent = 'เพิ่มสินค้าใหม่';
     document.getElementById('pName').value = '';
     document.getElementById('pBarcode').value = '';
+    currentEditBarcodes = [];
+    renderBarcodeList();
     document.getElementById('pPrice').value = '';
     document.getElementById('pCost').value = '';
     document.getElementById('pStock').value = '';
@@ -7715,15 +7723,11 @@ function handleScan(rawCode) {
   // แปล Thai layout → US layout ก่อนใช้
   const code = translateThaiKeys(rawCode);
 
-  // 1) Product modal เปิดอยู่ → fill barcode field
+  // 1) Product modal เปิดอยู่ → เพิ่ม barcode ลงในรายการ
   const pModal = document.getElementById('productModal');
   if (pModal && pModal.classList.contains('show')) {
-    const f = document.getElementById('pBarcode');
-    if (f) {
-      f.value = code;
-      beep(true);
-      showToast(`📷 รับบาร์โค้ด: ${code}`);
-    }
+    addBarcodeToList(code);
+    beep(true);
     return;
   }
   // 2) อยู่ POS view → auto add to cart
@@ -7735,9 +7739,84 @@ function handleScan(rawCode) {
   // 3) อื่นๆ → ignore เงียบๆ
 }
 
+// Map: barcode → product_id (สร้างจาก p.barcodes[] ของทุกสินค้า)
+const barcodeMap = new Map();
+function rebuildBarcodeMap() {
+  barcodeMap.clear();
+  products.forEach(p => (p.barcodes || []).forEach(b => barcodeMap.set(b, p.id)));
+}
+
 function findProductByBarcode(code) {
   if (!code) return null;
-  return products.find(p => p.barcode === code) || null;
+  const pid = barcodeMap.get(code);
+  return pid ? (products.find(p => p.id === pid) || null) : null;
+}
+
+// ===== Barcode list editing ภายใน product modal =====
+let currentEditBarcodes = []; // working copy ระหว่างเปิด modal
+
+function renderBarcodeList() {
+  const wrap = document.getElementById('pBarcodeList');
+  if (!wrap) return;
+  if (!currentEditBarcodes.length) {
+    wrap.innerHTML = '<span style="font-size:12px;color:var(--ink-soft);font-style:italic;">— ยังไม่มี barcode —</span>';
+    return;
+  }
+  wrap.innerHTML = currentEditBarcodes.map(b => {
+    const safe = String(b).replace(/'/g, "\\'");
+    return `<span style="background:#E8F5F2;color:#1A5C54;padding:5px 4px 5px 12px;border-radius:14px;font-size:13px;display:inline-flex;align-items:center;gap:4px;font-weight:600;">
+      ${b}
+      <button type="button" onclick="removeBarcodeFromList('${safe}')" style="background:none;border:none;color:#1A5C54;font-size:18px;cursor:pointer;line-height:1;padding:0 6px;font-weight:bold;">×</button>
+    </span>`;
+  }).join('');
+}
+
+function addBarcodeToList(code) {
+  const input = document.getElementById('pBarcode');
+  code = (code || input?.value || '').trim();
+  if (!code) return;
+  if (currentEditBarcodes.includes(code)) {
+    showToast('barcode นี้อยู่ในรายการแล้ว', true);
+    if (input) input.value = '';
+    return;
+  }
+  // เช็คซ้ำกับสินค้าอื่น
+  const dupPid = barcodeMap.get(code);
+  if (dupPid && dupPid !== editingProductId) {
+    const dupProd = products.find(p => p.id === dupPid);
+    showToast(`barcode นี้ใช้กับ "${dupProd?.name || '?'}" อยู่แล้ว`, true);
+    if (input) input.value = '';
+    return;
+  }
+  currentEditBarcodes.push(code);
+  if (input) input.value = '';
+  renderBarcodeList();
+}
+
+function removeBarcodeFromList(code) {
+  currentEditBarcodes = currentEditBarcodes.filter(b => b !== code);
+  renderBarcodeList();
+}
+
+// Sync barcodes ขึ้น Supabase — delete แล้ว insert ใหม่
+async function syncProductBarcodes(productId, newBarcodes) {
+  if (!sb || !productId) return;
+  try {
+    await sb.from('product_barcodes').delete().eq('product_id', productId);
+    if (newBarcodes && newBarcodes.length) {
+      const rows = newBarcodes.map(b => ({ barcode: b, product_id: productId }));
+      const { error } = await sb.from('product_barcodes').insert(rows);
+      if (error) throw error;
+    }
+    rebuildBarcodeMap();
+  } catch (e) {
+    console.error('syncProductBarcodes failed', e);
+    if (e.code === '23505' || /duplicate/i.test(e.message || '')) {
+      showToast('บาร์โค้ดบางตัวซ้ำกับสินค้าอื่น — ตรวจสอบอีกครั้ง', true);
+    } else {
+      showToast('บันทึก barcode ไม่สำเร็จ: ' + (e.message || e), true);
+    }
+  }
 }
 
 function addToCartByBarcode(code) {
@@ -8335,10 +8414,21 @@ async function loadFromCloud() {
         price: p.price, cost: p.cost || 0, category: p.category || 'other',
         imageUrl: p.image_url || null,
         stock: p.stock, lowAt: p.low_at, unit: p.unit || '/ชิ้น',
-        barcode: p.barcode || null
+        barcodes: []
       }));
       nextProductId = Math.max(...products.map(p => p.id), 0) + 1;
     }
+    // โหลด barcodes ของทุกสินค้า (1 product → หลาย barcode)
+    try {
+      const { data: bcs } = await sb.from('product_barcodes').select('barcode,product_id');
+      if (bcs && bcs.length) {
+        bcs.forEach(b => {
+          const p = products.find(x => x.id === b.product_id);
+          if (p) p.barcodes.push(b.barcode);
+        });
+      }
+      rebuildBarcodeMap();
+    } catch(e) { console.warn('load product_barcodes', e); }
     // members
     const { data: mems } = await sb.from('members').select('*').order('id');
     if (mems && mems.length) {
@@ -8788,17 +8878,23 @@ function approveRequest(id) {
       id: nextProductId++, name: p.name, price: p.price,
       cost: p.cost || 0, category: p.category || 'other',
       emoji: p.emoji, stock: p.stock, lowAt: p.lowAt || 10, unit: p.unit || '/ชิ้น',
-      barcode: p.barcode || null
+      barcodes: Array.isArray(p.barcodes) ? p.barcodes : []
     };
     products.push(newP);
-    sbSaveProduct(newP, true);
+    (async () => {
+      await sbSaveProduct(newP, true);
+      if (newP.barcodes.length) await syncProductBarcodes(newP.id, newP.barcodes);
+    })();
   } else if (req.type === 'edit_product') {
     const prod = products.find(x => x.id === p.id);
     if (prod) {
       prod.name = p.name; prod.price = p.price; prod.emoji = p.emoji;
       if (p.cost !== undefined) prod.cost = p.cost;
       if (p.category) prod.category = p.category;
-      if (p.barcode !== undefined) prod.barcode = p.barcode || null;
+      if (Array.isArray(p.barcodes)) {
+        prod.barcodes = p.barcodes;
+        syncProductBarcodes(prod.id, p.barcodes);
+      }
       sbSaveProduct(prod, false);
     }
   } else if (req.type === 'delete_product') {
@@ -8934,21 +9030,18 @@ function renderRequests() {
 }
 
 // ============== HIJACK STOCK SAVE — students go through approval ==============
-saveProduct = function() {
+saveProduct = async function() {
   const name = document.getElementById('pName').value.trim();
   const price = parseInt(document.getElementById('pPrice').value) || 0;
   const cost = parseFloat(document.getElementById('pCost').value) || 0;
   const category = selectedProductCategory;
   const addQty = parseInt(document.getElementById('pStock').value) || 0;
-  const barcodeRaw = (document.getElementById('pBarcode')?.value || '').trim();
-  const barcode = barcodeRaw ? barcodeRaw : null;
+  // ถ้ามี text ค้างใน input → auto add ก่อน save
+  const pendingBarcode = (document.getElementById('pBarcode')?.value || '').trim();
+  if (pendingBarcode) addBarcodeToList(pendingBarcode);
+  const barcodes = [...currentEditBarcodes]; // snapshot
   if (!name) { showToast('กรุณาใส่ชื่อสินค้า', true); return; }
   if (price <= 0) { showToast('กรุณาใส่ราคา', true); return; }
-  // กัน barcode ซ้ำใน local
-  if (barcode) {
-    const dup = products.find(p => p.barcode === barcode && p.id !== editingProductId);
-    if (dup) { showToast(`บาร์โค้ดนี้ใช้กับ "${dup.name}" อยู่แล้ว`, true); return; }
-  }
 
   if (isTeacher()) {
     if (editingProductId) {
@@ -8957,8 +9050,9 @@ saveProduct = function() {
       p.name = name; p.price = price; p.cost = cost; p.category = category; p.emoji = selectedEmoji;
       p.imageUrl = selectedImageUrl;
       p.stock += addQty;
-      p.barcode = barcode;
+      p.barcodes = barcodes;
       sbSaveProduct(p, false);
+      await syncProductBarcodes(p.id, barcodes);
       if (addQty > 0) {
         logAudit('restock', 'product', p.id, p.name, {
           addQty, before: before.stock, after: p.stock,
@@ -8974,9 +9068,11 @@ saveProduct = function() {
       }
       showToast(addQty > 0 ? `เพิ่มสต็อก ${name} +${addQty}` : 'แก้ไขเรียบร้อย');
     } else {
-      const newP = { id: nextProductId++, name, price, cost, category, emoji: selectedEmoji, imageUrl: selectedImageUrl, stock: addQty, lowAt: 10, unit: '/ชิ้น', barcode };
+      const newP = { id: nextProductId++, name, price, cost, category, emoji: selectedEmoji, imageUrl: selectedImageUrl, stock: addQty, lowAt: 10, unit: '/ชิ้น', barcodes };
       products.push(newP);
-      sbSaveProduct(newP, true);
+      await sbSaveProduct(newP, true);
+      // หลัง insert เสร็จ newP.id อาจเปลี่ยนเป็น id จาก Supabase
+      if (barcodes.length) await syncProductBarcodes(newP.id, barcodes);
       logAudit('add_product', 'product', newP.id, name, {
         price, cost, stock: addQty,
         note: `ราคา ฿${price} · ต้นทุน ฿${cost} · เริ่ม ${addQty} ชิ้น`
@@ -8996,10 +9092,12 @@ saveProduct = function() {
         { id: p.id, addQty },
         `เติมสต็อก "${p.name}" +${addQty} ${p.unit.replace('/','')}`);
     }
-    const changed = name !== p.name || price !== p.price || cost !== (p.cost||0) || category !== (p.category||'other') || selectedEmoji !== p.emoji || barcode !== (p.barcode||null);
+    const oldBC = JSON.stringify((p.barcodes||[]).slice().sort());
+    const newBC = JSON.stringify(barcodes.slice().sort());
+    const changed = name !== p.name || price !== p.price || cost !== (p.cost||0) || category !== (p.category||'other') || selectedEmoji !== p.emoji || oldBC !== newBC;
     if (changed) {
       submitRequest('edit_product',
-        { id: p.id, name, price, cost, category, emoji: selectedEmoji, barcode },
+        { id: p.id, name, price, cost, category, emoji: selectedEmoji, barcodes },
         `แก้ไข "${p.name}" → ชื่อ: ${name}, ราคา: ฿${price}, ต้นทุน: ฿${cost}`);
     }
     if (addQty === 0 && !changed) {
@@ -9008,7 +9106,7 @@ saveProduct = function() {
     }
   } else {
     submitRequest('add_product',
-      { name, price, cost, category, emoji: selectedEmoji, stock: addQty, lowAt: 10, unit: '/ชิ้น', barcode },
+      { name, price, cost, category, emoji: selectedEmoji, stock: addQty, lowAt: 10, unit: '/ชิ้น', barcodes },
       `เพิ่มสินค้าใหม่ "${name}" ราคา ฿${price} ต้นทุน ฿${cost}`);
   }
   closeProductModal();

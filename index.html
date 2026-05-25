@@ -7682,7 +7682,39 @@ document.addEventListener('keydown', (e) => {
   if (e.key && e.key.length === 1) SCAN.buf += e.key;
 }, true); // capture phase — ดักก่อน input field
 
-function handleScan(code) {
+// Map Thai Kedmanee (TIS-820) → US keyboard layout
+// ใช้กรณี Windows ตั้งภาษาไทย เครื่องยิงส่ง scancode → OS แปลเป็นอักษรไทย
+const THAI_TO_US_KEY = {
+  // top number row (unshifted Thai)
+  'ๅ':'1', '/':'2', '-':'3', 'ภ':'4', 'ถ':'5',
+  'ุ':'6', 'ึ':'7', 'ค':'8', 'ต':'9', 'จ':'0',
+  'ข':'-', 'ช':'=',
+  // qwerty row
+  'ๆ':'q', 'ไ':'w', 'ำ':'e', 'พ':'r', 'ะ':'t',
+  'ั':'y', 'ี':'u', 'ร':'i', 'น':'o', 'ย':'p',
+  'บ':'[', 'ล':']',
+  // asdf row
+  'ฟ':'a', 'ห':'s', 'ก':'d', 'ด':'f', 'เ':'g',
+  '้':'h', '่':'j', 'า':'k', 'ส':'l', 'ว':';',
+  'ง':"'",
+  // zxcv row
+  'ผ':'z', 'ป':'x', 'แ':'c', 'อ':'v', 'ิ':'b',
+  'ื':'n', 'ท':'m', 'ม':',', 'ใ':'.', 'ฝ':'/'
+};
+
+function translateThaiKeys(s) {
+  if (!s) return s;
+  // ถ้าไม่มีอักษรไทย → คาดว่า Windows เป็น EN layout อยู่แล้ว → return ตรงๆ
+  if (!/[฀-๿]/.test(s)) return s;
+  let out = '';
+  for (const ch of s) out += THAI_TO_US_KEY[ch] || ch;
+  return out;
+}
+
+function handleScan(rawCode) {
+  // แปล Thai layout → US layout ก่อนใช้
+  const code = translateThaiKeys(rawCode);
+
   // 1) Product modal เปิดอยู่ → fill barcode field
   const pModal = document.getElementById('productModal');
   if (pModal && pModal.classList.contains('show')) {

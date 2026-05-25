@@ -8787,7 +8787,8 @@ function approveRequest(id) {
     const newP = {
       id: nextProductId++, name: p.name, price: p.price,
       cost: p.cost || 0, category: p.category || 'other',
-      emoji: p.emoji, stock: p.stock, lowAt: p.lowAt || 10, unit: p.unit || '/ชิ้น'
+      emoji: p.emoji, stock: p.stock, lowAt: p.lowAt || 10, unit: p.unit || '/ชิ้น',
+      barcode: p.barcode || null
     };
     products.push(newP);
     sbSaveProduct(newP, true);
@@ -8797,6 +8798,7 @@ function approveRequest(id) {
       prod.name = p.name; prod.price = p.price; prod.emoji = p.emoji;
       if (p.cost !== undefined) prod.cost = p.cost;
       if (p.category) prod.category = p.category;
+      if (p.barcode !== undefined) prod.barcode = p.barcode || null;
       sbSaveProduct(prod, false);
     }
   } else if (req.type === 'delete_product') {
@@ -8938,8 +8940,15 @@ saveProduct = function() {
   const cost = parseFloat(document.getElementById('pCost').value) || 0;
   const category = selectedProductCategory;
   const addQty = parseInt(document.getElementById('pStock').value) || 0;
+  const barcodeRaw = (document.getElementById('pBarcode')?.value || '').trim();
+  const barcode = barcodeRaw ? barcodeRaw : null;
   if (!name) { showToast('กรุณาใส่ชื่อสินค้า', true); return; }
   if (price <= 0) { showToast('กรุณาใส่ราคา', true); return; }
+  // กัน barcode ซ้ำใน local
+  if (barcode) {
+    const dup = products.find(p => p.barcode === barcode && p.id !== editingProductId);
+    if (dup) { showToast(`บาร์โค้ดนี้ใช้กับ "${dup.name}" อยู่แล้ว`, true); return; }
+  }
 
   if (isTeacher()) {
     if (editingProductId) {
@@ -8948,6 +8957,7 @@ saveProduct = function() {
       p.name = name; p.price = price; p.cost = cost; p.category = category; p.emoji = selectedEmoji;
       p.imageUrl = selectedImageUrl;
       p.stock += addQty;
+      p.barcode = barcode;
       sbSaveProduct(p, false);
       if (addQty > 0) {
         logAudit('restock', 'product', p.id, p.name, {
@@ -8964,7 +8974,7 @@ saveProduct = function() {
       }
       showToast(addQty > 0 ? `เพิ่มสต็อก ${name} +${addQty}` : 'แก้ไขเรียบร้อย');
     } else {
-      const newP = { id: nextProductId++, name, price, cost, category, emoji: selectedEmoji, imageUrl: selectedImageUrl, stock: addQty, lowAt: 10, unit: '/ชิ้น' };
+      const newP = { id: nextProductId++, name, price, cost, category, emoji: selectedEmoji, imageUrl: selectedImageUrl, stock: addQty, lowAt: 10, unit: '/ชิ้น', barcode };
       products.push(newP);
       sbSaveProduct(newP, true);
       logAudit('add_product', 'product', newP.id, name, {
@@ -8986,10 +8996,10 @@ saveProduct = function() {
         { id: p.id, addQty },
         `เติมสต็อก "${p.name}" +${addQty} ${p.unit.replace('/','')}`);
     }
-    const changed = name !== p.name || price !== p.price || cost !== (p.cost||0) || category !== (p.category||'other') || selectedEmoji !== p.emoji;
+    const changed = name !== p.name || price !== p.price || cost !== (p.cost||0) || category !== (p.category||'other') || selectedEmoji !== p.emoji || barcode !== (p.barcode||null);
     if (changed) {
       submitRequest('edit_product',
-        { id: p.id, name, price, cost, category, emoji: selectedEmoji },
+        { id: p.id, name, price, cost, category, emoji: selectedEmoji, barcode },
         `แก้ไข "${p.name}" → ชื่อ: ${name}, ราคา: ฿${price}, ต้นทุน: ฿${cost}`);
     }
     if (addQty === 0 && !changed) {
@@ -8998,7 +9008,7 @@ saveProduct = function() {
     }
   } else {
     submitRequest('add_product',
-      { name, price, cost, category, emoji: selectedEmoji, stock: addQty, lowAt: 10, unit: '/ชิ้น' },
+      { name, price, cost, category, emoji: selectedEmoji, stock: addQty, lowAt: 10, unit: '/ชิ้น', barcode },
       `เพิ่มสินค้าใหม่ "${name}" ราคา ฿${price} ต้นทุน ฿${cost}`);
   }
   closeProductModal();

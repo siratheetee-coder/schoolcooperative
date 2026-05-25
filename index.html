@@ -4914,7 +4914,7 @@
     <div class="actions">
       <button class="btn btn-ghost" onclick="closeProductModal()">ยกเลิก</button>
       <button class="btn btn-danger" id="pDeleteBtn" onclick="deleteProduct()" style="display:none;">ลบ</button>
-      <button class="btn btn-primary" onclick="saveProduct()">บันทึก</button>
+      <button class="btn btn-primary" id="pSaveBtn" onclick="saveProduct()">บันทึก</button>
     </div>
   </div>
 </div>
@@ -5626,7 +5626,7 @@ function renderProducts() {
     return `
     <div class="product ${cart.has(p.id) ? 'has-qty' : ''} ${out ? 'out-of-stock' : ''}" onclick="${out ? '' : `add(${p.id})`}">
       <span class="qty-badge">${cart.get(p.id) || ''}</span>
-      <div class="product-img">${p.imageUrl ? `<img class="prod-photo" src="${p.imageUrl}" alt="">` : p.emoji}</div>
+      <div class="product-img" data-emoji="${p.emoji||''}">${p.imageUrl ? `<img class="prod-photo" src="${p.imageUrl}" alt="" onerror="this.parentElement.textContent=this.parentElement.dataset.emoji">` : p.emoji}</div>
       <div class="product-name">${p.name}</div>
       <div class="product-stock">คงเหลือ ${remaining < 0 ? 0 : remaining} ${p.unit.replace('/','')}</div>
       <div class="product-foot">
@@ -5840,7 +5840,7 @@ function renderStock() {
         return `
           <div class="stock-item" onclick="openProductModal(${p.id})">
             ${s !== 'ok' ? `<div class="warn-corner">!</div>` : ''}
-            <div class="item-img">${p.imageUrl ? `<img class="item-photo" src="${p.imageUrl}" alt="">` : p.emoji}</div>
+            <div class="item-img" data-emoji="${p.emoji||''}">${p.imageUrl ? `<img class="item-photo" src="${p.imageUrl}" alt="" onerror="this.parentElement.textContent=this.parentElement.dataset.emoji">` : p.emoji}</div>
             <div class="item-info">
               <div class="item-name">${p.name}</div>
               <div class="item-meta">
@@ -7800,7 +7800,8 @@ function removeBarcodeFromList(code) {
 
 // Sync barcodes ขึ้น Supabase — delete แล้ว insert ใหม่
 async function syncProductBarcodes(productId, newBarcodes) {
-  if (!sb || !productId) return;
+  if (window.DEMO_MODE) { rebuildBarcodeMap(); return; } // demo → ไม่เขียน DB จริง
+  if (!sb || !productId) { rebuildBarcodeMap(); return; }
   try {
     await sb.from('product_barcodes').delete().eq('product_id', productId);
     if (newBarcodes && newBarcodes.length) {
@@ -9030,7 +9031,9 @@ function renderRequests() {
 }
 
 // ============== HIJACK STOCK SAVE — students go through approval ==============
+let _savingProduct = false;
 saveProduct = async function() {
+  if (_savingProduct) return; // กันกดซ้ำ
   const name = document.getElementById('pName').value.trim();
   const price = parseInt(document.getElementById('pPrice').value) || 0;
   const cost = parseFloat(document.getElementById('pCost').value) || 0;
@@ -9042,6 +9045,13 @@ saveProduct = async function() {
   const barcodes = [...currentEditBarcodes]; // snapshot
   if (!name) { showToast('กรุณาใส่ชื่อสินค้า', true); return; }
   if (price <= 0) { showToast('กรุณาใส่ราคา', true); return; }
+
+  // ล็อกปุ่มระหว่าง save (กันกดรัวๆ → DB write ซ้ำ)
+  _savingProduct = true;
+  const saveBtn = document.getElementById('pSaveBtn');
+  const origLabel = saveBtn?.textContent;
+  if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = '⏳ กำลังบันทึก...'; }
+  try {
 
   if (isTeacher()) {
     if (editingProductId) {
@@ -9110,6 +9120,10 @@ saveProduct = async function() {
       `เพิ่มสินค้าใหม่ "${name}" ราคา ฿${price} ต้นทุน ฿${cost}`);
   }
   closeProductModal();
+  } finally {
+    _savingProduct = false;
+    if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = origLabel || 'บันทึก'; }
+  }
 };
 
 deleteProduct = function() {
@@ -10498,7 +10512,7 @@ function startRealtime() {
       if (payload.eventType === 'INSERT') {
         const p = payload.new;
         if (!products.find(x => x.id === p.id)) {
-          products.push({ id: p.id, name: p.name, emoji: p.emoji, price: p.price, cost: p.cost || 0, category: p.category || 'other', imageUrl: p.image_url || null, stock: p.stock, lowAt: p.low_at, unit: p.unit || '/ชิ้น' });
+          products.push({ id: p.id, name: p.name, emoji: p.emoji, price: p.price, cost: p.cost || 0, category: p.category || 'other', imageUrl: p.image_url || null, stock: p.stock, lowAt: p.low_at, unit: p.unit || '/ชิ้น', barcodes: [] });
         }
       } else if (payload.eventType === 'UPDATE') {
         const p = payload.new;
@@ -10512,6 +10526,7 @@ function startRealtime() {
       } else if (payload.eventType === 'DELETE') {
         const idx = products.findIndex(x => x.id === payload.old.id);
         if (idx >= 0) products.splice(idx, 1);
+        rebuildBarcodeMap(); // ลบ product → ลบ entry ออกจาก map ด้วย
       }
       if (document.getElementById('view-pos').classList.contains('active')) renderProducts();
       if (document.getElementById('view-stock').classList.contains('active')) renderStock();
@@ -10519,6 +10534,30 @@ function startRealtime() {
     })
     .subscribe();
   realtimeChannels.push(prodChannel);
+
+  // === PRODUCT BARCODES (sync ข้ามอุปกรณ์) ===
+  const bcChannel = sb.channel('coop-barcodes')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'product_barcodes' }, payload => {
+      if (payload.eventType === 'INSERT') {
+        const b = payload.new;
+        const p = products.find(x => x.id === b.product_id);
+        if (p) {
+          if (!p.barcodes) p.barcodes = [];
+          if (!p.barcodes.includes(b.barcode)) p.barcodes.push(b.barcode);
+          barcodeMap.set(b.barcode, b.product_id);
+        }
+      } else if (payload.eventType === 'DELETE') {
+        const b = payload.old;
+        const p = products.find(x => x.id === b.product_id);
+        if (p && p.barcodes) p.barcodes = p.barcodes.filter(x => x !== b.barcode);
+        barcodeMap.delete(b.barcode);
+      } else if (payload.eventType === 'UPDATE') {
+        // ไม่ค่อยเกิด — แต่ rebuild เผื่อ
+        rebuildBarcodeMap();
+      }
+    })
+    .subscribe();
+  realtimeChannels.push(bcChannel);
 
   // === SALES (live new bills) ===
   const salesChannel = sb.channel('coop-sales')

@@ -26,7 +26,10 @@ end $$;
 alter table products add column if not exists category text default 'other';
 alter table products add column if not exists image_url text;
 -- บาร์โค้ดสินค้า (เวอร์ชันเก่า — เก็บไว้เพื่อ backward compat แต่ไม่ใช้แล้ว)
+-- ผู้ใช้เก่ารัน migration → ย้ายข้อมูลไป product_barcodes แล้ว → ลบ column นี้ได้
 alter table products add column if not exists barcode text;
+-- หลังย้ายข้อมูลเรียบร้อย ค่อยลบ column เก่า (uncomment เมื่อพร้อม)
+-- alter table products drop column if exists barcode;
 
 -- ตารางใหม่: รองรับหลาย barcode ต่อ 1 product (เช่น รสต่างกันแต่ stock เดียว)
 create table if not exists product_barcodes (

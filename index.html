@@ -4349,6 +4349,7 @@
         <input type="text" id="posSearchInput" placeholder="ค้นหาสินค้า..." oninput="setPosSearch(this.value)" />
         <button type="button" id="posSearchClear" onclick="clearPosSearch()" style="display:none;border:none;background:transparent;font-size:18px;color:var(--ink-soft);cursor:pointer;padding:0;">✕</button>
       </div>
+      <div style="font-size:11px;color:var(--ink-soft);margin-top:4px;padding-left:4px;">💡 มีเครื่องยิงบาร์โค้ด? สแกนได้เลย — เพิ่มลงตะกร้าอัตโนมัติ</div>
     </div>
     <div class="section-head">
       <h2>เลือกสินค้า</h2>
@@ -4873,6 +4874,11 @@
     <div class="field">
       <label>ชื่อสินค้า</label>
       <input type="text" id="pName" placeholder="เช่น นมจืด" />
+    </div>
+
+    <div class="field">
+      <label>บาร์โค้ด <span style="color:var(--ink-soft);font-weight:400;font-size:12px;">— 📷 สแกนเพื่อกรอก (ไม่บังคับ)</span></label>
+      <input type="text" id="pBarcode" placeholder="สแกนหรือพิมพ์ เช่น 8851234567890" autocomplete="off" />
     </div>
 
     <div class="field">
@@ -5943,6 +5949,7 @@ function openProductModal(id = null) {
     selectedImageUrl = p.imageUrl || null;
     document.getElementById('productTitle').textContent = 'แก้ไขสินค้า';
     document.getElementById('pName').value = p.name;
+    document.getElementById('pBarcode').value = p.barcode || '';
     document.getElementById('pPrice').value = p.price;
     document.getElementById('pCost').value = p.cost || 0;
     document.getElementById('pStock').value = '';
@@ -5954,6 +5961,7 @@ function openProductModal(id = null) {
     selectedImageUrl = null;
     document.getElementById('productTitle').textContent = 'เพิ่มสินค้าใหม่';
     document.getElementById('pName').value = '';
+    document.getElementById('pBarcode').value = '';
     document.getElementById('pPrice').value = '';
     document.getElementById('pCost').value = '';
     document.getElementById('pStock').value = '';
@@ -5985,14 +5993,23 @@ function saveProduct() {
   const name = document.getElementById('pName').value.trim();
   const price = parseInt(document.getElementById('pPrice').value) || 0;
   const addQty = parseInt(document.getElementById('pStock').value) || 0;
+  const barcodeRaw = (document.getElementById('pBarcode')?.value || '').trim();
+  const barcode = barcodeRaw ? barcodeRaw : null;
 
   if (!name) { showToast('กรุณาใส่ชื่อสินค้า', true); return; }
   if (price <= 0) { showToast('กรุณาใส่ราคา', true); return; }
+
+  // กัน barcode ซ้ำใน local (Supabase ก็มี unique index แต่เช็คก่อนช่วย UX)
+  if (barcode) {
+    const dup = products.find(p => p.barcode === barcode && p.id !== editingProductId);
+    if (dup) { showToast(`บาร์โค้ดนี้ใช้กับ "${dup.name}" อยู่แล้ว`, true); return; }
+  }
 
   if (editingProductId) {
     const p = products.find(x => x.id === editingProductId);
     p.name = name; p.price = price; p.emoji = selectedEmoji;
     p.stock += addQty;
+    p.barcode = barcode;
     showToast(addQty > 0 ? `เพิ่มสต็อก ${name} +${addQty}` : 'แก้ไขเรียบร้อย');
   } else {
     products.push({
@@ -6001,7 +6018,8 @@ function saveProduct() {
       emoji: selectedEmoji,
       stock: addQty,
       lowAt: 10,
-      unit: '/ชิ้น'
+      unit: '/ชิ้น',
+      barcode
     });
     showToast(`เพิ่ม "${name}" เรียบร้อย`);
   }
@@ -7626,6 +7644,114 @@ document.getElementById('loginCode').addEventListener('keydown', e => {
   if (e.key === 'Enter') document.getElementById('loginPin').focus();
 });
 
+// ============== BARCODE SCANNER (USB HID — ITcan) ==============
+// เครื่องยิง = HID keyboard → พิมพ์ตัวอักษรเร็วมาก (<50ms ระหว่างตัว) + Enter ปิดท้าย
+// Detection: ถ้าตัวอักษรพิมพ์ติดกัน fast + ลงท้าย Enter + ยาวพอ → treat as scan
+const SCAN = { buf: '', last: 0, GAP_MS: 50, MIN_LEN: 4 };
+
+document.addEventListener('keydown', (e) => {
+  // ข้ามถ้าอยู่ landing หรือ login screen — scanner ไม่ควรทำงาน
+  if (window.__SHOW_LANDING__) return;
+  const loginEl = document.getElementById('loginScreen');
+  if (loginEl && !loginEl.classList.contains('hidden')) return;
+
+  const now = performance.now();
+  const fast = (now - SCAN.last) < SCAN.GAP_MS;
+  if (!fast) SCAN.buf = '';
+  SCAN.last = now;
+
+  if (e.key === 'Enter') {
+    if (fast && SCAN.buf.length >= SCAN.MIN_LEN) {
+      e.preventDefault();
+      e.stopPropagation();
+      const code = SCAN.buf;
+      // ลบตัวอักษรที่ leak เข้า focused input ระหว่างสแกน
+      const el = document.activeElement;
+      if (el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA')) {
+        if (typeof el.value === 'string' && el.value.endsWith(code)) {
+          el.value = el.value.slice(0, -code.length);
+          // trigger input event เผื่อ search field สนใจ
+          try { el.dispatchEvent(new Event('input', { bubbles: true })); } catch(_){}
+        }
+      }
+      handleScan(code);
+    }
+    SCAN.buf = '';
+    return;
+  }
+  if (e.key && e.key.length === 1) SCAN.buf += e.key;
+}, true); // capture phase — ดักก่อน input field
+
+function handleScan(code) {
+  // 1) Product modal เปิดอยู่ → fill barcode field
+  const pModal = document.getElementById('productModal');
+  if (pModal && pModal.classList.contains('show')) {
+    const f = document.getElementById('pBarcode');
+    if (f) {
+      f.value = code;
+      beep(true);
+      showToast(`📷 รับบาร์โค้ด: ${code}`);
+    }
+    return;
+  }
+  // 2) อยู่ POS view → auto add to cart
+  const posView = document.getElementById('view-pos');
+  if (posView && posView.classList.contains('active')) {
+    addToCartByBarcode(code);
+    return;
+  }
+  // 3) อื่นๆ → ignore เงียบๆ
+}
+
+function findProductByBarcode(code) {
+  if (!code) return null;
+  return products.find(p => p.barcode === code) || null;
+}
+
+function addToCartByBarcode(code) {
+  const p = findProductByBarcode(code);
+  if (p) {
+    add(p.id);
+    beep(true);
+    showToast(`✅ ${p.name} (×${cart.get(p.id) || 0})`);
+  } else {
+    beep(false);
+    if (!isTeacher || !isTeacher()) {
+      showToast(`❌ ไม่พบสินค้า barcode: ${code} (แจ้งครูเพื่อเพิ่ม)`, true);
+      return;
+    }
+    if (confirm(`ไม่พบสินค้า barcode: ${code}\n\nเปิดหน้าเพิ่มสินค้าใหม่?`)) {
+      openProductModal();
+      setTimeout(() => {
+        const f = document.getElementById('pBarcode');
+        if (f) f.value = code;
+        const n = document.getElementById('pName');
+        if (n) n.focus();
+      }, 150);
+    }
+  }
+}
+
+// เสียง beep — Web Audio oscillator (ตัวเล็ก, ไม่ต้อง file)
+function beep(ok) {
+  try {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+    const ctx = new AC();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.frequency.value = ok ? 880 : 300;
+    osc.type = 'sine';
+    const dur = ok ? 0.12 : 0.25;
+    gain.gain.setValueAtTime(0.18, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
+    osc.start();
+    osc.stop(ctx.currentTime + dur);
+    setTimeout(() => { try { ctx.close(); } catch(_){} }, (dur * 1000) + 100);
+  } catch(_){}
+}
+
 // Update CURRENT_SELLER reference in confirmPay — hook into existing function
 const _origConfirmPay = confirmPay;
 confirmPay = function() {
@@ -8176,7 +8302,8 @@ async function loadFromCloud() {
         id: p.id, name: p.name, emoji: p.emoji,
         price: p.price, cost: p.cost || 0, category: p.category || 'other',
         imageUrl: p.image_url || null,
-        stock: p.stock, lowAt: p.low_at, unit: p.unit || '/ชิ้น'
+        stock: p.stock, lowAt: p.low_at, unit: p.unit || '/ชิ้น',
+        barcode: p.barcode || null
       }));
       nextProductId = Math.max(...products.map(p => p.id), 0) + 1;
     }
@@ -8326,7 +8453,8 @@ async function sbSaveProduct(p, isNew) {
         name: p.name, emoji: p.emoji, price: p.price,
         cost: p.cost || 0, category: p.category || 'other',
         image_url: p.imageUrl || null,
-        stock: p.stock, low_at: p.lowAt, unit: p.unit
+        stock: p.stock, low_at: p.lowAt, unit: p.unit,
+        barcode: p.barcode || null
       }).select().single();
       if (error) throw error;
       p.id = data.id;
@@ -8335,13 +8463,19 @@ async function sbSaveProduct(p, isNew) {
         name: p.name, emoji: p.emoji, price: p.price,
         cost: p.cost || 0, category: p.category || 'other',
         image_url: p.imageUrl || null,
-        stock: p.stock, low_at: p.lowAt
+        stock: p.stock, low_at: p.lowAt,
+        barcode: p.barcode || null
       }).eq('id', p.id);
       if (error) throw error;
     }
   } catch (e) {
     console.error('saveProduct failed', e);
-    showToast(`บันทึกขึ้น Cloud ไม่สำเร็จ: ${e.message || e}`, true);
+    // Duplicate barcode → unique index violation (23505)
+    if (e && (e.code === '23505' || /duplicate/i.test(e.message || ''))) {
+      showToast('บาร์โค้ดนี้มีอยู่แล้วในสินค้าอื่น', true);
+    } else {
+      showToast(`บันทึกขึ้น Cloud ไม่สำเร็จ: ${e.message || e}`, true);
+    }
     // ลบจาก local ถ้า insert ใหม่ล้มเหลว เพื่อไม่ให้ค้างปลอม
     if (isNew && !p.id) {
       const idx = products.findIndex(x => x === p);

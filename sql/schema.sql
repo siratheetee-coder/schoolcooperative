@@ -25,6 +25,10 @@ exception when others then null;
 end $$;
 alter table products add column if not exists category text default 'other';
 alter table products add column if not exists image_url text;
+-- บาร์โค้ดสินค้า (ใช้กับเครื่องยิงบาร์โค้ด USB)
+alter table products add column if not exists barcode text;
+create unique index if not exists products_barcode_uniq
+  on products(barcode) where barcode is not null;
 
 -- อัปเดต constraint category ให้รองรับ 'icecream'
 do $$

@@ -4717,6 +4717,14 @@
     <div class="shift-grid" id="shiftGrid"></div>
 
     <div class="admin-section-head">จัดการสมาชิก</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
+      <button onclick="downloadBarcodeTemplate()" style="flex:1;min-width:140px;padding:10px 12px;border:none;border-radius:10px;background:linear-gradient(135deg,#B8E6C8,#7BC99A);color:#1F4A2D;font-family:inherit;font-weight:700;font-size:13px;cursor:pointer;box-shadow:0 3px 0 #4A9669;display:flex;align-items:center;justify-content:center;gap:6px;">
+        📥 <span>ดาวน์โหลด Template</span>
+      </button>
+      <button onclick="openBarcodeImport()" style="flex:1;min-width:140px;padding:10px 12px;border:none;border-radius:10px;background:linear-gradient(135deg,#5BA8E0,#2A7DC4);color:white;font-family:inherit;font-weight:700;font-size:13px;cursor:pointer;box-shadow:0 3px 0 #1A5A99;display:flex;align-items:center;justify-content:center;gap:6px;">
+        💳 <span>Import บาร์โค้ด</span>
+      </button>
+    </div>
     <div class="admin-members" id="adminMembers"></div>
   </div>
 
@@ -5173,15 +5181,6 @@
       <span class="sub" style="color:#FFE0FF;">⚠️ จะแทนที่ข้อมูลปัจจุบัน</span>
     </button>
 
-    <div style="border-top:1px dashed var(--cream-300);margin:18px 0 14px;"></div>
-
-    <div style="font-size:11px;color:var(--ink-soft);font-weight:700;margin-bottom:6px;letter-spacing:0.5px;">💳 Import บาร์โค้ดนักเรียน</div>
-    <button class="backup-btn" style="width:100%;background:linear-gradient(135deg,#5BA8E0,#2A7DC4);color:white;box-shadow:0 5px 0 #1A5A99,0 8px 14px rgba(42,125,196,0.3);" onclick="openBarcodeImport()">
-      <span class="ico">💳</span>
-      <span>Import บาร์โค้ดจาก Excel/CSV</span>
-      <span class="sub" style="color:#D6ECFC;">จับคู่กับชื่อนักเรียนในระบบ</span>
-    </button>
-
     <div class="actions" style="margin-top:14px;">
       <button class="btn btn-ghost" onclick="closeBackup()">ปิด</button>
     </div>
@@ -5197,9 +5196,10 @@
     <div style="background:#E8F2FB;border-left:4px solid #2A7DC4;border-radius:12px;padding:12px;margin-bottom:14px;font-size:12px;line-height:1.6;">
       <b style="color:#1A5A99;">📋 รูปแบบไฟล์ที่รองรับ:</b><br>
       • Excel (.xlsx, .xls) หรือ CSV (.csv)<br>
-      • <b>คอลัมน์ A:</b> ชื่อนักเรียน (เช่น "เด็กชายสมชาย ใจดี")<br>
-      • <b>คอลัมน์ B:</b> บาร์โค้ด (เช่น 6512345001)<br>
-      • บรรทัดแรกเป็น header (จะข้าม) หรือไม่มีก็ได้
+      • <b>คอลัมน์ A:</b> ชื่อ-นามสกุล<br>
+      • <b>คอลัมน์ B:</b> บาร์โค้ด<br>
+      • <b>คอลัมน์ C:</b> รหัสนักเรียน (ถ้ามี — แม่นยำกว่าใช้ชื่ออย่างเดียว)<br>
+      • <b>💡 แนะนำ:</b> กดปุ่ม "📥 ดาวน์โหลด Template" ก่อน — จะได้ไฟล์ที่มีชื่อ+รหัสครบ
     </div>
 
     <label class="upload-btn" style="margin-bottom:12px;display:block;text-align:center;background:linear-gradient(135deg,#5BA8E0,#2A7DC4);color:white;padding:14px;border-radius:12px;cursor:pointer;font-weight:700;">
@@ -9893,6 +9893,59 @@ function exportBackupCSV() {
   showToast('✅ ดาวน์โหลด CSV Backup เรียบร้อย');
 }
 
+// ============== DOWNLOAD BARCODE TEMPLATE (Excel) ==============
+// สร้าง template ที่มีชื่อสมาชิกจริงในระบบ + คอลัมน์ barcode ว่างให้ใส่
+function downloadBarcodeTemplate() {
+  if (!isTeacher()) { showToast('เฉพาะครูเท่านั้น', true); return; }
+  if (typeof XLSX === 'undefined') {
+    showToast('Library ยังโหลดไม่เสร็จ — รอสักครู่แล้วลองใหม่', true);
+    return;
+  }
+  if (!members.length) {
+    showToast('ยังไม่มีสมาชิกในระบบ', true);
+    return;
+  }
+
+  // เรียงตามชั้น → ชื่อ
+  const sorted = [...members].sort((a, b) => {
+    const ca = (a.class || '').toString();
+    const cb = (b.class || '').toString();
+    if (ca !== cb) return ca.localeCompare(cb, 'th');
+    return (a.name || '').localeCompare(b.name || '', 'th');
+  });
+
+  // sheet data — header + rows
+  const rows = [
+    ['ชื่อ-นามสกุล', 'บาร์โค้ด', 'รหัสนักเรียน', 'ชั้น', 'Role']
+  ];
+  sorted.forEach(m => {
+    rows.push([
+      m.name || '',
+      m.barcode || '', // ถ้ามีแล้วก็แสดง เพื่อให้ user เห็นว่ามีของเดิม
+      m.code || '',
+      m.class || '',
+      m.role === 'teacher' ? 'ครู' : 'นักเรียน'
+    ]);
+  });
+
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  // กำหนดความกว้างคอลัมน์
+  ws['!cols'] = [
+    { wch: 32 }, // ชื่อ
+    { wch: 18 }, // barcode
+    { wch: 12 }, // รหัส
+    { wch: 8 },  // ชั้น
+    { wch: 10 }  // role
+  ];
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'สมาชิก');
+
+  const filename = `template-บาร์โค้ดสมาชิก-${new Date().toISOString().slice(0,10)}.xlsx`;
+  XLSX.writeFile(wb, filename);
+  showToast(`📥 ดาวน์โหลด ${members.length} แถวเรียบร้อย — กรอกคอลัมน์ B แล้ว Import กลับ`);
+}
+
 // ============== IMPORT STUDENT BARCODES (Excel/CSV) ==============
 // Workflow: เลือกไฟล์ → parse → match ชื่อกับ members → preview → ยืนยัน → batch update DB
 
@@ -9957,14 +10010,15 @@ async function loadBarcodeImportFile(event) {
       if (looksLikeHeader) startIdx = 1;
     }
 
-    // build parsed entries
+    // build parsed entries — รองรับคอลัมน์ A=ชื่อ B=barcode C=code(optional)
     const entries = [];
     for (let i = startIdx; i < rows.length; i++) {
       const r = rows[i] || [];
       const rawName = String(r[0] || '').trim();
       const barcode = String(r[1] || '').trim();
+      const code = String(r[2] || '').trim(); // optional — รหัสนักเรียน
       if (!rawName && !barcode) continue;
-      entries.push({ rawName, barcode });
+      entries.push({ rawName, barcode, code });
     }
 
     if (!entries.length) {
@@ -9972,31 +10026,42 @@ async function loadBarcodeImportFile(event) {
       return;
     }
 
-    // Match กับ members
-    const normMap = new Map(); // normalized name → [member]
+    // Build lookup maps
+    const codeMap = new Map();   // code → member
+    const normMap = new Map();   // normalized name → [member]
     members.forEach(m => {
+      if (m.code) codeMap.set(String(m.code).trim(), m);
       const k = normalizeNameForMatch(m.name);
       if (!normMap.has(k)) normMap.set(k, []);
       normMap.get(k).push(m);
     });
 
     _bcImpParsedRows = entries.map(e => {
-      const matches = normMap.get(normalizeNameForMatch(e.rawName)) || [];
-      let status, member = null;
-      if (!e.rawName) {
-        status = 'no-name';
-      } else if (!e.barcode) {
+      let member = null, status;
+      // 1) ถ้ามี code (รหัสนักเรียน) → match by code (unique, แม่นยำสุด)
+      if (e.code) {
+        member = codeMap.get(e.code) || null;
+      }
+      // 2) fallback match by name
+      let matches = [];
+      if (!member && e.rawName) {
+        matches = normMap.get(normalizeNameForMatch(e.rawName)) || [];
+      }
+
+      if (!e.barcode) {
         status = 'no-barcode';
+      } else if (member) {
+        status = (member.barcode && member.barcode !== e.barcode) ? 'overwrite' : 'ok';
+      } else if (!e.rawName && !e.code) {
+        status = 'no-name';
       } else if (matches.length === 0) {
         status = 'not-found';
       } else if (matches.length > 1) {
         status = 'ambiguous';
-        member = matches[0]; // เลือกอันแรก แต่ user เห็น warning
+        member = matches[0];
       } else {
         member = matches[0];
-        status = member.barcode && member.barcode !== e.barcode
-          ? 'overwrite'
-          : 'ok';
+        status = (member.barcode && member.barcode !== e.barcode) ? 'overwrite' : 'ok';
       }
       return { ...e, status, member };
     });

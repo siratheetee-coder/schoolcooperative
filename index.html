@@ -3822,6 +3822,8 @@
     .bottom-nav-inner { max-width: 1400px; }
   }
 </style>
+<!-- SheetJS — สำหรับอ่าน Excel/CSV ตอน import บาร์โค้ดนักเรียน -->
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js" defer></script>
 </head>
 <body>
 
@@ -5171,8 +5173,71 @@
       <span class="sub" style="color:#FFE0FF;">⚠️ จะแทนที่ข้อมูลปัจจุบัน</span>
     </button>
 
+    <div style="border-top:1px dashed var(--cream-300);margin:18px 0 14px;"></div>
+
+    <div style="font-size:11px;color:var(--ink-soft);font-weight:700;margin-bottom:6px;letter-spacing:0.5px;">💳 Import บาร์โค้ดนักเรียน</div>
+    <button class="backup-btn" style="width:100%;background:linear-gradient(135deg,#5BA8E0,#2A7DC4);color:white;box-shadow:0 5px 0 #1A5A99,0 8px 14px rgba(42,125,196,0.3);" onclick="openBarcodeImport()">
+      <span class="ico">💳</span>
+      <span>Import บาร์โค้ดจาก Excel/CSV</span>
+      <span class="sub" style="color:#D6ECFC;">จับคู่กับชื่อนักเรียนในระบบ</span>
+    </button>
+
     <div class="actions" style="margin-top:14px;">
       <button class="btn btn-ghost" onclick="closeBackup()">ปิด</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============== IMPORT STUDENT BARCODES MODAL ============== -->
+<div class="modal-bg" id="barcodeImportModal" onclick="if(event.target===this)closeBarcodeImport()">
+  <div class="modal">
+    <div class="modal-close"></div>
+    <h3>💳 Import บาร์โค้ดนักเรียน</h3>
+
+    <div style="background:#E8F2FB;border-left:4px solid #2A7DC4;border-radius:12px;padding:12px;margin-bottom:14px;font-size:12px;line-height:1.6;">
+      <b style="color:#1A5A99;">📋 รูปแบบไฟล์ที่รองรับ:</b><br>
+      • Excel (.xlsx, .xls) หรือ CSV (.csv)<br>
+      • <b>คอลัมน์ A:</b> ชื่อนักเรียน (เช่น "เด็กชายสมชาย ใจดี")<br>
+      • <b>คอลัมน์ B:</b> บาร์โค้ด (เช่น 6512345001)<br>
+      • บรรทัดแรกเป็น header (จะข้าม) หรือไม่มีก็ได้
+    </div>
+
+    <label class="upload-btn" style="margin-bottom:12px;display:block;text-align:center;background:linear-gradient(135deg,#5BA8E0,#2A7DC4);color:white;padding:14px;border-radius:12px;cursor:pointer;font-weight:700;">
+      📂 เลือกไฟล์ Excel / CSV
+      <input type="file" id="barcodeImportFile" accept=".xlsx,.xls,.csv" style="display:none;" onchange="loadBarcodeImportFile(event)" />
+    </label>
+
+    <div id="barcodeImportPreview" style="display:none;">
+      <div style="background:#FFF8EE;border-radius:10px;padding:10px;margin-bottom:10px;font-size:13px;">
+        <b>📄 ไฟล์:</b> <span id="bcImpFileName">-</span><br>
+        <b>📊 อ่านได้:</b> <span id="bcImpStats">-</span>
+      </div>
+
+      <div id="bcImpSummary" style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;"></div>
+
+      <div style="max-height:300px;overflow-y:auto;border:1px solid var(--cream-300);border-radius:10px;background:white;">
+        <table style="width:100%;border-collapse:collapse;font-size:12px;">
+          <thead style="background:var(--cream-200);position:sticky;top:0;z-index:1;">
+            <tr>
+              <th style="padding:8px;text-align:left;border-bottom:1px solid var(--cream-400);">ชื่อในไฟล์</th>
+              <th style="padding:8px;text-align:left;border-bottom:1px solid var(--cream-400);">Barcode</th>
+              <th style="padding:8px;text-align:left;border-bottom:1px solid var(--cream-400);">สถานะ</th>
+            </tr>
+          </thead>
+          <tbody id="bcImpTableBody"></tbody>
+        </table>
+      </div>
+
+      <div style="font-size:11px;color:var(--ink-soft);margin-top:8px;">
+        💡 <b>✓ พบ</b> = จะอัปเดต · <b>⚠️ ทับ</b> = มี barcode อยู่แล้ว จะเขียนทับ · <b>❌ ไม่พบ</b> = ข้าม
+      </div>
+    </div>
+
+    <div class="actions" style="margin-top:14px;">
+      <button class="btn btn-ghost" onclick="closeBarcodeImport()">ยกเลิก</button>
+      <button class="btn btn-primary" id="bcImpConfirmBtn" onclick="executeBarcodeImport()" disabled style="flex:1;">
+        บันทึก
+      </button>
     </div>
   </div>
 </div>
@@ -9826,6 +9891,212 @@ function exportBackupCSV() {
   saveBlob(combined, `backup-สหกรณ์-${date}.csv`, 'text/csv;charset=utf-8;');
   logAudit('add_member', 'system', null, 'Export CSV backup', { stats: backup.stats });
   showToast('✅ ดาวน์โหลด CSV Backup เรียบร้อย');
+}
+
+// ============== IMPORT STUDENT BARCODES (Excel/CSV) ==============
+// Workflow: เลือกไฟล์ → parse → match ชื่อกับ members → preview → ยืนยัน → batch update DB
+
+let _bcImpParsedRows = []; // {rawName, barcode, member, status} หลัง match แล้ว
+
+// normalize ชื่อสำหรับ match — ตัด prefix (นาย/นาง/ด.ช./ด.ญ./เด็กชาย/เด็กหญิง), ช่องว่างซ้ำ, lowercase
+function normalizeNameForMatch(s) {
+  if (!s) return '';
+  let out = String(s).trim();
+  // ลบ prefix ภาษาไทยที่พบบ่อย
+  const prefixes = [
+    'เด็กชาย', 'เด็กหญิง', 'ด.ช.', 'ด.ญ.', 'ดช.', 'ดญ.',
+    'นาย', 'นาง', 'นางสาว', 'น.ส.', 'นส.',
+    'Mr.', 'Mrs.', 'Ms.', 'Miss', 'Mr ', 'Mrs ', 'Ms '
+  ];
+  for (const p of prefixes) {
+    if (out.startsWith(p)) { out = out.slice(p.length).trim(); break; }
+  }
+  // collapse whitespace + ลบ space ระหว่างคำไทย (ชื่อไทยมักเว้น space ระหว่างชื่อ-นามสกุล แต่บางครั้งก็ไม่)
+  out = out.replace(/\s+/g, ' ').trim().toLowerCase();
+  return out;
+}
+
+function openBarcodeImport() {
+  if (!isTeacher()) { showToast('เฉพาะครูเท่านั้น', true); return; }
+  // reset state
+  _bcImpParsedRows = [];
+  document.getElementById('barcodeImportFile').value = '';
+  document.getElementById('barcodeImportPreview').style.display = 'none';
+  document.getElementById('bcImpConfirmBtn').disabled = true;
+  document.getElementById('bcImpConfirmBtn').textContent = 'บันทึก';
+  document.getElementById('barcodeImportModal').classList.add('show');
+}
+
+function closeBarcodeImport() {
+  document.getElementById('barcodeImportModal').classList.remove('show');
+}
+
+async function loadBarcodeImportFile(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  if (typeof XLSX === 'undefined') {
+    showToast('Library ยังโหลดไม่เสร็จ — รอสักครู่แล้วลองใหม่', true);
+    return;
+  }
+
+  document.getElementById('bcImpFileName').textContent = file.name;
+
+  try {
+    const buf = await file.arrayBuffer();
+    const wb = XLSX.read(buf, { type: 'array' });
+    const sheet = wb.Sheets[wb.SheetNames[0]];
+    // อ่านเป็น array of arrays (header:1) → ง่ายต่อการเช็คคอลัมน์
+    const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+
+    // skip header row อัตโนมัติ — ถ้า row แรกมี "ชื่อ"/"name"/"barcode"/"บาร์โค้ด"
+    let startIdx = 0;
+    if (rows.length > 0) {
+      const firstRow = (rows[0] || []).map(c => String(c).toLowerCase());
+      const looksLikeHeader = firstRow.some(c =>
+        /ชื่อ|name|บาร์โค้ด|barcode/.test(c));
+      if (looksLikeHeader) startIdx = 1;
+    }
+
+    // build parsed entries
+    const entries = [];
+    for (let i = startIdx; i < rows.length; i++) {
+      const r = rows[i] || [];
+      const rawName = String(r[0] || '').trim();
+      const barcode = String(r[1] || '').trim();
+      if (!rawName && !barcode) continue;
+      entries.push({ rawName, barcode });
+    }
+
+    if (!entries.length) {
+      showToast('ไม่พบข้อมูลในไฟล์', true);
+      return;
+    }
+
+    // Match กับ members
+    const normMap = new Map(); // normalized name → [member]
+    members.forEach(m => {
+      const k = normalizeNameForMatch(m.name);
+      if (!normMap.has(k)) normMap.set(k, []);
+      normMap.get(k).push(m);
+    });
+
+    _bcImpParsedRows = entries.map(e => {
+      const matches = normMap.get(normalizeNameForMatch(e.rawName)) || [];
+      let status, member = null;
+      if (!e.rawName) {
+        status = 'no-name';
+      } else if (!e.barcode) {
+        status = 'no-barcode';
+      } else if (matches.length === 0) {
+        status = 'not-found';
+      } else if (matches.length > 1) {
+        status = 'ambiguous';
+        member = matches[0]; // เลือกอันแรก แต่ user เห็น warning
+      } else {
+        member = matches[0];
+        status = member.barcode && member.barcode !== e.barcode
+          ? 'overwrite'
+          : 'ok';
+      }
+      return { ...e, status, member };
+    });
+
+    renderBarcodeImportPreview();
+  } catch (e) {
+    console.error('parse Excel/CSV failed', e);
+    showToast('อ่านไฟล์ไม่สำเร็จ: ' + (e.message || e), true);
+  }
+}
+
+function renderBarcodeImportPreview() {
+  document.getElementById('barcodeImportPreview').style.display = 'block';
+
+  const total = _bcImpParsedRows.length;
+  const stats = {
+    ok: 0, overwrite: 0, notFound: 0, ambiguous: 0, missing: 0
+  };
+  _bcImpParsedRows.forEach(r => {
+    if (r.status === 'ok') stats.ok++;
+    else if (r.status === 'overwrite') stats.overwrite++;
+    else if (r.status === 'not-found') stats.notFound++;
+    else if (r.status === 'ambiguous') stats.ambiguous++;
+    else stats.missing++;
+  });
+  document.getElementById('bcImpStats').textContent = `${total} แถว`;
+
+  const sum = document.getElementById('bcImpSummary');
+  sum.innerHTML = `
+    <span style="background:#D4EDDA;color:#155724;padding:5px 10px;border-radius:12px;font-size:12px;font-weight:700;">✓ พร้อม ${stats.ok}</span>
+    <span style="background:#FFF3CD;color:#856404;padding:5px 10px;border-radius:12px;font-size:12px;font-weight:700;">⚠️ ทับของเก่า ${stats.overwrite}</span>
+    <span style="background:#F8D7DA;color:#721C24;padding:5px 10px;border-radius:12px;font-size:12px;font-weight:700;">❌ ไม่พบ ${stats.notFound}</span>
+    ${stats.ambiguous ? `<span style="background:#FFE5B4;color:#7A5020;padding:5px 10px;border-radius:12px;font-size:12px;font-weight:700;">⚠️ ซ้ำ ${stats.ambiguous}</span>` : ''}
+    ${stats.missing ? `<span style="background:#E5E5E5;color:#666;padding:5px 10px;border-radius:12px;font-size:12px;font-weight:700;">⊘ ข้าม ${stats.missing}</span>` : ''}
+  `;
+
+  const tbody = document.getElementById('bcImpTableBody');
+  tbody.innerHTML = _bcImpParsedRows.map((r, i) => {
+    let badge, bgColor;
+    if (r.status === 'ok') { badge = '✓ พบ → ' + (r.member?.code || ''); bgColor = '#F0F9F2'; }
+    else if (r.status === 'overwrite') { badge = `⚠️ ทับ (เดิม: ${r.member?.barcode})`; bgColor = '#FFFCEF'; }
+    else if (r.status === 'not-found') { badge = '❌ ไม่พบ'; bgColor = '#FFF5F5'; }
+    else if (r.status === 'ambiguous') { badge = `⚠️ ซ้ำ ${r.member ? 'จะใช้: '+r.member.code : ''}`; bgColor = '#FFF7E8'; }
+    else if (r.status === 'no-name') { badge = '⊘ ไม่มีชื่อ'; bgColor = '#F5F5F5'; }
+    else { badge = '⊘ ไม่มี barcode'; bgColor = '#F5F5F5'; }
+    return `<tr style="background:${bgColor};">
+      <td style="padding:6px 8px;border-bottom:1px solid var(--cream-200);">${escapeHtml(r.rawName || '—')}</td>
+      <td style="padding:6px 8px;border-bottom:1px solid var(--cream-200);font-family:monospace;">${escapeHtml(r.barcode || '—')}</td>
+      <td style="padding:6px 8px;border-bottom:1px solid var(--cream-200);font-size:11px;">${badge}</td>
+    </tr>`;
+  }).join('');
+
+  const willUpdate = stats.ok + stats.overwrite + stats.ambiguous;
+  const btn = document.getElementById('bcImpConfirmBtn');
+  btn.disabled = willUpdate === 0;
+  btn.textContent = willUpdate > 0 ? `บันทึก ${willUpdate} รายการ` : 'ไม่มีรายการที่อัปเดตได้';
+}
+
+// Helper: HTML escape (เผื่อชื่อมี < > &)
+function escapeHtml(s) {
+  return String(s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+async function executeBarcodeImport() {
+  if (!sb) { showToast('ยังไม่ได้เชื่อมต่อฐานข้อมูล', true); return; }
+  const btn = document.getElementById('bcImpConfirmBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ กำลังบันทึก...';
+
+  // เลือกเฉพาะ row ที่ update ได้
+  const toUpdate = _bcImpParsedRows.filter(r =>
+    r.member && r.barcode && (r.status === 'ok' || r.status === 'overwrite' || r.status === 'ambiguous')
+  );
+
+  let success = 0, failed = 0;
+  for (const row of toUpdate) {
+    try {
+      const { error } = await sb.from('members')
+        .update({ barcode: row.barcode })
+        .eq('id', row.member.id);
+      if (error) throw error;
+      // update local
+      row.member.barcode = row.barcode;
+      success++;
+    } catch (e) {
+      console.error('update barcode failed for', row.member.name, e);
+      failed++;
+    }
+  }
+
+  rebuildMemberBarcodeMap();
+  closeBarcodeImport();
+
+  if (failed === 0) {
+    showToast(`✅ อัปเดตบาร์โค้ด ${success} นักเรียนเรียบร้อย`);
+  } else {
+    showToast(`อัปเดตสำเร็จ ${success} · ล้มเหลว ${failed}`, failed > success);
+  }
 }
 
 // ============== IMPORT BACKUP ==============

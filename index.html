@@ -4898,6 +4898,7 @@
       </div>
       <button class="change-btn" onclick="openBuyerPicker()">เปลี่ยน</button>
     </div>
+    <div style="font-size:11px;color:var(--ink-soft);margin:-6px 0 10px 4px;">💳 สแกนบัตรนักเรียนเพื่อระบุผู้ซื้ออัตโนมัติ</div>
 
     <div class="total-display">
       <div class="lbl">ยอดที่ต้องชำระ</div>
@@ -7796,20 +7797,41 @@ function handleScan(rawCode) {
   // แปล Thai layout → US layout ก่อนใช้
   const code = translateThaiKeys(rawCode);
 
-  // 1) Product modal เปิดอยู่ → เพิ่ม barcode ลงในรายการ
+  // 1) Pay modal เปิดอยู่ → สแกนบัตรนักเรียน → ตั้งเป็นผู้ซื้อ
+  const payModal = document.getElementById('payModal');
+  if (payModal && payModal.classList.contains('show')) {
+    setBuyerByBarcode(code);
+    return;
+  }
+  // 2) Product modal เปิดอยู่ → เพิ่ม barcode สินค้าลงในรายการ
   const pModal = document.getElementById('productModal');
   if (pModal && pModal.classList.contains('show')) {
     addBarcodeToList(code);
     beep(true);
     return;
   }
-  // 2) อยู่ POS view → auto add to cart
+  // 3) Buyer picker modal เปิดอยู่ → สแกนบัตรเพื่อเลือกผู้ซื้อ
+  const buyerModal = document.getElementById('buyerPickerModal');
+  if (buyerModal && buyerModal.classList.contains('show')) {
+    const m = findMemberByBarcode(code);
+    if (m) {
+      setBuyer(m);
+      closeBuyerPicker();
+      beep(true);
+      showToast(`👤 ผู้ซื้อ: ${m.name}`);
+    } else {
+      beep(false);
+      showToast(`❌ ไม่พบนักเรียน barcode: ${code}`, true);
+    }
+    return;
+  }
+  // 4) อยู่ POS view → auto add to cart
   const posView = document.getElementById('view-pos');
   if (posView && posView.classList.contains('active')) {
     addToCartByBarcode(code);
     return;
   }
-  // 3) อื่นๆ → ignore เงียบๆ
+  // 5) อื่นๆ → ignore เงียบๆ
 }
 
 // Map: barcode → product_id (สร้างจาก p.barcodes[] ของทุกสินค้า)
@@ -7823,6 +7845,34 @@ function findProductByBarcode(code) {
   if (!code) return null;
   const pid = barcodeMap.get(code);
   return pid ? (products.find(p => p.id === pid) || null) : null;
+}
+
+// Map: barcode → member_id (บัตรนักเรียน)
+const memberBarcodeMap = new Map();
+function rebuildMemberBarcodeMap() {
+  memberBarcodeMap.clear();
+  members.forEach(m => {
+    if (m.barcode) memberBarcodeMap.set(m.barcode, m.id);
+  });
+}
+
+function findMemberByBarcode(code) {
+  if (!code) return null;
+  const mid = memberBarcodeMap.get(code);
+  return mid ? (members.find(m => m.id === mid) || null) : null;
+}
+
+// เรียกเมื่อสแกนบัตรนักเรียนตอน pay modal เปิดอยู่
+function setBuyerByBarcode(code) {
+  const m = findMemberByBarcode(code);
+  if (m) {
+    setBuyer(m);
+    beep(true);
+    showToast(`👤 ผู้ซื้อ: ${m.name}${m.class ? ' · ' + m.class : ''}`);
+  } else {
+    beep(false);
+    showToast(`❌ ไม่พบนักเรียนที่มี barcode: ${code}`, true);
+  }
 }
 
 // ===== Barcode list editing ภายใน product modal =====
@@ -8511,8 +8561,10 @@ async function loadFromCloud() {
         id: m.id, code: m.code, name: m.name, class: m.class,
         avatar: m.avatar || m.name.charAt(2), color: m.color || 1,
         role: m.role || 'student',
-        pin: m.pin || null
+        pin: m.pin || null,
+        barcode: m.barcode || null
       }));
+      rebuildMemberBarcodeMap();
     }
     // sales (with items, last 365 days) — include void fields
     const since = new Date(); since.setDate(since.getDate() - 365);
@@ -10358,17 +10410,25 @@ async function sbSaveMember(m, isNew) {
       const { data, error } = await sb.from('members').insert({
         code: m.code, name: m.name, class: m.class,
         avatar: m.avatar, color: m.color, role: m.role,
-        pin: m.role === 'teacher' ? '9999' : '1234'
+        pin: m.role === 'teacher' ? '9999' : '1234',
+        barcode: m.barcode || null
       }).select().single();
       if (error) throw error;
       m.id = data.id;
     } else {
       await sb.from('members').update({
         code: m.code, name: m.name, class: m.class,
-        avatar: m.avatar, color: m.color, role: m.role
+        avatar: m.avatar, color: m.color, role: m.role,
+        barcode: m.barcode || null
       }).eq('id', m.id);
     }
-  } catch (e) { console.error('saveMember', e); }
+    rebuildMemberBarcodeMap();
+  } catch (e) {
+    console.error('saveMember', e);
+    if (e && (e.code === '23505' || /duplicate/i.test(e.message || ''))) {
+      showToast('บาร์โค้ดบัตรนักเรียนซ้ำกับคนอื่น', true);
+    }
+  }
 }
 
 async function sbDeleteMember(id) {

@@ -83,6 +83,10 @@ create table if not exists members (
 );
 -- อัปเกรดตารางเดิมถ้ายังไม่มี role
 alter table members add column if not exists role text default 'student';
+-- บาร์โค้ดบัตรนักเรียน (สำหรับสแกนตอนชำระเงิน → ระบุผู้ซื้อ)
+alter table members add column if not exists barcode text;
+create unique index if not exists members_barcode_uniq
+  on members(barcode) where barcode is not null;
 
 -- 3. SALES (header)
 create table if not exists sales (

@@ -128,20 +128,41 @@
   }
 
   .signature {
-    margin-top: 16px;
+    margin-top: 18px;
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 30px;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 20px;
     page-break-inside: avoid;
   }
   .sig-col {
     text-align: center;
-    font-size: 11.5px;
+    font-size: 11px;
   }
-  .sig-line {
-    margin-top: 35px;
-    border-top: 1px dotted #4A3F30;
-    padding-top: 4px;
+  .sig-col .role {
+    font-weight: 800;
+    color: #174740;
+    background: #C8E8DD;
+    border-radius: 6px;
+    padding: 4px;
+    margin-bottom: 8px;
+    font-size: 11px;
+  }
+  .sig-box {
+    height: 50px;
+    border-bottom: 1px dotted #4A3F30;
+    margin-bottom: 4px;
+  }
+  .sig-fld {
+    margin-top: 8px;
+    text-align: left;
+    font-size: 11px;
+  }
+  .sig-fld .lbl { color: #4A3F30; font-weight: 600; }
+  .sig-fld .blank-line {
+    display: inline-block;
+    width: 100%;
+    border-bottom: 1px dotted #6B5E4C;
+    height: 16px;
   }
 
   .ft {
@@ -371,12 +392,28 @@
   <!-- ===== ลายเซ็น ===== -->
   <div class="signature">
     <div class="sig-col">
-      <div class="sig-line">ลงชื่อ ........................................... ผู้ประเมิน</div>
-      <div>วันที่ ........./........./.........</div>
+      <div class="role">ผู้ประเมิน</div>
+      <div class="sig-box"></div>
+      <div style="font-size:10px;color:#6B5E4C;">(เซ็นชื่อ)</div>
+      <div class="sig-fld"><span class="lbl">ชื่อ-สกุล:</span><div class="blank-line"></div></div>
+      <div class="sig-fld"><span class="lbl">ตำแหน่ง:</span><div class="blank-line"></div></div>
+      <div class="sig-fld"><span class="lbl">วันที่:</span><div class="blank-line"></div></div>
     </div>
     <div class="sig-col">
-      <div class="sig-line">ลงชื่อ ........................................... ผู้รับแบบประเมิน</div>
-      <div>วันที่ ........./........./.........</div>
+      <div class="role">ผู้รับการประเมิน</div>
+      <div class="sig-box"></div>
+      <div style="font-size:10px;color:#6B5E4C;">(เซ็นชื่อ)</div>
+      <div class="sig-fld"><span class="lbl">ชื่อ-สกุล:</span><div class="blank-line"></div></div>
+      <div class="sig-fld"><span class="lbl">ตำแหน่ง:</span><div class="blank-line"></div></div>
+      <div class="sig-fld"><span class="lbl">วันที่:</span><div class="blank-line"></div></div>
+    </div>
+    <div class="sig-col">
+      <div class="role">ผู้รับรอง / อนุมัติ</div>
+      <div class="sig-box"></div>
+      <div style="font-size:10px;color:#6B5E4C;">(เซ็นชื่อ)</div>
+      <div class="sig-fld"><span class="lbl">ชื่อ-สกุล:</span><div class="blank-line"></div></div>
+      <div class="sig-fld"><span class="lbl">ตำแหน่ง:</span><div class="blank-line"></div></div>
+      <div class="sig-fld"><span class="lbl">วันที่:</span><div class="blank-line"></div></div>
     </div>
   </div>
 

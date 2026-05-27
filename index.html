@@ -4382,6 +4382,7 @@
         </div>
       </div>
       <div style="display:flex;gap:8px;align-items:center;">
+        <button id="pendingSyncBadge" onclick="retryPendingSales(false);showToast('🔄 กำลัง sync บิลที่ค้าง...');" style="display:none;background:linear-gradient(135deg,#FFB07A,#E8804D);color:white;border:none;border-radius:14px;padding:6px 12px;font-family:inherit;font-weight:700;font-size:11px;cursor:pointer;box-shadow:0 2px 0 #B85A28;align-items:center;gap:4px;" title="คลิกเพื่อ retry บิลที่ยังไม่ sync"></button>
         <button class="icon-btn bell-btn" id="notiBtn" onclick="openNotifications()" aria-label="การแจ้งเตือน">
           📬
           <span class="bell-badge" id="notiBadge" style="display:none;">0</span>
@@ -8729,9 +8730,193 @@ async function loadFromCloud() {
   }
 }
 
-// === WRITE HELPERS (fire-and-forget, non-blocking UI) ===
-async function sbSaveSale(sale) {
+// === WRITE HELPERS (with retry queue — บิลจะไม่หายแม้เน็ตหลุด) ===
+
+// ============== PENDING SALES RETRY QUEUE (IndexedDB) ==============
+// ถ้า sbSaveSale fail → เก็บลง IndexedDB → retry อัตโนมัติเมื่อเน็ตกลับมา/เปิดแอป
+const PENDING_DB_NAME = 'coopSync';
+const PENDING_STORE = 'pendingSales';
+let _pendingDb = null;
+
+function openPendingDb() {
+  if (_pendingDb) return Promise.resolve(_pendingDb);
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(PENDING_DB_NAME, 1);
+    req.onupgradeneeded = () => {
+      const db = req.result;
+      if (!db.objectStoreNames.contains(PENDING_STORE)) {
+        db.createObjectStore(PENDING_STORE, { keyPath: 'queueId', autoIncrement: true });
+      }
+    };
+    req.onsuccess = () => { _pendingDb = req.result; resolve(_pendingDb); };
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function addToPendingQueue(sale) {
+  try {
+    const db = await openPendingDb();
+    return new Promise((res, rej) => {
+      const tx = db.transaction(PENDING_STORE, 'readwrite');
+      const item = {
+        sale: serializeSale(sale),
+        attempts: 0,
+        createdAt: Date.now(),
+        lastError: null
+      };
+      const r = tx.objectStore(PENDING_STORE).add(item);
+      r.onsuccess = () => { updatePendingBadge(); res(r.result); };
+      r.onerror = () => rej(r.error);
+    });
+  } catch (e) { console.error('addToPendingQueue', e); }
+}
+
+async function getPendingSales() {
+  try {
+    const db = await openPendingDb();
+    return new Promise((res, rej) => {
+      const tx = db.transaction(PENDING_STORE, 'readonly');
+      const r = tx.objectStore(PENDING_STORE).getAll();
+      r.onsuccess = () => res(r.result || []);
+      r.onerror = () => rej(r.error);
+    });
+  } catch (e) { console.error('getPendingSales', e); return []; }
+}
+
+async function removePending(queueId) {
+  try {
+    const db = await openPendingDb();
+    return new Promise((res) => {
+      const tx = db.transaction(PENDING_STORE, 'readwrite');
+      tx.objectStore(PENDING_STORE).delete(queueId);
+      tx.oncomplete = () => { updatePendingBadge(); res(); };
+    });
+  } catch (e) { console.error('removePending', e); }
+}
+
+async function updatePendingEntry(queueId, updates) {
+  try {
+    const db = await openPendingDb();
+    return new Promise((res) => {
+      const tx = db.transaction(PENDING_STORE, 'readwrite');
+      const store = tx.objectStore(PENDING_STORE);
+      const r = store.get(queueId);
+      r.onsuccess = () => {
+        const item = r.result;
+        if (item) {
+          Object.assign(item, updates);
+          store.put(item);
+        }
+        res();
+      };
+    });
+  } catch (e) { console.error('updatePendingEntry', e); }
+}
+
+// แปลง sale object → format ที่ใส่ DB ได้ (Date → ISO string)
+function serializeSale(sale) {
+  return {
+    seller: sale.seller,
+    sellerId: sale.sellerId,
+    buyerId: sale.buyerId,
+    buyerName: sale.buyerName,
+    total: sale.total,
+    date: sale.date instanceof Date ? sale.date.toISOString() : sale.date,
+    items: sale.items.map(i => ({
+      id: i.id, name: i.name, emoji: i.emoji,
+      price: i.price, cost: i.cost || 0, qty: i.qty
+    })),
+    localId: sale.id // เก็บไว้ match กลับใน local memory
+  };
+}
+
+let _retrying = false;
+async function retryPendingSales(silent = false) {
+  if (_retrying) return;
   if (!sb) return;
+  _retrying = true;
+  try {
+    const pending = await getPendingSales();
+    if (!pending.length) { _retrying = false; return; }
+
+    if (!silent) console.log(`🔄 พยายาม sync ${pending.length} บิลที่ค้าง...`);
+
+    let success = 0, failed = 0;
+    for (const entry of pending) {
+      try {
+        const s = entry.sale;
+        const { data: row, error } = await sb.from('sales').insert({
+          seller_name: s.seller,
+          buyer_id: s.buyerId || null,
+          buyer_name: s.buyerName || null,
+          total: s.total,
+          date: s.date
+        }).select().single();
+        if (error) throw error;
+
+        await sb.from('sale_items').insert(
+          s.items.map(i => ({
+            sale_id: row.id, product_id: i.id,
+            name: i.name, emoji: i.emoji, price: i.price, cost: i.cost || 0, qty: i.qty
+          }))
+        );
+
+        // update local sale id (ถ้ายังอยู่ใน memory)
+        if (s.localId) {
+          const localSale = sales.find(x => x.id === s.localId);
+          if (localSale) localSale.id = row.id;
+        }
+
+        await removePending(entry.queueId);
+        success++;
+      } catch (e) {
+        await updatePendingEntry(entry.queueId, {
+          attempts: (entry.attempts || 0) + 1,
+          lastError: e.message || String(e)
+        });
+        failed++;
+        console.warn(`Retry บิล queueId=${entry.queueId} fail:`, e.message);
+      }
+    }
+
+    if (success > 0 && !silent) {
+      showToast(`✅ Sync ${success} บิลที่ค้างเรียบร้อย${failed ? ` (ยังเหลือ ${failed})` : ''}`);
+    }
+  } finally {
+    _retrying = false;
+  }
+}
+
+function updatePendingBadge() {
+  getPendingSales().then(list => {
+    const badge = document.getElementById('pendingSyncBadge');
+    if (!badge) return;
+    if (!list.length) {
+      badge.style.display = 'none';
+    } else {
+      badge.style.display = 'inline-flex';
+      badge.textContent = `🔄 รอ sync ${list.length}`;
+      badge.title = `มี ${list.length} บิลยังไม่ได้บันทึก cloud — คลิกเพื่อ retry ทันที`;
+    }
+  });
+}
+
+// Auto-retry triggers
+window.addEventListener('online', () => {
+  console.log('🌐 เน็ตกลับมา — ลอง sync บิลที่ค้าง');
+  retryPendingSales();
+});
+// Periodic retry every 60s
+setInterval(() => retryPendingSales(true), 60000);
+// On startup — show badge ทันทีถ้ามี pending จาก session ก่อน
+setTimeout(() => { updatePendingBadge(); retryPendingSales(true); }, 1500);
+
+// ============== sbSaveSale with queue fallback ==============
+async function sbSaveSale(sale) {
+  if (!sb) {
+    await addToPendingQueue(sale);
+    return;
+  }
   try {
     const { data: row, error } = await sb.from('sales')
       .insert({
@@ -8744,18 +8929,23 @@ async function sbSaveSale(sale) {
       .select().single();
     if (error) throw error;
     sale.id = row.id;
-    await sb.from('sale_items').insert(
+    const { error: itErr } = await sb.from('sale_items').insert(
       sale.items.map(i => ({
         sale_id: row.id, product_id: i.id,
         name: i.name, emoji: i.emoji, price: i.price, cost: i.cost || 0, qty: i.qty
       }))
     );
+    if (itErr) throw itErr;
     // update product stock
     for (const it of sale.items) {
       const p = products.find(x => x.id === it.id);
       if (p) await sb.from('products').update({ stock: p.stock }).eq('id', it.id);
     }
-  } catch (e) { console.error('saveSale failed', e); }
+  } catch (e) {
+    console.error('saveSale failed → queueing for retry', e);
+    await addToPendingQueue(sale);
+    showToast(`⚠️ บิล ฿${sale.total} ยังไม่ sync — จะลองใหม่อัตโนมัติ`, true);
+  }
 }
 
 async function sbSaveProduct(p, isNew) {

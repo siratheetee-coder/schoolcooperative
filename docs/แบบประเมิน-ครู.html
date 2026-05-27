@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<title>แบบประเมินความพึงพอใจ — ครู</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  @page { size: A4; margin: 12mm 12mm; }
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Sarabun', sans-serif;
+    color: #1A1A1A;
+    margin: 0; padding: 0;
+    background: #fff;
+    font-size: 12.5px;
+    line-height: 1.45;
+  }
+  .form-wrap { max-width: 800px; margin: 0 auto; padding: 12px; }
+
+  .head {
+    display: flex; align-items: center; gap: 14px;
+    padding-bottom: 10px; border-bottom: 3px double #2D7D6F;
+    margin-bottom: 12px;
+  }
+  .head .logo {
+    width: 64px; height: 64px;
+    background: #2D7D6F;
+    color: white;
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 32px;
+    flex-shrink: 0;
+  }
+  .head .ttl { flex: 1; }
+  .head h1 { font-size: 17px; margin: 0 0 2px; color: #174740; font-weight: 800; }
+  .head .sub { font-size: 12px; color: #4A3F30; font-weight: 600; }
+  .head .form-id {
+    font-size: 10px; color: #6B5E4C;
+    text-align: right; line-height: 1.3;
+  }
+
+  .meta {
+    background: #FFFBF3;
+    border: 1px solid #E8D6B3;
+    border-radius: 10px;
+    padding: 10px 14px;
+    margin-bottom: 12px;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 8px 14px;
+  }
+  .meta .fld { display: flex; align-items: baseline; gap: 6px; font-size: 12px; }
+  .meta .lbl { font-weight: 700; color: #2A2218; white-space: nowrap; }
+  .meta .blank {
+    flex: 1;
+    border-bottom: 1.2px dotted #6B5E4C;
+    min-height: 16px;
+  }
+
+  .section { margin-bottom: 12px; page-break-inside: avoid; }
+  .section h2 {
+    font-size: 13.5px; font-weight: 800; color: #174740;
+    background: linear-gradient(90deg, #C8E8DD, transparent);
+    padding: 6px 12px; border-left: 5px solid #2D7D6F;
+    border-radius: 4px;
+    margin: 0 0 8px;
+  }
+  .instruct {
+    font-size: 11px; color: #4A3F30;
+    background: #FFF8E6;
+    border-left: 3px solid #E8A22A;
+    padding: 6px 10px;
+    border-radius: 4px;
+    margin-bottom: 8px;
+  }
+
+  table.likert { width: 100%; border-collapse: collapse; font-size: 11.5px; }
+  table.likert thead th {
+    background: #2D7D6F; color: white;
+    padding: 6px 5px;
+    font-weight: 700;
+    border: 1px solid #1F5F55;
+    text-align: center;
+  }
+  table.likert thead th.q-col { text-align: left; padding-left: 10px; }
+  table.likert thead th.scale {
+    width: 50px; font-size: 10.5px;
+    line-height: 1.2;
+  }
+  table.likert tbody td {
+    padding: 6px 5px;
+    border: 1px solid #E8D6B3;
+    background: #FFFBF3;
+    vertical-align: middle;
+  }
+  table.likert tbody tr:nth-child(even) td { background: #FFF8EE; }
+  table.likert tbody td.q { padding-left: 10px; }
+  table.likert tbody td.q .num {
+    display: inline-block;
+    width: 20px; height: 20px;
+    background: #2D7D6F; color: white;
+    text-align: center; line-height: 20px;
+    border-radius: 50%;
+    font-weight: 800; font-size: 10.5px;
+    margin-right: 6px;
+  }
+  table.likert tbody td.chk {
+    text-align: center;
+  }
+  .chk-box {
+    display: inline-block;
+    width: 16px; height: 16px;
+    border: 1.5px solid #4A3F30;
+    border-radius: 4px;
+    vertical-align: middle;
+  }
+
+  .open-q { margin-top: 10px; }
+  .open-q .q-text {
+    font-weight: 700; color: #174740;
+    margin-bottom: 4px; font-size: 12px;
+  }
+  .open-q .lines {
+    border: 1px solid #E8D6B3;
+    background: #FFFBF3;
+    border-radius: 6px;
+    padding: 6px 12px;
+    background-image: repeating-linear-gradient(transparent, transparent 20px, #E8D6B3 20px, #E8D6B3 21px);
+    min-height: 80px;
+  }
+
+  .signature {
+    margin-top: 16px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    page-break-inside: avoid;
+  }
+  .sig-col {
+    text-align: center;
+    font-size: 11.5px;
+  }
+  .sig-line {
+    margin-top: 35px;
+    border-top: 1px dotted #4A3F30;
+    padding-top: 4px;
+  }
+
+  .ft {
+    margin-top: 14px;
+    text-align: center;
+    font-size: 10px;
+    color: #6B5E4C;
+    border-top: 1px dashed #E8D6B3;
+    padding-top: 8px;
+  }
+  .thank {
+    text-align: center;
+    background: linear-gradient(135deg, #2D7D6F, #1F5F55);
+    color: white;
+    padding: 10px;
+    border-radius: 8px;
+    font-weight: 700;
+    margin-top: 12px;
+    font-size: 13px;
+  }
+
+  @media print {
+    body { background: white; }
+    .no-print { display: none !important; }
+  }
+  .no-print {
+    position: fixed; top: 12px; right: 12px;
+    background: #2D7D6F; color: white;
+    border: none; border-radius: 10px;
+    padding: 10px 18px; cursor: pointer;
+    font-family: inherit; font-weight: 700;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    font-size: 14px;
+  }
+</style>
+</head>
+<body>
+<button class="no-print" onclick="window.print()">🖨️ พิมพ์ / Save PDF</button>
+
+<div class="form-wrap">
+
+  <div class="head">
+    <div class="logo">🏫</div>
+    <div class="ttl">
+      <h1>แบบประเมินความพึงพอใจระบบสหกรณ์โรงเรียนดิจิทัล</h1>
+      <div class="sub">สำหรับ <b>ครู</b> · ระบบ POS · จัดการสต็อก · หุ้น/ปันผล · รายงาน</div>
+    </div>
+    <div class="form-id">
+      เลขที่ ......./.......<br>
+      วันที่ ........./........./.........
+    </div>
+  </div>
+
+  <div class="meta">
+    <div class="fld"><span class="lbl">ตำแหน่ง/หน้าที่:</span><span class="blank"></span></div>
+    <div class="fld"><span class="lbl">ระยะเวลาที่ใช้ระบบ:</span><span class="blank"></span> เดือน</div>
+    <div class="fld"><span class="lbl">เพศ:</span><span class="blank"></span></div>
+    <div class="fld"><span class="lbl">อายุ:</span><span class="blank"></span> ปี</div>
+  </div>
+
+  <div class="instruct">
+    <b>คำชี้แจง:</b> ทำเครื่องหมาย ✓ ในช่องที่ตรงกับความคิดเห็นของท่านมากที่สุด<br>
+    <b>5</b> = มากที่สุด · <b>4</b> = มาก · <b>3</b> = ปานกลาง · <b>2</b> = น้อย · <b>1</b> = น้อยที่สุด
+  </div>
+
+  <!-- ===== ตอนที่ 1: ด้านการใช้งาน ===== -->
+  <div class="section">
+    <h2>ตอนที่ 1 · ด้านการใช้งานระบบ (Usability)</h2>
+    <table class="likert">
+      <thead>
+        <tr>
+          <th class="q-col" style="width: 55%;">รายการประเมิน</th>
+          <th class="scale">5<br>มากที่สุด</th>
+          <th class="scale">4<br>มาก</th>
+          <th class="scale">3<br>ปานกลาง</th>
+          <th class="scale">2<br>น้อย</th>
+          <th class="scale">1<br>น้อยที่สุด</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="q"><span class="num">1</span>ระบบใช้งานง่าย ไม่ซับซ้อน เรียนรู้ได้ในเวลาสั้น</td>
+          <td class="chk"><span class="chk-box"></span></td><td class="chk"><span class="chk-box"></span></td>
+          <td class="chk"><span class="chk-box"></span></td><td class="chk"><span class="chk-box"></span></td>
+          <td class="chk"><span class="chk-box"></span></td>
+        </tr>
+        <tr>
+          <td class="q"><span class="num">2</span>การออกแบบหน้าจอสวยงาม เป็นระเบียบ</td>
+          <td class="chk"><span class="chk-box"></span></td><td class="chk"><span class="chk-box"></span></td>
+          <td class="chk"><span class="chk-box"></span></td><td class="chk"><span class="chk-box"></span></td>
+          <td class="chk"><span class="chk-box"></span></td>
+        </tr>
+        <tr>
+          <td class="q"><span class="num">3</span>การสแกนบาร์โค้ดสะดวก รวดเร็ว</td>
+          <td class="chk"><span class="chk-box"></span></td><td class="chk"><span class="chk-box"></span></td>
+          <td class="chk"><span class="chk-box"></span></td><td class="chk"><span class="chk-box"></span></td>
+          <td class="chk"><span class="chk-box"></span></td>
+        </tr>
+        <tr>
+          <td class="q"><span class="num">4</span>การเพิ่ม/แก้ไขสินค้าและสมาชิกทำได้ง่าย</td>
+          <td class="chk"><span class="chk-box"></span></td><td class="chk"><span class="chk-box"></span></td>
+          <td class="chk"><span class="chk-box"></span></td><td class="chk"><span class="chk-box"></span></td>
+          <td class="chk"><span class="chk-box"></span></td>
+        </tr>
+        <tr>
+          <td class="q"><span class="num">5</span>ระบบทำงานเสถียร ไม่ค้าง ไม่ล่ม</td>
+          <td class="chk"><span class="chk-box"></span></td><td class="chk"><span class="chk-box"></span></td>
+          <td class="chk"><span class="chk-box"></span></td><td class="chk"><span class="chk-box"></span></td>
+          <td class="chk"><span class="chk-box"></span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ===== ตอนที่ 2: ด้านประสิทธิภาพ ===== -->
+  <div class="section">
+    <h2>ตอนที่ 2 · ด้านประสิทธิภาพและประโยชน์ (Effectiveness)</h2>
+    <table class="likert">
+      <thead>
+        <tr>
+          <th class="q-col" style="width: 55%;">รายการประเมิน</th>
+          <th class="scale">5</th><th class="scale">4</th><th class="scale">3</th>
+          <th class="scale">2</th><th class="scale">1</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="q"><span class="num">6</span>ลดเวลาในการขาย/คิดเงินเมื่อเทียบกับระบบเดิม</td>
+          <td class="chk"><span class="chk-box"></span></td><td class="chk"><span class="chk-box"></span></td>
+          <td class="chk"><span class="chk-box"></span></td><td class="chk"><span class="chk-box"></span></td>
+          <td class="chk"><span class="chk-box"></span></td>
+        </tr>
+        <tr>
+          <td class="q"><span class="num">7</span>ลดเวลาในการเช็คสต็อก / นับของ</td>
+          <td class="chk"><span class="chk-box"></span></td><td class="chk"><span class="chk-box"></span></td>
+          <td class="chk"><span class="chk-box"></span></td><td class="chk"><span class="chk-box"></span></td>
+          <td class="chk"><span class="chk-box"></span></td>
+        </tr>
+        <tr>
+          <td class="q"><span class="num">8</span>รายงานยอดขาย/กำไรถูกต้อง แม่นยำ</td>
+          <td class="chk"><span class="chk-box"></span></td><td class="chk"><span class="chk-box"></span></td>
+          <td class="chk"><span class="chk-box"></span></td><td class="chk"><span class="chk-box"></span></td>
+          <td class="chk"><span class="chk-box"></span></td>
+        </tr>
+        <tr>
+          <td class="q"><span class="num">9</span>การคำนวณปันผล/เฉลี่ยคืนสะดวก ลดงานครู</td>
+          <td class="chk"><span class="chk-box"></span></td><td class="chk"><span class="chk-box"></span></td>
+          <td class="chk"><span class="chk-box"></span></td><td class="chk"><span class="chk-box"></span></td>
+          <td class="chk"><span class="chk-box"></span></td>
+        </tr>
+        <tr>
+          <td class="q"><span class="num">10</span>การแจ้งเตือน push (บิลใหญ่, สต็อกใกล้หมด) มีประโยชน์</td>
+          <td class="chk"><span class="chk-box"></span></td><td class="chk"><span class="chk-box"></span></td>
+          <td class="chk"><span class="chk-box"></span></td><td class="chk"><span class="chk-box"></span></td>
+          <td class="chk"><span class="chk-box"></span></td>
+        </tr>
+        <tr>
+          <td class="q"><span class="num">11</span>ระบบ approval (อนุมัติคำขอ) ช่วยควบคุมข้อมูลได้ดี</td>
+          <td class="chk"><span class="chk-box"></span></td><td class="chk"><span class="chk-box"></span></td>
+          <td class="chk"><span class="chk-box"></span></td><td class="chk"><span class="chk-box"></span></td>
+          <td class="chk"><span class="chk-box"></span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ===== ตอนที่ 3: ด้านการศึกษา ===== -->
+  <div class="section">
+    <h2>ตอนที่ 3 · ด้านคุณค่าทางการศึกษา (Educational Value)</h2>
+    <table class="likert">
+      <thead>
+        <tr>
+          <th class="q-col" style="width: 55%;">รายการประเมิน</th>
+          <th class="scale">5</th><th class="scale">4</th><th class="scale">3</th>
+          <th class="scale">2</th><th class="scale">1</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="q"><span class="num">12</span>นักเรียนได้เรียนรู้การออมและการลงทุน (ระบบหุ้น)</td>
+          <td class="chk"><span class="chk-box"></span></td><td class="chk"><span class="chk-box"></span></td>
+          <td class="chk"><span class="chk-box"></span></td><td class="chk"><span class="chk-box"></span></td>
+          <td class="chk"><span class="chk-box"></span></td>
+        </tr>
+        <tr>
+          <td class="q"><span class="num">13</span>นักเรียนได้ฝึกทักษะดิจิทัลและการเป็นผู้ขาย</td>
+          <td class="chk"><span class="chk-box"></span></td><td class="chk"><span class="chk-box"></span></td>
+          <td class="chk"><span class="chk-box"></span></td><td class="chk"><span class="chk-box"></span></td>
+          <td class="chk"><span class="chk-box"></span></td>
+        </tr>
+        <tr>
+          <td class="q"><span class="num">14</span>เหมาะสำหรับนำไปใช้กับโรงเรียนอื่นทั่วประเทศ</td>
+          <td class="chk"><span class="chk-box"></span></td><td class="chk"><span class="chk-box"></span></td>
+          <td class="chk"><span class="chk-box"></span></td><td class="chk"><span class="chk-box"></span></td>
+          <td class="chk"><span class="chk-box"></span></td>
+        </tr>
+        <tr>
+          <td class="q"><span class="num">15</span><b>ความพึงพอใจโดยรวมต่อระบบ</b></td>
+          <td class="chk"><span class="chk-box"></span></td><td class="chk"><span class="chk-box"></span></td>
+          <td class="chk"><span class="chk-box"></span></td><td class="chk"><span class="chk-box"></span></td>
+          <td class="chk"><span class="chk-box"></span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ===== ตอนที่ 4: ข้อเสนอแนะ ===== -->
+  <div class="section">
+    <h2>ตอนที่ 4 · ข้อเสนอแนะเชิงลึก</h2>
+
+    <div class="open-q">
+      <div class="q-text">16. จุดเด่นของระบบที่ท่านประทับใจ</div>
+      <div class="lines"></div>
+    </div>
+
+    <div class="open-q">
+      <div class="q-text">17. จุดที่ควรปรับปรุง / ฟีเจอร์ที่อยากให้เพิ่ม</div>
+      <div class="lines"></div>
+    </div>
+
+    <div class="open-q">
+      <div class="q-text">18. ข้อเสนอแนะอื่นๆ (การนำไปใช้, การขยายผล)</div>
+      <div class="lines"></div>
+    </div>
+  </div>
+
+  <!-- ===== ลายเซ็น ===== -->
+  <div class="signature">
+    <div class="sig-col">
+      <div class="sig-line">ลงชื่อ ........................................... ผู้ประเมิน</div>
+      <div>วันที่ ........./........./.........</div>
+    </div>
+    <div class="sig-col">
+      <div class="sig-line">ลงชื่อ ........................................... ผู้รับแบบประเมิน</div>
+      <div>วันที่ ........./........./.........</div>
+    </div>
+  </div>
+
+  <div class="thank">
+    🙏 ขอบคุณท่านที่สละเวลาในการประเมิน · ข้อมูลจะนำไปพัฒนาระบบให้ดียิ่งขึ้น
+  </div>
+
+  <div class="ft">
+    ระบบสหกรณ์โรงเรียนดิจิทัล · พัฒนาโดย ครูสิรธีร์ ตีเมืองซ้าย<br>
+    © 2569 · สำหรับการประเมินวัดผลความพึงพอใจของผู้ใช้ระดับครู/บุคลากร
+  </div>
+
+</div>
+</body>
+</html>

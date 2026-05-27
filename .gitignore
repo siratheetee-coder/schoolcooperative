@@ -1,21 +1,54 @@
+# ============================================================
+# School Cooperative PWA — .gitignore
+# ============================================================
+
 # OS / IDE
 .DS_Store
 Thumbs.db
 .vscode/
 .idea/
 *.swp
+*.swo
 
 # Logs
 *.log
 npm-debug.log*
 
-# Node (ถ้าเพิ่ม build tool ภายหลัง)
+# Node (เผื่อเพิ่ม build tool ภายหลัง)
 node_modules/
 dist/
 .env
 .env.local
+.env.production
 
-# build tools
-ประกวด/node_modules/
-ประกวด/package.json
-ประกวด/package-lock.json
+# ============================================================
+# Personal / local files — ไม่ต้องขึ้น GitHub
+# ============================================================
+
+# งานประกวด + storyboard + รูปส่วนตัว
+ประกวด/
+
+# Backup ข้อมูลโรงเรียน (sensitive: ชื่อ-รหัสนักเรียน, ยอดขาย)
+backups/
+
+# รูปสินค้า — ใช้ Supabase Storage แทน (repo เบาขึ้นเยอะ)
+product img/
+product-images/
+
+# ไฟล์เอกสารส่วนตัว (.docx, .pptx, .xlsx)
+docs/*.docx
+docs/*.pptx
+docs/*.xlsx
+
+# Demo / test files
+demo-qr.html
+
+# Editor temp
+*~
+*.bak
+
+# ============================================================
+# DO NOT track Supabase secrets / VAPID keys
+# ============================================================
+supabase-config.local.js
+push-keys.json

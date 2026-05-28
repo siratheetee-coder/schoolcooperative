@@ -8747,22 +8747,32 @@ async function loadFromCloud() {
 // ถ้า sbSaveSale fail → เก็บลง IndexedDB → retry อัตโนมัติเมื่อเน็ตกลับมา/เปิดแอป
 const PENDING_DB_NAME = 'coopSync';
 const PENDING_STORE = 'pendingSales';
+const DB_VERSION = 2; // ⚠️ ทุกฟังก์ชันต้องใช้ version เดียวกัน — กัน VersionError
 let _pendingDb = null;
 
-function openPendingDb() {
+// เปิด DB เดียว สร้างทุก store (pendingSales + snapshots + pendingOps)
+function openCoopDb() {
   if (_pendingDb) return Promise.resolve(_pendingDb);
   return new Promise((resolve, reject) => {
-    const req = indexedDB.open(PENDING_DB_NAME, 1);
+    const req = indexedDB.open(PENDING_DB_NAME, DB_VERSION);
     req.onupgradeneeded = () => {
       const db = req.result;
       if (!db.objectStoreNames.contains(PENDING_STORE)) {
         db.createObjectStore(PENDING_STORE, { keyPath: 'queueId', autoIncrement: true });
+      }
+      if (!db.objectStoreNames.contains('snapshots')) {
+        db.createObjectStore('snapshots', { keyPath: 'key' });
+      }
+      if (!db.objectStoreNames.contains('pendingOps')) {
+        db.createObjectStore('pendingOps', { keyPath: 'opId', autoIncrement: true });
       }
     };
     req.onsuccess = () => { _pendingDb = req.result; resolve(_pendingDb); };
     req.onerror = () => reject(req.error);
   });
 }
+// alias เดิม — ใช้ตัวเดียวกันหมด
+function openPendingDb() { return openCoopDb(); }
 
 async function addToPendingQueue(sale) {
   try {
@@ -8931,25 +8941,8 @@ setTimeout(() => {
 // บันทึก in-memory data ลง IndexedDB → cold start แบบ offline ใช้ได้
 const SNAPSHOT_STORE = 'snapshots';
 
-function openSnapshotDb() {
-  return new Promise((resolve, reject) => {
-    const req = indexedDB.open(PENDING_DB_NAME, 2); // upgrade version 1 → 2
-    req.onupgradeneeded = (e) => {
-      const db = req.result;
-      if (!db.objectStoreNames.contains(PENDING_STORE)) {
-        db.createObjectStore(PENDING_STORE, { keyPath: 'queueId', autoIncrement: true });
-      }
-      if (!db.objectStoreNames.contains(SNAPSHOT_STORE)) {
-        db.createObjectStore(SNAPSHOT_STORE, { keyPath: 'key' });
-      }
-      if (!db.objectStoreNames.contains('pendingOps')) {
-        db.createObjectStore('pendingOps', { keyPath: 'opId', autoIncrement: true });
-      }
-    };
-    req.onsuccess = () => resolve(req.result);
-    req.onerror = () => reject(req.error);
-  });
-}
+// ใช้ openCoopDb เดียวกัน (กัน VersionError จากการเปิดคนละ version)
+function openSnapshotDb() { return openCoopDb(); }
 
 async function saveSnapshot() {
   try {

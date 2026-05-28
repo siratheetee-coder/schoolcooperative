@@ -9161,9 +9161,51 @@ updatePendingBadge = function() {
 // Periodic op queue retry
 setInterval(() => processOpQueue(true), 45000);
 
+// ============== DIAGNOSTIC + MANUAL SYNC ==============
+// Expose ใน console: coopSync.status() / coopSync.forceSync() / coopSync.clearQueue()
+window.coopSync = {
+  async status() {
+    const sales = await getPendingSales();
+    const ops = await getPendingOps();
+    console.log('═══ Sync Queue Status ═══');
+    console.log('Online:', navigator.onLine);
+    console.log('Supabase ready:', !!sb);
+    console.log('Pending sales:', sales.length);
+    console.log('Pending ops:', ops.length);
+    if (sales.length) console.table(sales.map(s => ({
+      queueId: s.queueId, total: s.sale?.total, seller: s.sale?.seller,
+      date: s.sale?.date, attempts: s.attempts, lastError: s.lastError
+    })));
+    if (ops.length) console.table(ops.map(o => ({
+      opId: o.opId, type: o.type, table: o.table, op: o.op,
+      attempts: o.attempts, age: Math.floor((Date.now()-o.createdAt)/1000) + 's'
+    })));
+    return { online: navigator.onLine, salesPending: sales.length, opsPending: ops.length };
+  },
+  async forceSync() {
+    if (!navigator.onLine) { console.warn('⚠️ ออฟไลน์ — รอเน็ตกลับมาก่อน'); return; }
+    if (!sb) { console.warn('⚠️ Supabase ยังไม่ ready'); return; }
+    console.log('🔄 บังคับ sync...');
+    await Promise.all([retryPendingSales(false), processOpQueue(false)]);
+    console.log('✅ เสร็จ');
+    return this.status();
+  },
+  async clearQueue() {
+    if (!confirm('⚠️ ลบทุก pending queue? (ข้อมูลที่ยังไม่ sync จะหายตลอดกาล)')) return;
+    const db = await openSnapshotDb();
+    const tx = db.transaction(['pendingSales', 'pendingOps'], 'readwrite');
+    tx.objectStore('pendingSales').clear();
+    tx.objectStore('pendingOps').clear();
+    return new Promise(r => { tx.oncomplete = () => { updatePendingBadge(); console.log('✅ Cleared'); r(); }; });
+  }
+};
+console.log('💡 Sync commands: coopSync.status() / coopSync.forceSync() / coopSync.clearQueue()');
+
 // ============== sbSaveSale with queue fallback ==============
 async function sbSaveSale(sale) {
-  if (!sb) {
+  markDirty();
+  // ถ้า offline → queue ทันทีไม่ต้องลอง insert (กันค้าง timeout)
+  if (!sb || !navigator.onLine) {
     await addToPendingQueue(sale);
     return;
   }

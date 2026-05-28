@@ -1,6 +1,7 @@
 // ============== Service Worker — สหกรณ์โรงเรียน ==============
-const CACHE_VERSION = 'v21';  // เปลี่ยนเลขนี้เพื่อ force ลบ cache เก่า
+const CACHE_VERSION = 'v22';  // เปลี่ยนเลขนี้เพื่อ force ลบ cache เก่า
 const CACHE = `coop-${CACHE_VERSION}`;
+const IMG_CACHE = `coop-images-${CACHE_VERSION}`;
 const CORE_ASSETS = [
   './',
   './index.html',
@@ -26,7 +27,7 @@ self.addEventListener('install', e => {
 self.addEventListener('activate', e => {
   e.waitUntil(
     caches.keys().then(keys =>
-      Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
+      Promise.all(keys.filter(k => k !== CACHE && k !== IMG_CACHE).map(k => caches.delete(k)))
     ).then(() => self.clients.claim())
   );
 });
@@ -38,8 +39,30 @@ self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
   const url = new URL(e.request.url);
 
-  // ข้าม Supabase API + external assets (font, supabase-js)
-  if (url.origin !== self.location.origin) return;
+  // === Cross-origin images (Supabase Storage / external CDN) ===
+  // Cache-first สำหรับรูป → offline ใช้ได้
+  if (url.origin !== self.location.origin) {
+    const isImage = e.request.destination === 'image' ||
+                    /\.(jpg|jpeg|png|webp|gif|svg|avif)(\?|$)/i.test(url.pathname) ||
+                    url.pathname.includes('/storage/v1/object/');
+    if (isImage) {
+      e.respondWith(
+        caches.match(e.request).then(cached => {
+          if (cached) return cached;
+          return fetch(e.request).then(resp => {
+            if (resp && resp.status === 200) {
+              const clone = resp.clone();
+              caches.open(IMG_CACHE).then(c => c.put(e.request, clone)).catch(() => {});
+            }
+            return resp;
+          }).catch(() => cached);
+        })
+      );
+      return;
+    }
+    // ไม่ใช่รูป (เช่น Supabase API, font) → ไม่ intercept
+    return;
+  }
 
   const isHTML = e.request.mode === 'navigate' ||
                  e.request.destination === 'document' ||

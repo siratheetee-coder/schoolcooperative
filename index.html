@@ -1252,13 +1252,15 @@
     min-width: 0;
   }
   .buyer-row .name .av {
-    width: 26px; height: 26px;
+    min-width: 26px; height: 26px;
+    padding: 0 8px;
     border-radius: 8px;
-    display: grid; place-items: center;
+    display: inline-flex; align-items: center; justify-content: center;
     color: white;
     font-weight: 700;
     font-size: 11px;
     flex-shrink: 0;
+    white-space: nowrap;
   }
   .buyer-row .name .av.general {
     background: var(--cream-300);
@@ -5113,8 +5115,8 @@
       <input type="text" id="mClass" placeholder="เช่น ม.5/2 หรือ ครูที่ปรึกษา" />
     </div>
     <div class="field">
-      <label>ตัวอักษร avatar (2 ตัว)</label>
-      <input type="text" id="mAvatar" maxlength="5" placeholder="เช่น นภ, ก้อง, เบิร์ด" />
+      <label>ชื่อบน avatar <span style="color:var(--ink-soft);font-weight:400;">— สั้น/ยาวก็ได้ กรอบยืดตาม</span></label>
+      <input type="text" id="mAvatar" maxlength="20" placeholder="เช่น นภ, ก้อง, หมูกรอบ" />
     </div>
     <div class="field">
       <label>สี avatar</label>
@@ -5950,7 +5952,7 @@ function payBuyerSearch(query) {
   results.innerHTML = matches.map((m, i) => `
     <button type="button" onclick="payPickBuyer(${m.id})"
       style="display:flex;align-items:center;gap:10px;width:100%;border:none;background:${i===0?'#F0F9F2':'white'};padding:9px 12px;cursor:pointer;text-align:left;border-bottom:1px solid var(--cream-200);font-family:inherit;">
-      <span class="av av-${m.color}" style="height:28px;min-width:28px;padding:0 8px;font-size:12px;font-weight:700;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;border-radius:10px;white-space:nowrap;max-width:90px;overflow:hidden;text-overflow:ellipsis;color:white;">${m.avatar}</span>
+      <span class="av av-${m.color}" style="height:28px;min-width:28px;padding:0 10px;font-size:12px;font-weight:700;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;border-radius:10px;white-space:nowrap;color:white;">${m.avatar}</span>
       <span style="flex:1;min-width:0;">
         <span style="font-weight:700;font-size:13px;color:#2A2218;">${m.name}</span>
         <span style="font-size:11px;color:var(--ink-soft);"> · ${m.code}${m.class ? ' · '+m.class : ''}${m.role==='teacher'?' · ครู':''}</span>
@@ -10965,7 +10967,7 @@ function parseBulkPreview() {
     const code = cols[0] || '';
     const name = cols[1] || '';
     const klass = cols[2] || '';
-    const avatar = (cols[3] || name.charAt(2) || '?').slice(0, 2);
+    const avatar = (cols[3] || name.charAt(2) || '?').slice(0, 20);
     const colorRaw = parseInt(cols[4]) || 0;
     const color = colorRaw >= 1 && colorRaw <= 6 ? colorRaw : ((idx % 6) + 1);
     const role = (cols[5] || '').toLowerCase() === 'teacher' ? 'teacher' : 'student';

@@ -4908,9 +4908,20 @@
         <span class="av general">👤</span>
         <span>ลูกค้าทั่วไป</span>
       </div>
-      <button class="change-btn" onclick="openBuyerPicker()">เปลี่ยน</button>
+      <button class="change-btn" onclick="openBuyerPicker()">ดูทั้งหมด</button>
     </div>
-    <div style="font-size:11px;color:var(--ink-soft);margin:-6px 0 10px 4px;">💳 สแกนบัตรนักเรียนเพื่อระบุผู้ซื้ออัตโนมัติ</div>
+    <!-- inline buyer search — พิมพ์ได้ทันทีไม่ต้องกดเปลี่ยน -->
+    <div style="position:relative;margin:6px 0 4px;">
+      <div class="search-box" style="margin:0;">
+        <span class="icon">🔍</span>
+        <input type="text" id="payBuyerSearch" autocomplete="off"
+               placeholder="พิมพ์ชื่อ/รหัส หรือสแกนบัตร → Enter เลือกคนแรก"
+               oninput="payBuyerSearch(this.value)"
+               onkeydown="payBuyerKeydown(event)" />
+      </div>
+      <div id="payBuyerResults" style="display:none;position:absolute;left:0;right:0;top:100%;z-index:30;background:white;border:1px solid var(--cream-300);border-radius:12px;margin-top:4px;max-height:240px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,.15);"></div>
+    </div>
+    <div style="font-size:11px;color:var(--ink-soft);margin:2px 0 10px 4px;">💳 สแกนบัตรนักเรียน หรือพิมพ์ค้นหาด้านบนได้เลย</div>
 
     <div class="total-display">
       <div class="lbl">ยอดที่ต้องชำระ</div>
@@ -5898,9 +5909,79 @@ function openPay() {
   cart.forEach((qty, id) => total += products.find(x => x.id === id).price * qty);
   document.getElementById('payTotal').textContent = total;
   document.getElementById('changeBox').textContent = '';
+  // reset inline buyer search
+  const search = document.getElementById('payBuyerSearch');
+  if (search) search.value = '';
+  const results = document.getElementById('payBuyerResults');
+  if (results) { results.style.display = 'none'; results.innerHTML = ''; }
   document.getElementById('payModal').classList.add('show');
+  // auto-focus ช่องค้นหา → พิมพ์ได้ทันที (ไม่ต้องกดเปลี่ยน)
+  setTimeout(() => { if (search) search.focus(); }, 250);
 }
-function closePay() { document.getElementById('payModal').classList.remove('show'); }
+function closePay() {
+  document.getElementById('payModal').classList.remove('show');
+  const results = document.getElementById('payBuyerResults');
+  if (results) results.style.display = 'none';
+}
+
+// inline buyer search ใน pay modal — live dropdown
+function payBuyerSearch(query) {
+  const results = document.getElementById('payBuyerResults');
+  if (!results) return;
+  const q = (query || '').trim().toLowerCase();
+  if (!q) { results.style.display = 'none'; results.innerHTML = ''; return; }
+
+  const matches = members.filter(m =>
+    m.name.toLowerCase().includes(q) ||
+    (m.code || '').toLowerCase().includes(q) ||
+    (m.avatar || '').toLowerCase().includes(q) ||
+    (m.class || '').toLowerCase().includes(q)
+  ).sort((a, b) => {
+    if (a.role !== b.role) return a.role === 'teacher' ? -1 : 1;
+    return a.name.localeCompare(b.name, 'th');
+  }).slice(0, 12);
+
+  if (!matches.length) {
+    results.innerHTML = `<div style="padding:12px;text-align:center;color:var(--ink-soft);font-size:13px;">ไม่พบ "${query}"</div>`;
+    results.style.display = 'block';
+    return;
+  }
+
+  results.innerHTML = matches.map((m, i) => `
+    <button type="button" onclick="payPickBuyer(${m.id})"
+      style="display:flex;align-items:center;gap:10px;width:100%;border:none;background:${i===0?'#F0F9F2':'white'};padding:9px 12px;cursor:pointer;text-align:left;border-bottom:1px solid var(--cream-200);font-family:inherit;">
+      <span class="av av-${m.color}" style="width:30px;height:30px;font-size:13px;flex-shrink:0;">${m.avatar}</span>
+      <span style="flex:1;min-width:0;">
+        <span style="font-weight:700;font-size:13px;color:#2A2218;">${m.name}</span>
+        <span style="font-size:11px;color:var(--ink-soft);"> · ${m.code}${m.class ? ' · '+m.class : ''}${m.role==='teacher'?' · ครู':''}</span>
+      </span>
+      ${i===0?'<span style="font-size:10px;color:#2D7D6F;font-weight:700;">⏎ Enter</span>':''}
+    </button>
+  `).join('');
+  results.style.display = 'block';
+}
+
+// Enter → เลือกคนแรก, Escape → ปิด dropdown
+function payBuyerKeydown(e) {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    const results = document.getElementById('payBuyerResults');
+    const firstBtn = results?.querySelector('button');
+    if (firstBtn) firstBtn.click();
+  } else if (e.key === 'Escape') {
+    const results = document.getElementById('payBuyerResults');
+    if (results) results.style.display = 'none';
+  }
+}
+
+function payPickBuyer(id) {
+  const m = members.find(x => x.id === id);
+  if (m) setBuyer(m);
+  const search = document.getElementById('payBuyerSearch');
+  if (search) search.value = '';
+  const results = document.getElementById('payBuyerResults');
+  if (results) { results.style.display = 'none'; results.innerHTML = ''; }
+}
 function setCash(v) {
   const total = parseInt(document.getElementById('payTotal').textContent);
   if (v === 'exact') {

@@ -4502,6 +4502,28 @@
       </div>
     </div>
 
+    <!-- เงินทุน & กระแสเงินสด -->
+    <div class="summary" style="margin-top:10px;">
+      <div class="sum-card blue">
+        <div class="ico">🛒</div>
+        <div class="lbl">รายจ่ายซื้อของ (จริง)</div>
+        <div class="val">฿<span id="sumPurchases">0</span></div>
+        <div class="delta" id="sumPurchasesNote" style="font-size:11px;">ในช่วงนี้</div>
+      </div>
+      <div class="sum-card green">
+        <div class="ico">💵</div>
+        <div class="lbl">กระแสเงินสดสุทธิ</div>
+        <div class="val">฿<span id="sumCashflow">0</span></div>
+        <div class="delta" id="sumCashflowNote" style="font-size:11px;">ขาย − ซื้อของ − ปันผล</div>
+      </div>
+      <div class="sum-card gold" style="grid-column:1/-1;">
+        <div class="ico">💰</div>
+        <div class="lbl">เงินทุนคงเหลือ ณ ปัจจุบัน (เงินสดในมือ)</div>
+        <div class="val">฿<span id="sumCashOnHand">0</span></div>
+        <div class="delta" id="sumCashNote" style="font-size:11px;">ทุน + หุ้น + ขายสะสม − ซื้อของ − ปันผล</div>
+      </div>
+    </div>
+
     <div class="rcard">
       <div class="rcard-head">
         <h3>📈 กราฟยอดขาย</h3>
@@ -4718,6 +4740,9 @@
         <div class="ts">ดาวน์โหลดข้อมูลทั้งหมด — เก็บไว้กันระบบล่ม</div>
       </button>
     </div>
+
+    <div class="admin-section-head">💰 เงินทุน & กระแสเงินสด</div>
+    <div id="capitalSection"></div>
 
     <div class="admin-section-head">📅 ตารางเวรขาย</div>
     <div class="shift-grid" id="shiftGrid"></div>
@@ -5010,6 +5035,7 @@
         <button class="quick-btn" onclick="addStockQty(100)">+100</button>
       </div>
       <input type="number" id="pStock" placeholder="หรือพิมพ์จำนวน" inputmode="numeric" />
+      <div style="font-size:11px;color:var(--ink-soft);margin-top:6px;">💡 เติมสต็อกที่ซื้อมา? อย่าลืมไปลง <b>บิลซื้อของ</b> ที่หน้า Admin → เงินทุน เพื่อบันทึกเงินที่จ่าย</div>
     </div>
 
     <div class="actions">
@@ -5137,6 +5163,56 @@
       <button class="btn btn-danger" id="mDeleteBtn" onclick="deleteMember()" style="display:none;">ลบ</button>
       <button class="btn" id="mResetPinBtn" onclick="resetMemberPin()" style="display:none;background:var(--cream-200);color:var(--ink-soft);border:none;cursor:pointer;">🔑 รีเซ็ต PIN</button>
       <button class="btn btn-primary" onclick="saveMember()">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============== CAPITAL MODAL (ตั้ง/เพิ่ม/ถอน ทุน) ============== -->
+<div class="modal-bg" id="capitalModal" onclick="if(event.target===this)closeCapitalModal()">
+  <div class="modal">
+    <div class="modal-close"></div>
+    <h3 id="capitalModalTitle">เพิ่มเงินทุน</h3>
+    <div style="font-size:12px;color:var(--ink-soft);margin-bottom:14px;text-align:center;">บันทึกเงินทุนที่ใส่เข้า/ถอนออกจากระบบ</div>
+    <div class="field">
+      <label>จำนวนเงิน (บาท)</label>
+      <input type="number" id="capAmount" placeholder="0" inputmode="numeric" min="0" />
+    </div>
+    <div class="field">
+      <label>หมายเหตุ <span style="color:var(--ink-soft);font-weight:400;">— ไม่บังคับ</span></label>
+      <input type="text" id="capNote" placeholder="เช่น เงินทุนเริ่มต้นจากโรงเรียน" />
+    </div>
+    <div class="actions" style="margin-top:14px;">
+      <button class="btn btn-ghost" onclick="closeCapitalModal()">ยกเลิก</button>
+      <button class="btn btn-primary" id="capSaveBtn" onclick="saveCapital()" style="flex:1;">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============== PURCHASE MODAL (บิลซื้อของ) ============== -->
+<div class="modal-bg" id="purchaseModal" onclick="if(event.target===this)closePurchaseModal()">
+  <div class="modal">
+    <div class="modal-close"></div>
+    <h3>บิลซื้อของเข้าร้าน</h3>
+    <div style="font-size:12px;color:var(--ink-soft);margin-bottom:14px;text-align:center;">บันทึกเงินที่จ่ายซื้อสต็อก → หักจากเงินทุน</div>
+    <div class="field">
+      <label>ยอดรวมที่ซื้อ (บาท)</label>
+      <input type="number" id="pchTotal" placeholder="0" inputmode="numeric" min="0" />
+    </div>
+    <div class="field">
+      <label>ร้าน/แหล่งซื้อ <span style="color:var(--ink-soft);font-weight:400;">— ไม่บังคับ</span></label>
+      <input type="text" id="pchVendor" placeholder="เช่น แม็คโคร, ร้านป้าสมศรี" />
+    </div>
+    <div class="field">
+      <label>หมายเหตุ <span style="color:var(--ink-soft);font-weight:400;">— ไม่บังคับ</span></label>
+      <input type="text" id="pchNote" placeholder="เช่น ล็อตขนม + เครื่องเขียน" />
+    </div>
+    <div class="field">
+      <label>วันที่</label>
+      <input type="date" id="pchDate" />
+    </div>
+    <div class="actions" style="margin-top:14px;">
+      <button class="btn btn-ghost" onclick="closePurchaseModal()">ยกเลิก</button>
+      <button class="btn btn-primary" id="pchSaveBtn" onclick="savePurchase()" style="flex:1;">บันทึกบิลซื้อ</button>
     </div>
   </div>
 </div>
@@ -5608,7 +5684,7 @@ function setView(name) {
   if (name === 'report') renderReport();
   if (name === 'shares') { renderShareHero(); renderMembers(); applyRoleVisibility(); }
   if (name === 'quiz')   { renderQuizSelectScreen(); }
-  if (name === 'admin') { renderAdmin(); renderShiftGrid(); }
+  if (name === 'admin') { renderAdmin(); renderShiftGrid(); renderCapital(); }
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -6357,6 +6433,35 @@ function filterSales(period = currentPeriod, offset = 0, includeVoided = false) 
   });
 }
 
+// เช็คว่า date อยู่ใน period/offset ที่กำหนดไหม (ใช้ logic เดียวกับ filterSales)
+function dateInPeriod(d, period, offset) {
+  const t = new Date(reportRefDate);
+  if (period === 'day') {
+    const ref = new Date(t); ref.setDate(ref.getDate() - offset);
+    return d.toDateString() === ref.toDateString();
+  }
+  if (period === 'month') {
+    let m = t.getMonth() - offset, y = t.getFullYear();
+    while (m < 0) { m += 12; y -= 1; }
+    return d.getMonth() === m && d.getFullYear() === y;
+  }
+  if (period === 'term') {
+    const cur = getTerm(t);
+    if (offset === 0) return getTerm(d).num === cur.num && getTerm(d).year === cur.year;
+    const prevNum = cur.num === 1 ? 2 : 1;
+    const prevYear = cur.num === 1 ? cur.year - 1 : cur.year;
+    const a = getTerm(d);
+    return a.num === prevNum && a.year === prevYear;
+  }
+  if (period === 'year') return d.getFullYear() === t.getFullYear() - offset;
+  return false;
+}
+
+// บิลซื้อของใน period
+function filterPurchases(period = currentPeriod, offset = 0) {
+  return purchases.filter(p => dateInPeriod(p.date, period, offset));
+}
+
 const PERIOD_LABELS = {
   day:   () => `${isReportToday() ? 'วันนี้' : 'วันที่'} · <b>${thDate(reportRefDate)}</b>`,
   month: () => `เดือน · <b>${TH_MONTHS_FULL[reportRefDate.getMonth()]} ${reportRefDate.getFullYear()+543}</b>`,
@@ -6397,6 +6502,26 @@ function renderReport() {
   const bdEl = document.getElementById('sumBillsDelta');
   bdEl.className = 'delta ' + (bd >= 0 ? 'up' : 'down');
   bdEl.textContent = `${bd >= 0 ? '↑' : '↓'} ${Math.abs(bd)}% จากก่อนหน้า`;
+
+  // === เงินทุน & กระแสเงินสด ===
+  const periodPurchases = filterPurchases(currentPeriod, 0).reduce((s,p) => s + (p.total||0), 0);
+  // ปันผล/เฉลี่ยคืน ใน period นี้
+  const periodPayout = shareTxns
+    .filter(t => (t.type === 'dividend' || t.type === 'patronage') && dateInPeriod(t.date, currentPeriod, 0))
+    .reduce((s,t) => s + t.amount, 0);
+  const cashflow = totalSales - periodPurchases - periodPayout;
+  const cashNow = calcCashOnHand().cash;
+
+  const pEl = document.getElementById('sumPurchases');
+  if (pEl) pEl.textContent = Math.round(periodPurchases).toLocaleString();
+  const cfEl = document.getElementById('sumCashflow');
+  if (cfEl) {
+    cfEl.textContent = Math.round(cashflow).toLocaleString();
+    const card = cfEl.closest('.sum-card');
+    if (card) card.classList.toggle('red', cashflow < 0);
+  }
+  const cohEl = document.getElementById('sumCashOnHand');
+  if (cohEl) cohEl.textContent = Math.round(cashNow).toLocaleString();
 
   renderChart(cur);
   renderProfitChart(cur);
@@ -7163,6 +7288,10 @@ const AUDIT_META = {
   login:           { ico: '🔓', label: 'เข้าสู่ระบบ',       cat: '' },
   quiz_attempt:    { ico: '📚', label: 'ทำแบบฝึกหัด',       cat: '' },
   quiz_settings:   { ico: '⚙', label: 'ตั้งค่า Quiz',       cat: '' },
+  capital_add:     { ico: '💰', label: 'เพิ่มเงินทุน',       cat: 'money' },
+  capital_withdraw:{ ico: '💸', label: 'ถอนเงินทุน',        cat: 'money' },
+  add_purchase:    { ico: '🛒', label: 'ลงบิลซื้อของ',      cat: 'money' },
+  delete_purchase: { ico: '🗑️', label: 'ลบบิลซื้อของ',      cat: 'critical' },
 };
 
 // Shift assignments
@@ -7205,6 +7334,25 @@ function pendingCount() { return pendingRequests.filter(r => r.status === 'pendi
 
 let nextShareTxnId = 1;
 const shareTxns = []; // { id, memberId, type: 'buy'|'dividend', shares, amount, date }
+
+// ===== เงินทุน & กระแสเงินสด (Capital / Cash-flow) =====
+const purchases = [];     // บิลซื้อของ { id, date, vendor, note, total, createdByName }
+const capitalTxns = [];   // เงินทุน    { id, date, type:'initial'|'add'|'withdraw', amount, note, createdByName }
+let nextPurchaseId = 1;
+let nextCapitalId = 1;
+
+// คำนวณเงินทุนคงเหลือ (เงินสดในมือ)
+function calcCashOnHand() {
+  const capital = capitalTxns.reduce((s,t) => s + (t.type === 'withdraw' ? -t.amount : t.amount), 0);
+  const shareIn = shareTxns.filter(t => t.type === 'buy').reduce((s,t) => s + t.amount, 0);
+  const salesIn = sales.filter(s => !s.isVoided).reduce((s,x) => s + x.total, 0);
+  const purchaseOut = purchases.reduce((s,p) => s + (p.total || 0), 0);
+  const payoutOut = shareTxns.filter(t => t.type === 'dividend' || t.type === 'patronage').reduce((s,t) => s + t.amount, 0);
+  return {
+    cash: capital + shareIn + salesIn - purchaseOut - payoutOut,
+    capital, shareIn, salesIn, purchaseOut, payoutOut
+  };
+}
 function addShareTxn(memberId, shares, dateStr, type='buy') {
   shareTxns.push({
     id: nextShareTxnId++, memberId, type, shares,
@@ -8807,6 +8955,30 @@ async function loadFromCloud() {
       }));
       nextShareTxnId = txns.length ? Math.max(...txns.map(x => x.id)) + 1 : 1;
     }
+    // purchases (บิลซื้อของ)
+    try {
+      const { data: pchs } = await sb.from('purchases').select('*').order('date', { ascending: false }).limit(2000);
+      if (pchs) {
+        purchases.length = 0;
+        pchs.forEach(p => purchases.push({
+          id: p.id, date: new Date(p.date), vendor: p.vendor || '', note: p.note || '',
+          total: Number(p.total) || 0, createdByName: p.created_by_name || ''
+        }));
+        nextPurchaseId = pchs.length ? Math.max(...pchs.map(x => x.id)) + 1 : 1;
+      }
+    } catch(e) { console.warn('load purchases', e); }
+    // capital txns (เงินทุน)
+    try {
+      const { data: caps } = await sb.from('capital_txns').select('*').order('date');
+      if (caps) {
+        capitalTxns.length = 0;
+        caps.forEach(c => capitalTxns.push({
+          id: c.id, date: new Date(c.date), type: c.type,
+          amount: Number(c.amount) || 0, note: c.note || '', createdByName: c.created_by_name || ''
+        }));
+        nextCapitalId = caps.length ? Math.max(...caps.map(x => x.id)) + 1 : 1;
+      }
+    } catch(e) { console.warn('load capital_txns', e); }
     // Re-render quick + active view
     renderQuickGrid();
     renderProducts();
@@ -9039,6 +9211,8 @@ async function saveSnapshot() {
       members: members,
       sales: sales.slice(-500), // เก็บแค่ล่าสุด 500 บิลเพื่อประหยัด
       shareTxns: shareTxns,
+      purchases: purchases,
+      capitalTxns: capitalTxns,
       shifts: shifts || [],
       pendingRequests: pendingRequests || [],
       auditLogs: (auditLogs || []).slice(-200),
@@ -9085,6 +9259,22 @@ async function loadSnapshot() {
             t.date = t.date instanceof Date ? t.date : new Date(t.date);
             shareTxns.push(t);
           });
+        }
+        if (d.purchases) {
+          purchases.length = 0;
+          d.purchases.forEach(p => {
+            p.date = p.date instanceof Date ? p.date : new Date(p.date);
+            purchases.push(p);
+          });
+          nextPurchaseId = Math.max(...purchases.map(p => p.id), 0) + 1;
+        }
+        if (d.capitalTxns) {
+          capitalTxns.length = 0;
+          d.capitalTxns.forEach(c => {
+            c.date = c.date instanceof Date ? c.date : new Date(c.date);
+            capitalTxns.push(c);
+          });
+          nextCapitalId = Math.max(...capitalTxns.map(c => c.id), 0) + 1;
         }
         if (d.shifts && typeof shifts !== 'undefined') {
           shifts.length = 0;
@@ -9387,6 +9577,199 @@ async function sbSaveShareTxn(t) {
     console.error('saveShareTxn failed → queueing', e);
     await enqueueOp('share_txn', 'share_txns', 'insert', payload);
   }
+}
+
+// ===== Purchases (บิลซื้อของ) — offline-aware =====
+async function sbSavePurchase(p) {
+  markDirty();
+  const payload = {
+    date: p.date.toISOString(), vendor: p.vendor || null,
+    note: p.note || null, total: p.total, created_by_name: p.createdByName || null
+  };
+  if (!sb || !navigator.onLine) {
+    await enqueueOp('purchase', 'purchases', 'insert', payload);
+    return;
+  }
+  try {
+    const { data, error } = await sb.from('purchases').insert(payload).select().single();
+    if (error) throw error;
+    p.id = data.id;
+  } catch (e) {
+    console.error('savePurchase failed → queueing', e);
+    await enqueueOp('purchase', 'purchases', 'insert', payload);
+  }
+}
+async function sbDeletePurchase(id) {
+  markDirty();
+  if (!sb || !navigator.onLine) {
+    await enqueueOp('purchase', 'purchases', 'delete', { id });
+    return;
+  }
+  try { await sb.from('purchases').delete().eq('id', id); }
+  catch (e) {
+    console.error('deletePurchase failed → queueing', e);
+    await enqueueOp('purchase', 'purchases', 'delete', { id });
+  }
+}
+
+// ===== Capital txns (เงินทุน) — offline-aware =====
+async function sbSaveCapitalTxn(t) {
+  markDirty();
+  const payload = {
+    date: t.date.toISOString(), type: t.type, amount: t.amount,
+    note: t.note || null, created_by_name: t.createdByName || null
+  };
+  if (!sb || !navigator.onLine) {
+    await enqueueOp('capital', 'capital_txns', 'insert', payload);
+    return;
+  }
+  try {
+    const { data, error } = await sb.from('capital_txns').insert(payload).select().single();
+    if (error) throw error;
+    t.id = data.id;
+  } catch (e) {
+    console.error('saveCapitalTxn failed → queueing', e);
+    await enqueueOp('capital', 'capital_txns', 'insert', payload);
+  }
+}
+
+// ============== CAPITAL UI (เงินทุน & กระแสเงินสด) ==============
+function renderCapital() {
+  const el = document.getElementById('capitalSection');
+  if (!el) return;
+  const c = calcCashOnHand();
+  const fmt = n => '฿' + Math.round(n).toLocaleString();
+  const neg = c.cash < 0;
+  const teacher = isTeacher();
+
+  const recentPurchases = [...purchases].sort((a,b) => b.date - a.date).slice(0, 8);
+
+  el.innerHTML = `
+    <div style="background:linear-gradient(135deg,${neg?'#D94B4B,#9A2A2A':'#2D7D6F,#1F5F55'});border-radius:18px;padding:18px;color:white;margin-bottom:12px;box-shadow:0 6px 16px rgba(45,125,111,.25);">
+      <div style="font-size:13px;opacity:.9;">💰 เงินทุนคงเหลือ (เงินสดในมือ)</div>
+      <div style="font-size:34px;font-weight:800;margin:4px 0;">${fmt(c.cash)}</div>
+      ${neg ? '<div style="font-size:12px;background:rgba(255,255,255,.2);border-radius:8px;padding:6px 10px;margin-top:6px;">⚠️ ทุนติดลบ — ซื้อของเกินเงินที่มี</div>' : ''}
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:12px;font-size:12px;">
+        <div style="background:rgba(255,255,255,.12);border-radius:8px;padding:6px 10px;">ทุนตั้งต้น/เพิ่ม <b>${fmt(c.capital)}</b></div>
+        <div style="background:rgba(255,255,255,.12);border-radius:8px;padding:6px 10px;">+ หุ้นนักเรียน <b>${fmt(c.shareIn)}</b></div>
+        <div style="background:rgba(255,255,255,.12);border-radius:8px;padding:6px 10px;">+ ยอดขาย <b>${fmt(c.salesIn)}</b></div>
+        <div style="background:rgba(255,255,255,.12);border-radius:8px;padding:6px 10px;">− ซื้อของ <b>${fmt(c.purchaseOut)}</b></div>
+        <div style="background:rgba(255,255,255,.12);border-radius:8px;padding:6px 10px;grid-column:1/-1;">− ปันผล/เฉลี่ยคืน <b>${fmt(c.payoutOut)}</b></div>
+      </div>
+    </div>
+
+    ${teacher ? `
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
+      <button onclick="openCapitalModal('add')" style="flex:1;min-width:110px;padding:10px;border:none;border-radius:10px;background:linear-gradient(135deg,#7BC99A,#388F6F);color:white;font-family:inherit;font-weight:700;font-size:13px;cursor:pointer;box-shadow:0 3px 0 #1F5C45;">+ เพิ่มทุน</button>
+      <button onclick="openCapitalModal('withdraw')" style="flex:1;min-width:110px;padding:10px;border:none;border-radius:10px;background:linear-gradient(135deg,#FFB07A,#E8804D);color:white;font-family:inherit;font-weight:700;font-size:13px;cursor:pointer;box-shadow:0 3px 0 #B85A28;">− ถอนทุน</button>
+      <button onclick="openPurchaseModal()" style="flex:1;min-width:110px;padding:10px;border:none;border-radius:10px;background:linear-gradient(135deg,#5BA8E0,#2A7DC4);color:white;font-family:inherit;font-weight:700;font-size:13px;cursor:pointer;box-shadow:0 3px 0 #1A5A99;">🧾 บิลซื้อของ</button>
+    </div>` : ''}
+
+    <div style="font-size:12px;color:var(--ink-soft);font-weight:700;margin-bottom:6px;">🧾 บิลซื้อของล่าสุด</div>
+    ${recentPurchases.length === 0
+      ? '<div style="text-align:center;color:var(--ink-soft);padding:16px;font-size:13px;background:var(--cream-100);border-radius:10px;">ยังไม่มีบิลซื้อของ</div>'
+      : recentPurchases.map(p => `
+        <div style="display:flex;align-items:center;gap:10px;background:white;border:1px solid var(--cream-300);border-radius:10px;padding:9px 12px;margin-bottom:6px;">
+          <div style="flex:1;min-width:0;">
+            <div style="font-weight:700;font-size:14px;color:#2A2218;">${fmt(p.total)}${p.vendor ? ' · '+escapeHtml(p.vendor) : ''}</div>
+            <div style="font-size:11px;color:var(--ink-soft);">${thDate(p.date)}${p.note ? ' · '+escapeHtml(p.note) : ''}${p.createdByName ? ' · '+escapeHtml(p.createdByName) : ''}</div>
+          </div>
+          ${teacher ? `<button onclick="deletePurchase(${p.id})" style="border:none;background:#FFF0F0;color:#D94B4B;border-radius:8px;width:30px;height:30px;cursor:pointer;font-size:16px;">🗑</button>` : ''}
+        </div>
+      `).join('')}
+  `;
+}
+
+let capitalModalMode = 'add';
+function openCapitalModal(mode) {
+  if (!isTeacher()) { showToast('เฉพาะครูเท่านั้น', true); return; }
+  capitalModalMode = mode;
+  document.getElementById('capitalModalTitle').textContent = mode === 'withdraw' ? 'ถอนเงินทุน' : 'เพิ่มเงินทุน';
+  document.getElementById('capAmount').value = '';
+  document.getElementById('capNote').value = '';
+  document.getElementById('capitalModal').classList.add('show');
+  setTimeout(() => document.getElementById('capAmount').focus(), 200);
+}
+function closeCapitalModal() { document.getElementById('capitalModal').classList.remove('show'); }
+
+let _savingCapital = false;
+async function saveCapital() {
+  if (_savingCapital) return;
+  const amount = parseFloat(document.getElementById('capAmount').value) || 0;
+  const note = document.getElementById('capNote').value.trim();
+  if (amount <= 0) { showToast('กรุณาใส่จำนวนเงิน', true); return; }
+  _savingCapital = true;
+  const btn = document.getElementById('capSaveBtn');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ บันทึก...'; }
+  try {
+    const txn = {
+      id: nextCapitalId++, date: new Date(),
+      type: capitalTxns.length === 0 && capitalModalMode === 'add' ? 'initial' : capitalModalMode,
+      amount, note, createdByName: currentUser ? currentUser.name : ''
+    };
+    capitalTxns.push(txn);
+    await sbSaveCapitalTxn(txn);
+    logAudit(capitalModalMode === 'withdraw' ? 'capital_withdraw' : 'capital_add', 'capital', txn.id,
+      `${capitalModalMode === 'withdraw' ? 'ถอนทุน' : 'เพิ่มทุน'} ฿${amount}`, { amount, note });
+    showToast(`${capitalModalMode === 'withdraw' ? 'ถอน' : 'เพิ่ม'}ทุน ฿${amount.toLocaleString()} เรียบร้อย`);
+    closeCapitalModal();
+    renderCapital();
+  } finally {
+    _savingCapital = false;
+    if (btn) { btn.disabled = false; btn.textContent = 'บันทึก'; }
+  }
+}
+
+function openPurchaseModal() {
+  if (!isTeacher()) { showToast('เฉพาะครูเท่านั้น', true); return; }
+  document.getElementById('pchTotal').value = '';
+  document.getElementById('pchVendor').value = '';
+  document.getElementById('pchNote').value = '';
+  document.getElementById('pchDate').value = new Date().toISOString().slice(0, 10);
+  document.getElementById('purchaseModal').classList.add('show');
+  setTimeout(() => document.getElementById('pchTotal').focus(), 200);
+}
+function closePurchaseModal() { document.getElementById('purchaseModal').classList.remove('show'); }
+
+let _savingPurchase = false;
+async function savePurchase() {
+  if (_savingPurchase) return;
+  const total = parseFloat(document.getElementById('pchTotal').value) || 0;
+  const vendor = document.getElementById('pchVendor').value.trim();
+  const note = document.getElementById('pchNote').value.trim();
+  const dateStr = document.getElementById('pchDate').value;
+  if (total <= 0) { showToast('กรุณาใส่ยอดรวมที่ซื้อ', true); return; }
+  _savingPurchase = true;
+  const btn = document.getElementById('pchSaveBtn');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ บันทึก...'; }
+  try {
+    const p = {
+      id: nextPurchaseId++,
+      date: dateStr ? new Date(dateStr + 'T12:00:00') : new Date(),
+      vendor, note, total, createdByName: currentUser ? currentUser.name : ''
+    };
+    purchases.unshift(p);
+    await sbSavePurchase(p);
+    logAudit('add_purchase', 'purchase', p.id, `บิลซื้อ ฿${total}${vendor ? ' · '+vendor : ''}`, { total, vendor, note });
+    showToast(`บันทึกบิลซื้อ ฿${total.toLocaleString()} เรียบร้อย`);
+    closePurchaseModal();
+    renderCapital();
+  } finally {
+    _savingPurchase = false;
+    if (btn) { btn.disabled = false; btn.textContent = 'บันทึกบิลซื้อ'; }
+  }
+}
+
+function deletePurchase(id) {
+  if (!isTeacher()) { showToast('เฉพาะครูเท่านั้น', true); return; }
+  const p = purchases.find(x => x.id === id);
+  if (!p) return;
+  if (!confirm(`ลบบิลซื้อ ฿${p.total.toLocaleString()}?`)) return;
+  purchases.splice(purchases.findIndex(x => x.id === id), 1);
+  sbDeletePurchase(id);
+  logAudit('delete_purchase', 'purchase', id, `ลบบิลซื้อ ฿${p.total}`, { total: p.total });
+  showToast('ลบบิลซื้อเรียบร้อย');
+  renderCapital();
 }
 
 // === HOOK INTO EXISTING FUNCTIONS ===
@@ -11615,6 +11998,48 @@ function startRealtime() {
     })
     .subscribe();
   realtimeChannels.push(bcChannel);
+
+  // === PURCHASES (บิลซื้อของ — sync ข้ามอุปกรณ์) ===
+  const purchaseChannel = sb.channel('coop-purchases')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'purchases' }, payload => {
+      if (payload.eventType === 'INSERT') {
+        const p = payload.new;
+        if (!purchases.find(x => x.id === p.id)) {
+          purchases.unshift({
+            id: p.id, date: new Date(p.date), vendor: p.vendor || '', note: p.note || '',
+            total: Number(p.total) || 0, createdByName: p.created_by_name || ''
+          });
+          nextPurchaseId = Math.max(nextPurchaseId, p.id + 1);
+        }
+      } else if (payload.eventType === 'DELETE') {
+        const idx = purchases.findIndex(x => x.id === payload.old.id);
+        if (idx >= 0) purchases.splice(idx, 1);
+      }
+      if (document.getElementById('view-admin')?.classList.contains('active')) renderCapital();
+    })
+    .subscribe();
+  realtimeChannels.push(purchaseChannel);
+
+  // === CAPITAL TXNS (เงินทุน — sync ข้ามอุปกรณ์) ===
+  const capitalChannel = sb.channel('coop-capital')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'capital_txns' }, payload => {
+      if (payload.eventType === 'INSERT') {
+        const c = payload.new;
+        if (!capitalTxns.find(x => x.id === c.id)) {
+          capitalTxns.push({
+            id: c.id, date: new Date(c.date), type: c.type,
+            amount: Number(c.amount) || 0, note: c.note || '', createdByName: c.created_by_name || ''
+          });
+          nextCapitalId = Math.max(nextCapitalId, c.id + 1);
+        }
+      } else if (payload.eventType === 'DELETE') {
+        const idx = capitalTxns.findIndex(x => x.id === payload.old.id);
+        if (idx >= 0) capitalTxns.splice(idx, 1);
+      }
+      if (document.getElementById('view-admin')?.classList.contains('active')) renderCapital();
+    })
+    .subscribe();
+  realtimeChannels.push(capitalChannel);
 
   // === SALES (live new bills) ===
   const salesChannel = sb.channel('coop-sales')

@@ -198,6 +198,30 @@ exception when others then null;
 end $$;
 create index if not exists share_txns_member_idx on share_txns (member_id);
 
+-- 6. PURCHASES (บิลซื้อของ — เงินออกตอนซื้อสต็อก)
+create table if not exists purchases (
+  id bigserial primary key,
+  date timestamptz default now(),
+  vendor text,                       -- ร้าน/แหล่งซื้อ (ไม่บังคับ)
+  note text,                         -- หมายเหตุ
+  total numeric(10,2) not null,
+  created_by_name text,
+  created_at timestamptz default now()
+);
+create index if not exists purchases_date_idx on purchases (date desc);
+
+-- 7. CAPITAL TRANSACTIONS (เงินทุน — ตั้งต้น/เพิ่ม/ถอน)
+create table if not exists capital_txns (
+  id bigserial primary key,
+  date timestamptz default now(),
+  type text not null check (type in ('initial','add','withdraw')),
+  amount numeric(10,2) not null,
+  note text,
+  created_by_name text,
+  created_at timestamptz default now()
+);
+create index if not exists capital_txns_date_idx on capital_txns (date desc);
+
 -- ============================================================
 -- ROW LEVEL SECURITY (เปิดให้ทุกคนอ่าน-เขียนได้สำหรับ prototype)
 -- ⚠️ ก่อน production ควรเข้มงวดกว่านี้!
@@ -210,6 +234,8 @@ alter table share_txns         enable row level security;
 alter table pending_requests   enable row level security;
 alter table shift_assignments  enable row level security;
 alter table audit_logs         enable row level security;
+alter table purchases          enable row level security;
+alter table capital_txns       enable row level security;
 
 drop policy if exists "open" on products;
 drop policy if exists "open" on members;
@@ -230,6 +256,8 @@ create policy "open" on sale_items         for all using (true) with check (true
 create policy "open" on share_txns         for all using (true) with check (true);
 create policy "open" on pending_requests   for all using (true) with check (true);
 create policy "open" on shift_assignments  for all using (true) with check (true);
+create policy "open" on purchases          for all using (true) with check (true);
+create policy "open" on capital_txns       for all using (true) with check (true);
 -- audit_logs: ครูสามารถลบได้ (เพื่อล้าง log เก่าๆ)
 create policy "audit_insert" on audit_logs for insert with check (true);
 create policy "audit_select" on audit_logs for select using (true);
@@ -244,7 +272,7 @@ do $$
 declare
   tbl text;
 begin
-  foreach tbl in array array['products','sales','sale_items','pending_requests','share_txns','members','shift_assignments']
+  foreach tbl in array array['products','sales','sale_items','pending_requests','share_txns','members','shift_assignments','purchases','capital_txns','product_barcodes']
   loop
     begin
       execute format('alter publication supabase_realtime add table %I', tbl);

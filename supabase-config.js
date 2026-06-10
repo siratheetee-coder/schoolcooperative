@@ -12,10 +12,9 @@
 // ============================================================
 
 window.SUPABASE_CONFIG = {
-  url:     'https://znbtmgbcbdnrbtmxgnhj.supabase.co',
-  anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpuYnRtZ2JjYmRucmJ0bXhnbmhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1OTAwNjEsImV4cCI6MjA5NDE2NjA2MX0.30TWJzCmC43S2RHJtuDEq4soBeLQfQv3vuntoZICRsg',
-  // === Push Notifications (VAPID) ===
-  // วิธีสร้าง: ดู PUSH-SETUP.md
-  // วาง public key ที่นี่ (Base64URL); ใส่ private key ใน Supabase Secret
-  vapidPublicKey: 'BLOekTSLxGegh0WcTuHro3N6KOjrIBonyD3pAFRB1apfyNlPa_ChLsb0Hcx7siD1RsfM2cF5axYOXOoxobaVi7g',  // เช่น 'BNn...XYz'  ← ว่างไว้ = ปิดการแจ้งเตือน
+  url:     '',   // เช่น 'https://xxxxxxxxxxxx.supabase.co'  (กรอกผ่าน Setup Wizard ได้)
+  anonKey: '',   // ใช้ "anon public" key เท่านั้น — ห้ามใช้ service_role
+  // === Push Notifications (VAPID) — ไม่บังคับ ===
+  // วิธีสร้าง: ดู PUSH-SETUP.md  (ปล่อยว่าง = ปิดการแจ้งเตือน แอปยังใช้งานได้ปกติ)
+  vapidPublicKey: '',
 };

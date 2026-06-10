@@ -22,6 +22,8 @@ create table if not exists products (
   unit text default '/ชิ้น',
   is_active boolean default true,
   image_url text,
+  -- บาร์โค้ดหลักของสินค้า (ระบบหลักใช้ตาราง product_barcodes แต่แอปยังเขียนคอลัมน์นี้ด้วย — ต้องมีไว้)
+  barcode text,
   created_at timestamptz default now()
 );
 

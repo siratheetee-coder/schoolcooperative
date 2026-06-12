@@ -12401,6 +12401,13 @@ function backToLevelSelect() {
   renderQuizSelectScreen();
 }
 
+// กลับหน้าหลัก Quiz จากหน้าผลคะแนน (ปุ่ม "← กลับหน้าหลัก")
+function showQuizHome() {
+  if (quizState.timerInterval) clearInterval(quizState.timerInterval);
+  renderQuizSelectScreen();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
 async function renderQuizLeaderboard() {
   const el = document.getElementById('quizLeaderboard');
   if (!sb) {
@@ -12701,7 +12708,14 @@ async function saveQuizAttempt(score, total, duration) {
     // refresh ประวัติ + leaderboard ทันทีหลัง save สำเร็จ
     renderQuizMyHistory();
     renderQuizLeaderboard();
-  } catch (e) { console.error('saveQuizAttempt failed', e); }
+  } catch (e) {
+    console.error('saveQuizAttempt failed', e);
+    // อย่าให้คะแนนหายเงียบ ๆ — เตือนครู/นักเรียนให้รู้ว่ายังไม่บันทึก
+    const hint = (e && /schema cache|PGRST205/i.test(e.message || ''))
+      ? 'ฐานข้อมูล Quiz ยังไม่พร้อม — แจ้งครูให้รัน quiz-schema.sql + reload schema'
+      : 'ลองทำใหม่อีกครั้ง หรือเช็คอินเทอร์เน็ต';
+    showToast('⚠️ ยังไม่ได้บันทึกคะแนน — ' + hint, true);
+  }
 }
 
 function retryQuiz() {

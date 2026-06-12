@@ -17,9 +17,14 @@ create table if not exists quiz_attempts (
   duration_sec int default 0,
   created_at timestamptz default now()
 );
--- Upgrade existing table
+-- Upgrade existing table (เผื่อสร้างด้วยเวอร์ชันเก่าที่ยังไม่มีคอลัมน์ครบ)
 alter table quiz_attempts add column if not exists topic text default 'mix';
 alter table quiz_attempts add column if not exists phase text default 'pre';
+alter table quiz_attempts add column if not exists member_name text;
+alter table quiz_attempts add column if not exists total int default 10;
+alter table quiz_attempts add column if not exists correct_ids int[] default '{}';
+alter table quiz_attempts add column if not exists wrong_ids int[] default '{}';
+alter table quiz_attempts add column if not exists duration_sec int default 0;
 do $$
 begin
   alter table quiz_attempts drop constraint if exists quiz_attempts_phase_check;
@@ -67,3 +72,7 @@ begin
   exception when others then null;
   end;
 end $$;
+
+-- บังคับให้ PostgREST โหลด schema ใหม่ทันที (กัน error PGRST205 "table not found in schema cache"
+-- หลังเพิ่งสร้างตาราง — ถ้าไม่สั่งนี้ การ insert คะแนน quiz อาจล้มเหลวเงียบ ๆ ชั่วคราว)
+notify pgrst, 'reload schema';
